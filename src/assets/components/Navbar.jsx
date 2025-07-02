@@ -16,7 +16,7 @@ const Navbar = ({total}) => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav w-100">
             <li className="nav-item me-2 mb-2">
-              <Link to="/" className="btn btn-dark border border-white" type="button"><i className="fa-solid fa-pizza-slice"></i> Inicio</Link>
+              <Link to="/" className="btn btn-dark border border-white" type="button"> Inicio</Link>
             </li>
           
           {token ? (   // condición ? valorSiVerdadero : valorSiFalso
