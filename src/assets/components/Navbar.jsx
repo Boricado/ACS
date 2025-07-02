@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 
 const Navbar = ({total}) => {
-  const token = false;
+  const token = true;
 
   return (
     <nav className="navbar navbar-expand-lg bg-dark navbar-dark">
@@ -21,12 +21,16 @@ const Navbar = ({total}) => {
           
           {token ? (   // condición ? valorSiVerdadero : valorSiFalso
             <>
+             <li className="nav-item me-2 mb-2">
+              <Link to="/" className="btn btn-dark border border-white" type="button"> Ingreso Cliente</Link>
+            </li>
               <li className="nav-item me-2 mb-2">
                 <Link to="/ProfilePage" className="btn btn-dark border border-white" type="button"><i className="fa-solid fa-user-lock"></i> Profile</Link>
               </li>
               <li className="nav-item me-2 mb-2">
                 <button className="btn btn-dark border border-white" type="button"><i className="fa-solid fa-lock"></i> Logout</button>
               </li>
+             
             </>
           ) : (
 

@@ -10,16 +10,19 @@ import RegisterPage from './assets/views/RegisterPage'
 import LoginPage from './assets/views/LoginPage'
 import NotFound from './assets/views/NotFound'
 import ProfilePage from './assets/views/ProfilePage'
-import PresupuestoForm from './assets/components/PresupuestoForm'
+import ClientePage from './assets/views/ClientePage'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
+
+     <h1>TEST DE ACTUALIZACIÓN</h1>
+  
       <Navbar />
       <Routes>
-        <Route path='/' element={<PresupuestoForm/>} />
+        <Route path='/' element={<ClientePage/>} />
         <Route path='/RegisterPage' element={<RegisterPage/>} />
         <Route path='/LoginPage' element={<LoginPage/>} />
         <Route path='/ProfilePage' element={<ProfilePage/>} />
