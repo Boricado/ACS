@@ -100,6 +100,7 @@ const Sidebar = ({ total }) => {
                 <a href="#ordenesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Órdenes de Compra</a>
                 <ul className="collapse list-unstyled" id="ordenesSubmenu">
                   <li><Link to="/CrearOCPage">Crear Orden de compra</Link></li>
+                  <li><Link to="/EditarOCPage">Editar Orden de compra</Link></li>
                   <li><Link to="#">OC vigentes</Link></li>
                 </ul>
               </li>

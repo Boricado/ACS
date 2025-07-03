@@ -7,7 +7,9 @@ const CrearOCPage = () => {
   const [clientes, setClientes] = useState([]);
   const [presupuestos, setPresupuestos] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState('');
+  const [clienteNombre, setClienteNombre] = useState('');
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState('');
+  const [presupuestoNumero, setPresupuestoNumero] = useState('');
   const [items, setItems] = useState([]);
   const [item, setItem] = useState({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
   const [proveedor, setProveedor] = useState('');
@@ -40,11 +42,20 @@ const CrearOCPage = () => {
 
   useEffect(() => {
     if (clienteSeleccionado) {
+      const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
+      setClienteNombre(cliente?.nombre || '');
       axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
         .then(res => setPresupuestos(res.data))
         .catch(err => console.error('Error al obtener presupuestos:', err));
     }
   }, [clienteSeleccionado]);
+
+  useEffect(() => {
+    if (presupuestoSeleccionado) {
+      const presupuesto = presupuestos.find(p => p.id === parseInt(presupuestoSeleccionado));
+      setPresupuestoNumero(presupuesto?.numero || '');
+    }
+  }, [presupuestoSeleccionado]);
 
   useEffect(() => {
     const neto = items.reduce((sum, i) => sum + (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0), 0);
@@ -61,6 +72,18 @@ const CrearOCPage = () => {
       console.error('Error al obtener precio desde backend:', error);
       return '';
     }
+  };
+
+  const handleCodigoChange = async (codigo) => {
+    const m = materiales.find(m => m.codigo === codigo);
+    const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
+    setItem({ ...item, codigo, producto: m ? m.producto : '', precio_unitario: precio });
+  };
+
+  const handleProductoChange = async (producto) => {
+    const m = materiales.find(m => m.producto === producto);
+    const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
+    setItem({ ...item, producto, codigo: m ? m.codigo : '', precio_unitario: precio });
   };
 
   const agregarItem = async () => {
@@ -80,15 +103,21 @@ const CrearOCPage = () => {
 
   const guardarOC = async () => {
     try {
+      const itemsConExtras = items.map(i => ({
+        ...i,
+        costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
+        observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
+      }));
+
       const response = await axios.post('http://localhost:4000/api/ordenes_compra', {
         numero_oc: numeroOC,
         proveedor,
         fecha,
         realizado_por: realizadoPor,
         comentario,
-        cliente_id: clienteSeleccionado,
-        presupuesto_id: presupuestoSeleccionado,
-        items
+        cliente_id: clienteNombre,
+        numero_presupuesto: presupuestoNumero,
+        items: itemsConExtras
       });
       alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
       setItems([]);
@@ -96,6 +125,7 @@ const CrearOCPage = () => {
       console.error('Error al guardar OC:', error);
     }
   };
+
 
   return (
     <div className="container py-4">
@@ -126,10 +156,11 @@ const CrearOCPage = () => {
       <div className="row mb-3">
         <div className="col-md-4">
           <label>Código</label>
-          <input type="text" className="form-control" list="codigos" value={item.codigo} onChange={(e) => {
+          <input type="text" className="form-control" list="codigos" value={item.codigo} onChange={async (e) => {
             const codigo = e.target.value;
             const m = materiales.find(m => m.codigo === codigo);
-            setItem({ ...item, codigo, producto: m ? m.producto : item.producto, precio_unitario: m ? m.precio_unitario || '' : item.precio_unitario });
+            const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
+            setItem({ ...item, codigo, producto: m ? m.producto : '', precio_unitario: precio });
           }} placeholder="Código del producto" />
           <datalist id="codigos">
             {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
@@ -137,10 +168,11 @@ const CrearOCPage = () => {
         </div>
         <div className="col-md-4">
           <label>Producto</label>
-          <input type="text" className="form-control" list="productos" value={item.producto} onChange={(e) => {
+          <input type="text" className="form-control" list="productos" value={item.producto} onChange={async (e) => {
             const producto = e.target.value;
             const m = materiales.find(m => m.producto === producto);
-            setItem({ ...item, producto, codigo: m ? m.codigo : item.codigo, precio_unitario: m ? m.precio_unitario || '' : item.precio_unitario });
+            const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
+            setItem({ ...item, producto, codigo: m ? m.codigo : '', precio_unitario: precio });
           }} placeholder="Nombre del producto" />
           <datalist id="productos">
             {materiales.map(m => <option key={m.producto} value={m.producto} />)}

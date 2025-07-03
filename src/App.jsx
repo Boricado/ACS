@@ -16,6 +16,7 @@ import EditarItemsPresupuestoPage from './assets/views/EditarItemsPresupuestoPag
 import Home from './assets/components/Home';
 import InventarioPage from './assets/views/InventarioPage';
 import CrearOCPage from './assets/views/CrearOCPage';
+import EditarOCPage from './assets/views/EditarOCPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path='EditarPresupuestos' element={<EditarItemsPresupuestoPage />} />
         <Route path='StockActual' element={<InventarioPage />} />
         <Route path='CrearOCPage' element={<CrearOCPage />} />
+        <Route path='EditarOCPage' element={<EditarOCPage />} />
         <Route path='RegisterPage' element={<RegisterPage />} />
         <Route path='LoginPage' element={<LoginPage />} />
         <Route path='ProfilePage' element={<ProfilePage />} />

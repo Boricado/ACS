@@ -282,56 +282,103 @@ app.get('/api/presupuestos/cliente/:cliente_id', async (req, res) => {
 });
 
 /////////////////////
+// ✅ Crear una nueva orden de compra
 app.post('/api/ordenes_compra', async (req, res) => {
   try {
-    const { numero_oc, proveedor, fecha, realizado_por, comentario, cliente_id, presupuesto_id, items } = req.body;
+    const {
+      numero_oc,
+      proveedor,
+      fecha,
+      realizado_por,
+      comentario,
+      cliente_id,            // Nombre del cliente (texto)
+      numero_presupuesto,    // Número de presupuesto
+      items
+    } = req.body;
 
-    // Verificar si ya existe una orden con ese número para evitar duplicados
-    const existeOC = await pool.query(`SELECT 1 FROM ordenes_compra WHERE numero_oc = $1`, [numero_oc]);
-    if (existeOC.rowCount > 0) {
-      return res.status(400).json({ error: 'Ya existe una orden con este número' });
-    }
-
-    // 1. Insertar la orden en ordenes_compra
+    // Insertar en ordenes_compra
     const insertOrden = `
-      INSERT INTO ordenes_compra (numero_oc, proveedor, fecha, realizado_por, estado_oc, comentario, cliente_id, presupuesto_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id
+      INSERT INTO ordenes_compra (
+        numero_oc,
+        proveedor,
+        fecha,
+        realizado_por,
+        comentario,
+        cliente_id,
+        numero_presupuesto,
+        estado_oc
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDIENTE')
+      RETURNING numero_oc
     `;
-    const valuesOrden = [numero_oc, proveedor, fecha, realizado_por, 'PENDIENTE', comentario, cliente_id, presupuesto_id];
-    const resultOrden = await pool.query(insertOrden, valuesOrden);
-    const ordenId = resultOrden.rows[0].id;
 
-    // 2. Insertar los ítems en detalle_oc
+    const valuesOrden = [
+      numero_oc,
+      proveedor,
+      fecha,
+      realizado_por,
+      comentario,
+      cliente_id,
+      numero_presupuesto
+    ];
+
+    await pool.query(insertOrden, valuesOrden);
+
+    // Insertar ítems en detalle_oc
     const insertDetalle = `
-      INSERT INTO detalle_oc (orden_id, codigo, producto, cantidad, precio_unitario, numero_oc)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO detalle_oc (
+        codigo,
+        producto,
+        cantidad,
+        precio_unitario,
+        numero_oc,
+        costo_neto,
+        observacion
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
     `;
 
     for (const item of items) {
-      // Buscar precio actualizado del material si no se proporciona o es cero
-      let precio_unitario = item.precio_unitario;
-      if (!precio_unitario || parseFloat(precio_unitario) === 0) {
-        const precioQuery = await pool.query('SELECT precio_unitario FROM materiales WHERE codigo = $1 OR producto = $2', [item.codigo, item.producto]);
-        precio_unitario = precioQuery.rows[0]?.precio_unitario || 0;
-      }
-
       await pool.query(insertDetalle, [
-        ordenId,
         item.codigo,
         item.producto,
         item.cantidad,
-        precio_unitario,
-        numero_oc
+        item.precio_unitario,
+        numero_oc,
+        item.costo_neto || (item.cantidad * item.precio_unitario) || 0,
+        item.observacion || ''
       ]);
     }
 
     res.status(201).json({ message: 'Orden de compra guardada con éxito', numero_oc });
   } catch (err) {
-    console.error('❌ Error al guardar orden:', err.message);
+    console.error('❌ Error al guardar orden de compra:', err.message);
     res.status(500).json({ error: 'Error al guardar la orden de compra' });
   }
 });
+
+
+// ✅ Obtener todas las órdenes de compra (para editar o listar)
+app.get('/api/ordenes_compra', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        numero_oc,
+        proveedor,
+        cliente_id,
+        numero_presupuesto
+      FROM ordenes_compra
+      ORDER BY numero_oc DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('❌ Error al obtener órdenes de compra:', error.message);
+    res.status(500).json({ error: 'Error al obtener órdenes de compra' });
+  }
+});
+
+
+
 
 app.get('/api/proveedores', async (req, res) => {
   try {
@@ -387,6 +434,67 @@ app.get('/api/precio-material', async (req, res) => {
   } catch (error) {
     console.error('❌ Error al obtener precio del material:', error.message);
     res.status(500).json({ error: 'Error al obtener precio del material' });
+  }
+});
+//////////////////
+
+app.get('/api/items_oc/:numero_oc', async (req, res) => {
+  try {
+    const { numero_oc } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM detalle_oc WHERE numero_oc = $1 ORDER BY id ASC',
+      [numero_oc]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener ítems OC:', error.message);
+    res.status(500).json({ error: 'Error al obtener ítems de OC' });
+  }
+});
+app.post('/api/items_oc', async (req, res) => {
+  try {
+    const { codigo, producto, cantidad, precio_unitario, numero_oc } = req.body;
+    const costo_neto = (parseInt(cantidad) || 0) * (parseInt(precio_unitario) || 0);
+
+    const result = await pool.query(
+      `INSERT INTO detalle_oc (codigo, producto, cantidad, precio_unitario, numero_oc, costo_neto)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [codigo, producto, cantidad, precio_unitario, numero_oc, costo_neto]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al agregar ítem OC:', error.message);
+    res.status(500).json({ error: 'Error al agregar ítem de OC' });
+  }
+});
+app.put('/api/items_oc/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { codigo, producto, cantidad, precio_unitario } = req.body;
+    const costo_neto = (parseInt(cantidad) || 0) * (parseInt(precio_unitario) || 0);
+
+    const result = await pool.query(
+      `UPDATE detalle_oc
+       SET codigo = $1, producto = $2, cantidad = $3, precio_unitario = $4, costo_neto = $5
+       WHERE id = $6
+       RETURNING *`,
+      [codigo, producto, cantidad, precio_unitario, costo_neto, id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al actualizar ítem OC:', error.message);
+    res.status(500).json({ error: 'Error al actualizar ítem de OC' });
+  }
+});
+app.delete('/api/items_oc/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM detalle_oc WHERE id = $1', [id]);
+    res.json({ message: 'Ítem eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar ítem OC:', error.message);
+    res.status(500).json({ error: 'Error al eliminar ítem de OC' });
   }
 });
 
