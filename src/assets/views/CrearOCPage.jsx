@@ -1,0 +1,219 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const CrearOCPage = () => {
+  const [materiales, setMateriales] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [presupuestos, setPresupuestos] = useState([]);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState('');
+  const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState('');
+  const [items, setItems] = useState([]);
+  const [item, setItem] = useState({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
+  const [proveedor, setProveedor] = useState('');
+  const [comentario, setComentario] = useState('');
+  const [realizadoPor, setRealizadoPor] = useState('');
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
+  const [numeroOC, setNumeroOC] = useState('');
+
+  useEffect(() => {
+    axios.get('http://localhost:4000/api/materiales')
+      .then(res => setMateriales(res.data))
+      .catch(err => console.error('Error al cargar materiales:', err));
+
+    axios.get('http://localhost:4000/api/proveedores')
+      .then(res => setProveedores(res.data))
+      .catch(err => console.error('Error al cargar proveedores:', err));
+
+    axios.get('http://localhost:4000/api/clientes')
+      .then(res => setClientes(res.data))
+      .catch(err => console.error('Error al cargar clientes:', err));
+
+    axios.get('http://localhost:4000/api/ultima_oc')
+      .then(res => {
+        const ultimo = parseInt(res.data.ultimo || 0);
+        setNumeroOC((ultimo + 1).toString());
+      })
+      .catch(err => console.error('Error al obtener último número OC:', err));
+  }, []);
+
+  useEffect(() => {
+    if (clienteSeleccionado) {
+      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
+        .then(res => setPresupuestos(res.data))
+        .catch(err => console.error('Error al obtener presupuestos:', err));
+    }
+  }, [clienteSeleccionado]);
+
+  useEffect(() => {
+    const neto = items.reduce((sum, i) => sum + (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0), 0);
+    const iva = Math.round(neto * 0.19);
+    const total = neto + iva;
+    setTotales({ neto, iva, total });
+  }, [items]);
+
+  const obtenerPrecioUltimo = async (codigo) => {
+    try {
+      const res = await axios.get(`http://localhost:4000/api/precio-material?codigo=${codigo}`);
+      return res.data.precio_unitario;
+    } catch (error) {
+      console.error('Error al obtener precio desde backend:', error);
+      return '';
+    }
+  };
+
+  const agregarItem = async () => {
+    let precio = item.precio_unitario;
+    if (!precio && item.codigo) {
+      precio = await obtenerPrecioUltimo(item.codigo);
+    }
+    if (item.codigo && item.producto && item.cantidad && precio) {
+      setItems([...items, { ...item, precio_unitario: precio }]);
+      setItem({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
+    }
+  };
+
+  const eliminarItem = (index) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const guardarOC = async () => {
+    try {
+      const response = await axios.post('http://localhost:4000/api/ordenes_compra', {
+        numero_oc: numeroOC,
+        proveedor,
+        fecha,
+        realizado_por: realizadoPor,
+        comentario,
+        cliente_id: clienteSeleccionado,
+        presupuesto_id: presupuestoSeleccionado,
+        items
+      });
+      alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
+      setItems([]);
+    } catch (error) {
+      console.error('Error al guardar OC:', error);
+    }
+  };
+
+  return (
+    <div className="container py-4">
+      <h2 className="mb-4 text-center">Crear Orden de Compra</h2>
+
+      <div className="row mb-3">
+        <div className="col-md-2">
+          <label>N° OC</label>
+          <input type="text" className="form-control" value={numeroOC} onChange={(e) => setNumeroOC(e.target.value)} placeholder="Número OC" />
+        </div>
+        <div className="col-md-4">
+          <label>Proveedor</label>
+          <input type="text" className="form-control" list="lista_proveedores" value={proveedor} onChange={(e) => setProveedor(e.target.value)} placeholder="Buscar proveedor" />
+          <datalist id="lista_proveedores">
+            {proveedores.map(p => (<option key={p.id} value={p.nombre} />))}
+          </datalist>
+        </div>
+        <div className="col-md-3">
+          <label>Fecha</label>
+          <input type="date" className="form-control" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </div>
+        <div className="col-md-3">
+          <label>Realizado por</label>
+          <input type="text" className="form-control" value={realizadoPor} onChange={(e) => setRealizadoPor(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <label>Código</label>
+          <input type="text" className="form-control" list="codigos" value={item.codigo} onChange={(e) => {
+            const codigo = e.target.value;
+            const m = materiales.find(m => m.codigo === codigo);
+            setItem({ ...item, codigo, producto: m ? m.producto : item.producto, precio_unitario: m ? m.precio_unitario || '' : item.precio_unitario });
+          }} placeholder="Código del producto" />
+          <datalist id="codigos">
+            {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
+          </datalist>
+        </div>
+        <div className="col-md-4">
+          <label>Producto</label>
+          <input type="text" className="form-control" list="productos" value={item.producto} onChange={(e) => {
+            const producto = e.target.value;
+            const m = materiales.find(m => m.producto === producto);
+            setItem({ ...item, producto, codigo: m ? m.codigo : item.codigo, precio_unitario: m ? m.precio_unitario || '' : item.precio_unitario });
+          }} placeholder="Nombre del producto" />
+          <datalist id="productos">
+            {materiales.map(m => <option key={m.producto} value={m.producto} />)}
+          </datalist>
+        </div>
+        <div className="col-md-2">
+          <label>Cantidad</label>
+          <input type="number" className="form-control" placeholder="Cantidad" value={item.cantidad} onChange={(e) => setItem({ ...item, cantidad: e.target.value })} />
+        </div>
+        <div className="col-md-2">
+          <label>Precio Neto</label>
+          <input type="number" className="form-control" placeholder="Precio neto" value={item.precio_unitario} onChange={(e) => setItem({ ...item, precio_unitario: e.target.value })} />
+        </div>
+      </div>
+
+      <button className="btn btn-primary mb-3" onClick={agregarItem}>Añadir elemento</button>
+
+      {items.length > 0 && (
+        <table className="table table-bordered table-hover text-center">
+          <thead className="table-dark">
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unitario</th>
+              <th>Precio Total</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((i, idx) => (
+              <tr key={idx}>
+                <td>{i.codigo}</td>
+                <td>{i.producto}</td>
+                <td>{i.cantidad}</td>
+                <td>${parseInt(i.precio_unitario).toLocaleString()}</td>
+                <td>${(i.cantidad * i.precio_unitario).toLocaleString()}</td>
+                <td><button className="btn btn-sm btn-danger" onClick={() => eliminarItem(idx)}>X</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className="text-end me-3">
+        <p><strong>Total Neto:</strong> ${totales.neto.toLocaleString()}</p>
+        <p><strong>IVA 19%:</strong> ${totales.iva.toLocaleString()}</p>
+        <p><strong>TOTAL:</strong> ${totales.total.toLocaleString()}</p>
+      </div>
+
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label>Cliente</label>
+          <select className="form-control" value={clienteSeleccionado} onChange={(e) => setClienteSeleccionado(e.target.value)}>
+            <option value="">Seleccionar cliente</option>
+            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </div>
+        <div className="col-md-6">
+          <label>Presupuesto</label>
+          <select className="form-control" value={presupuestoSeleccionado} onChange={(e) => setPresupuestoSeleccionado(e.target.value)}>
+            <option value="">Seleccionar presupuesto</option>
+            {presupuestos.map(p => <option key={p.id} value={p.id}>{p.numero}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <label>Comentario</label>
+      <textarea className="form-control mb-3" rows="2" value={comentario} onChange={(e) => setComentario(e.target.value)} />
+
+      <button className="btn btn-success" onClick={guardarOC}>Guardar Orden de Compra</button>
+    </div>
+  );
+};
+
+export default CrearOCPage;

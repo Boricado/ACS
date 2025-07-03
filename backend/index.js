@@ -281,6 +281,117 @@ app.get('/api/presupuestos/cliente/:cliente_id', async (req, res) => {
   }
 });
 
+/////////////////////
+app.post('/api/ordenes_compra', async (req, res) => {
+  try {
+    const { numero_oc, proveedor, fecha, realizado_por, comentario, cliente_id, presupuesto_id, items } = req.body;
+
+    // Verificar si ya existe una orden con ese número para evitar duplicados
+    const existeOC = await pool.query(`SELECT 1 FROM ordenes_compra WHERE numero_oc = $1`, [numero_oc]);
+    if (existeOC.rowCount > 0) {
+      return res.status(400).json({ error: 'Ya existe una orden con este número' });
+    }
+
+    // 1. Insertar la orden en ordenes_compra
+    const insertOrden = `
+      INSERT INTO ordenes_compra (numero_oc, proveedor, fecha, realizado_por, estado_oc, comentario, cliente_id, presupuesto_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
+    `;
+    const valuesOrden = [numero_oc, proveedor, fecha, realizado_por, 'PENDIENTE', comentario, cliente_id, presupuesto_id];
+    const resultOrden = await pool.query(insertOrden, valuesOrden);
+    const ordenId = resultOrden.rows[0].id;
+
+    // 2. Insertar los ítems en detalle_oc
+    const insertDetalle = `
+      INSERT INTO detalle_oc (orden_id, codigo, producto, cantidad, precio_unitario, numero_oc)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+
+    for (const item of items) {
+      // Buscar precio actualizado del material si no se proporciona o es cero
+      let precio_unitario = item.precio_unitario;
+      if (!precio_unitario || parseFloat(precio_unitario) === 0) {
+        const precioQuery = await pool.query('SELECT precio_unitario FROM materiales WHERE codigo = $1 OR producto = $2', [item.codigo, item.producto]);
+        precio_unitario = precioQuery.rows[0]?.precio_unitario || 0;
+      }
+
+      await pool.query(insertDetalle, [
+        ordenId,
+        item.codigo,
+        item.producto,
+        item.cantidad,
+        precio_unitario,
+        numero_oc
+      ]);
+    }
+
+    res.status(201).json({ message: 'Orden de compra guardada con éxito', numero_oc });
+  } catch (err) {
+    console.error('❌ Error al guardar orden:', err.message);
+    res.status(500).json({ error: 'Error al guardar la orden de compra' });
+  }
+});
+
+app.get('/api/proveedores', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, proveedor AS nombre FROM proveedores ORDER BY proveedor');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener proveedores:', err.message);
+    res.status(500).json({ error: 'Error al obtener proveedores' });
+  }
+});
+
+app.get('/api/materiales', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT codigo, producto, precio_unitario FROM materiales ORDER BY producto');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener materiales:', err.message);
+    res.status(500).json({ error: 'Error al consultar materiales' });
+  }
+});
+
+app.get('/api/ultima_oc', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT MAX(numero_oc::int) AS ultimo FROM detalle_oc');
+    res.json({ ultimo: result.rows[0].ultimo });
+  } catch (err) {
+    console.error('Error al obtener último número OC:', err.message);
+    res.status(500).json({ error: 'Error al obtener último número OC' });
+  }
+});
+app.get('/api/precio-material', async (req, res) => {
+  try {
+    const { codigo } = req.query;
+
+    if (!codigo) {
+      return res.status(400).json({ error: 'Código requerido' });
+    }
+
+    const result = await pool.query(
+      `SELECT precio_unitario
+       FROM detalle_oc
+       WHERE codigo = $1
+       ORDER BY id DESC
+       LIMIT 1`,
+      [codigo]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Precio no encontrado para este código' });
+    }
+
+    res.json({ precio_unitario: result.rows[0].precio_unitario });
+  } catch (error) {
+    console.error('❌ Error al obtener precio del material:', error.message);
+    res.status(500).json({ error: 'Error al obtener precio del material' });
+  }
+});
+
+
+
 app.listen(port, () => {
   console.log(`✅ Servidor backend escuchando en http://localhost:${port}`);
 });
