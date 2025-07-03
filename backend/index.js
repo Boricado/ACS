@@ -232,6 +232,24 @@ app.get('/api/items_presupuesto/:presupuesto_id', async (req, res) => {
 });
 
 // ----------------------
+// Ruta para obtener presupuestos por cliente_id
+// ----------------------
+app.get('/api/presupuestos/cliente/:cliente_id', async (req, res) => {
+  const { cliente_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM presupuestos WHERE cliente_id = $1 ORDER BY fecha DESC',
+      [cliente_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener presupuestos del cliente:', err.message);
+    res.status(500).json({ error: 'Error al consultar la base de datos' });
+  }
+});
+
+// ----------------------
 // Servidor
 // ----------------------
 app.listen(port, () => {

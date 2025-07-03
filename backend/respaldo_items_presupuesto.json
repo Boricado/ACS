@@ -853,5 +853,24 @@
     "utv_monto": 60000,
     "texto_observaciones": "",
     "adicional": true
+  },
+  {
+    "presupuesto_id": 2,
+    "item": "V1",
+    "recinto": "Living",
+    "ancho": 1500,
+    "alto": 1500,
+    "tipo_apertura": "Derecha",
+    "grada_buque": false,
+    "observaciones": false,
+    "cantidad": 3,
+    "precio_unitario": 25000,
+    "total": 75000,
+    "tipo_ventana": "Proyectante",
+    "cuadros_adicionales": 3,
+    "utv": 2.5,
+    "utv_monto": 50000,
+    "texto_observaciones": "",
+    "adicional": true
   }
 ]

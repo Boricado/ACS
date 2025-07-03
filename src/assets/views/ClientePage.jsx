@@ -20,24 +20,22 @@ const ClientePage = () => {
   };
 
   const guardarCliente = async () => {
-    if (!cliente.nombre || !cliente.rut) {
-      setMensaje({ tipo: 'error', texto: 'Nombre y RUT son obligatorios.' });
-      return;
-    }
+  if (!cliente.nombre || !cliente.rut) {
+    setMensaje({ tipo: 'error', texto: 'Nombre y RUT son obligatorios' });
+    return;
+  }
 
+  try {
     setLoading(true);
-    setMensaje(null);
-    try {
-      await axios.post('http://localhost:4000/api/clientes', cliente);
-      setMensaje({ tipo: 'exito', texto: 'Cliente guardado correctamente.' });
-      setCliente({ nombre: '', rut: '', correo: '', telefono: '', direccion: '' });
-    } catch (error) {
-      setMensaje({ tipo: 'error', texto: 'Error al guardar el cliente.' });
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const res = await axios.post('http://localhost:4000/api/clientes', cliente);
+    setMensaje({ tipo: 'success', texto: 'Cliente guardado correctamente' });
+    setCliente({ nombre: '', rut: '', correo: '', telefono: '', direccion: '' });
+  } catch (error) {
+    setMensaje({ tipo: 'error', texto: 'Error al guardar el cliente' });
+  } finally {
+    setLoading(false);
+  }
+};
 
 return (
   <div className="p-4 max-w-4xl mx-auto bg-white shadow rounded mt-5">

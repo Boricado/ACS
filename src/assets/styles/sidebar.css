@@ -1,0 +1,85 @@
+/* Fondo morado oscuro */
+#sidebar {
+  min-width: 250px;
+  max-width: 250px;
+  height: 100vh;
+  background-color: #4b0082;
+  color: white;
+  padding: 15px;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;     /* ✅ Permite scroll interno si crece */
+  overflow-x: hidden;
+}
+
+
+/* Encabezado */
+#sidebar h4 {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Menú principal */
+#sidebar ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+#sidebar ul.components > li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Línea tenue entre grupos */
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+/* Enlaces generales */
+#sidebar ul li a {
+  color: #ffffff;
+  padding: 8px 12px;
+  display: block;
+  text-decoration: none;  /* Quita subrayado */
+  font-size: 15px;
+  text-align: left;       /* Alineación izquierda */
+  white-space: normal;
+}
+
+/* Hover visual */
+#sidebar ul li a:hover {
+  background-color: #6a0dad; /* Morado más claro */
+  text-decoration: none;
+}
+
+/* Subgrupos */
+#sidebar ul ul {
+  padding-left: 10px;
+}
+
+#sidebar ul ul li a {
+  font-size: 14px;
+  padding-left: 20px;
+}
+
+/* Sub-subgrupos */
+#sidebar ul ul ul {
+  padding-left: 10px;
+}
+
+#sidebar ul ul ul li a {
+  font-size: 13.5px;
+  padding-left: 30px;
+}
+
+/* Botones especiales (opcional para login/logout/cart) */
+#sidebar .btn-link {
+  color: #ffffff;
+  padding: 8px 12px;
+  display: block;
+  text-align: left;
+  font-size: 15px;
+  border: none;
+  background: none;
+}
+
+#sidebar .btn-link:hover {
+  background-color: #6a0dad;
+}
