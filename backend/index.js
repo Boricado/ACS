@@ -17,9 +17,6 @@ const pool = new pg.Pool({
   port: 5432,
 });
 
-// ----------------------
-// Ruta: Guardar Cliente
-// ----------------------
 app.post('/api/clientes', async (req, res) => {
   const { nombre, rut, correo, telefono, direccion } = req.body;
 
@@ -48,9 +45,6 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
-// ----------------------
-// Ruta: Obtener todos los clientes
-// ----------------------
 app.get('/api/clientes', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM clientes ORDER BY nombre');
@@ -61,39 +55,16 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
-// ----------------------
-// Ruta: Guardar Presupuesto
-// ----------------------
 app.post('/api/presupuestos', async (req, res) => {
-  const {
-    numero,
-    cliente_id,
-    nombre_obra,
-    direccion,
-    observacion,
-    fecha
-  } = req.body;
+  const { numero, cliente_id, nombre_obra, direccion, observacion, fecha } = req.body;
 
   try {
     const query = `
-      INSERT INTO presupuestos (
-        numero, cliente_id, nombre_obra,
-        direccion, observacion, fecha
-      ) VALUES (
-        $1, $2, $3,
-        $4, $5, $6
-      ) RETURNING *;
+      INSERT INTO presupuestos (numero, cliente_id, nombre_obra, direccion, observacion, fecha)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
     `;
-
-    const values = [
-      numero || null,
-      cliente_id || null,
-      nombre_obra || null,
-      direccion || null,
-      observacion || null,
-      fecha || new Date()
-    ];
-
+    const values = [numero || null, cliente_id || null, nombre_obra || null, direccion || null, observacion || null, fecha || new Date()];
     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -102,9 +73,6 @@ app.post('/api/presupuestos', async (req, res) => {
   }
 });
 
-// ----------------------
-// Ruta: Guardar Ítem de Presupuesto
-// ----------------------
 app.post('/api/items_presupuesto', async (req, res) => {
   const {
     presupuesto_id,
@@ -128,27 +96,21 @@ app.post('/api/items_presupuesto', async (req, res) => {
     case 'Fijo': base_utv = 0.5; break;
     case 'Doble corredera con fijo':
     case 'Marco puerta': base_utv = 2; break;
-    case 'Proyectante':
-    case 'Oscilobatiente':
-    case 'Doble Corredera':
-    case 'Otro':
-    default: base_utv = 1; break;
+    default: base_utv = 1;
   }
 
-  const adicionales = adicional ? (cuadros_adicionales || 0) * 0.5 : 0;
+  const adicionales = adicional ? (parseFloat(cuadros_adicionales) || 0) * 0.5 : 0;
   const utv = observaciones ? 0 : base_utv + adicionales;
   const valorUTV = 20000;
   const utv_monto = utv * valorUTV;
-  const total = (cantidad ?? 0) * (precio_unitario ?? 0);
+  const total = (parseFloat(cantidad) || 0) * (parseFloat(precio_unitario) || 0);
 
   const jsonPath = './respaldo_items_presupuesto.json';
   let respaldo = [];
-
   if (fs.existsSync(jsonPath)) {
     const raw = fs.readFileSync(jsonPath);
     respaldo = JSON.parse(raw);
   }
-
   respaldo.push({
     presupuesto_id,
     item,
@@ -185,26 +147,24 @@ app.post('/api/items_presupuesto', async (req, res) => {
         $15, $16
       ) RETURNING *;
     `;
-
     const values = [
-      presupuesto_id || null,
+      parseInt(presupuesto_id) || null,
       item || null,
       recinto || null,
-      ancho || null,
-      alto || null,
+      ancho === '' ? null : parseFloat(ancho),
+      alto === '' ? null : parseFloat(alto),
       tipo_apertura || null,
-      grada_buque ?? false,
-      observaciones ?? false,
-      cantidad ?? 0,
-      precio_unitario ?? 0,
+      !!grada_buque,
+      !!observaciones,
+      cantidad === '' ? 0 : parseInt(cantidad),
+      precio_unitario === '' ? 0 : parseInt(precio_unitario),
       tipo_ventana || null,
-      cuadros_adicionales ?? 0,
+      cuadros_adicionales === '' ? 0 : parseInt(cuadros_adicionales),
       utv ?? 0,
       utv_monto ?? 0,
       texto_observaciones || null,
-      adicional ?? false
+      !!adicional
     ];
-
     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -213,12 +173,8 @@ app.post('/api/items_presupuesto', async (req, res) => {
   }
 });
 
-// ----------------------
-// Ruta: Obtener ítems por presupuesto
-// ----------------------
-app.get('/api/items_presupuesto/:presupuesto_id', async (req, res) => {
+app.get('/api/items_presupuesto/presupuesto/:presupuesto_id', async (req, res) => {
   const { presupuesto_id } = req.params;
-
   try {
     const result = await pool.query(
       'SELECT * FROM items_presupuesto WHERE presupuesto_id = $1 ORDER BY id',
@@ -226,17 +182,93 @@ app.get('/api/items_presupuesto/:presupuesto_id', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Error al obtener ítems:', err.message);
-    res.status(500).json({ error: 'Error al consultar la base de datos' });
+    console.error('Error al obtener ítems del presupuesto:', err.message);
+    res.status(500).json({ error: 'Error al consultar ítems del presupuesto' });
   }
 });
 
-// ----------------------
-// Ruta para obtener presupuestos por cliente_id
-// ----------------------
+app.delete('/api/items_presupuesto/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM items_presupuesto WHERE id = $1 RETURNING *', [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Ítem no encontrado' });
+    }
+    res.json({ mensaje: 'Ítem eliminado exitosamente', item: result.rows[0] });
+  } catch (err) {
+    console.error('Error al eliminar ítem:', err.message);
+    res.status(500).json({ error: 'Error al eliminar el ítem de la base de datos' });
+  }
+});
+
+app.put('/api/items_presupuesto/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    item,
+    recinto,
+    ancho,
+    alto,
+    tipo_ventana,
+    tipo_apertura,
+    grada_buque,
+    observaciones,
+    texto_observaciones,
+    adicional,
+    cuadros_adicionales,
+    cantidad,
+    precio_unitario
+  } = req.body;
+
+  let base_utv = 1;
+  switch (tipo_ventana) {
+    case 'Fijo': base_utv = 0.5; break;
+    case 'Doble corredera con fijo':
+    case 'Marco puerta': base_utv = 2; break;
+    default: base_utv = 1;
+  }
+  const adicionales = adicional ? (cuadros_adicionales || 0) * 0.5 : 0;
+  const utv = observaciones ? 0 : base_utv + adicionales;
+  const valorUTV = 20000;
+  const utv_monto = utv * valorUTV;
+
+  try {
+    const query = `
+      UPDATE items_presupuesto
+      SET item = $1, recinto = $2, ancho = $3, alto = $4,
+          tipo_ventana = $5, tipo_apertura = $6, grada_buque = $7,
+          observaciones = $8, texto_observaciones = $9, adicional = $10,
+          cuadros_adicionales = $11, cantidad = $12, precio_unitario = $13,
+          utv = $14, utv_monto = $15
+      WHERE id = $16 RETURNING *;
+    `;
+    const values = [
+      item || null,
+      recinto || null,
+      ancho === '' ? null : parseFloat(ancho),
+      alto === '' ? null : parseFloat(alto),
+      tipo_ventana || null,
+      tipo_apertura || null,
+      !!grada_buque,
+      !!observaciones,
+      texto_observaciones || null,
+      !!adicional,
+      cuadros_adicionales === '' ? 0 : parseInt(cuadros_adicionales),
+      cantidad === '' ? 0 : parseInt(cantidad),
+      precio_unitario === '' ? 0 : parseInt(precio_unitario),
+      utv,
+      utv_monto,
+      id
+    ];
+    const result = await pool.query(query, values);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar ítem:', err.message);
+    res.status(500).json({ error: 'Error al actualizar el ítem en la base de datos' });
+  }
+});
+
 app.get('/api/presupuestos/cliente/:cliente_id', async (req, res) => {
   const { cliente_id } = req.params;
-
   try {
     const result = await pool.query(
       'SELECT * FROM presupuestos WHERE cliente_id = $1 ORDER BY fecha DESC',
@@ -249,9 +281,6 @@ app.get('/api/presupuestos/cliente/:cliente_id', async (req, res) => {
   }
 });
 
-// ----------------------
-// Servidor
-// ----------------------
 app.listen(port, () => {
   console.log(`✅ Servidor backend escuchando en http://localhost:${port}`);
 });

@@ -21,7 +21,8 @@ const ItemPresupuestoPage = () => {
     cantidad: '',
     precio_unitario: ''
   });
-
+  const [items, setItems] = useState([]);
+  const [editIndex, setEditIndex] = useState(null);
   const [mensaje, setMensaje] = useState(null);
   const valorUTV = 20000;
 
@@ -54,17 +55,17 @@ const ItemPresupuestoPage = () => {
     }
   };
 
-  const calcularUTVUnitario = () => {
-    if (item.observaciones) return 0;
-    const base = getBaseUTV(item.tipo_ventana);
-    const adicionales = item.adicional ? (parseFloat(item.cuadros_adicionales) || 0) * 0.5 : 0;
+  const calcularUTVUnitario = (itemData) => {
+    if (itemData.observaciones) return 0;
+    const base = getBaseUTV(itemData.tipo_ventana);
+    const adicionales = itemData.adicional ? (parseFloat(itemData.cuadros_adicionales) || 0) * 0.5 : 0;
     return base + adicionales;
   };
 
-  const utvUnitario = calcularUTVUnitario();
-  const cantidad = parseFloat(item.cantidad) || 1;
-  const utv = utvUnitario * cantidad;
-  const utv_monto = utv * valorUTV;
+  const utvUnitarioActual = calcularUTVUnitario(item);
+  const cantidadActual = parseFloat(item.cantidad) || 1;
+  const utvActual = utvUnitarioActual * cantidadActual;
+  const utvMontoActual = utvActual * valorUTV;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -75,36 +76,82 @@ const ItemPresupuestoPage = () => {
     }));
   };
 
-  const guardarItem = async () => {
-    const payload = {
-      ...item,
-      presupuesto_id: parseInt(item.presupuesto_id),
-      utv,
-      utv_monto
-    };
+  const agregarItem = () => {
+    if (!item.presupuesto_id) {
+      setMensaje({ tipo: 'error', texto: 'Debe seleccionar un presupuesto' });
+      return;
+    }
+
+    const utvUnitario = calcularUTVUnitario(item);
+    const cantidad = parseFloat(item.cantidad) || 1;
+    const utv = utvUnitario * cantidad;
+    const utv_monto = utv * valorUTV;
+    const nuevoItem = { ...item, utv, utv_monto };
+
+    if (editIndex !== null) {
+      const actualizados = [...items];
+      actualizados[editIndex] = nuevoItem;
+      setItems(actualizados);
+      setEditIndex(null);
+    } else {
+      setItems(prev => [...prev, nuevoItem]);
+    }
+
+    setItem(prev => ({
+      ...prev,
+      item: '',
+      recinto: '',
+      ancho: '',
+      alto: '',
+      tipo_ventana: 'Doble Corredera',
+      tipo_apertura: 'Derecha',
+      grada_buque: false,
+      observaciones: false,
+      texto_observaciones: '',
+      adicional: false,
+      cuadros_adicionales: 0,
+      cantidad: '',
+      precio_unitario: ''
+    }));
+    setMensaje(null);
+  };
+
+  const editarItem = (index) => {
+    setItem(items[index]);
+    setEditIndex(index);
+  };
+
+  const eliminarItem = (index) => {
+    const copia = [...items];
+    copia.splice(index, 1);
+    setItems(copia);
+  };
+
+  const clonarItem = (index) => {
+    setItems(prev => [...prev, { ...items[index] }]);
+  };
+
+  const guardarPresupuesto = async () => {
+    if (!item.presupuesto_id) {
+      setMensaje({ tipo: 'error', texto: 'Debe seleccionar un presupuesto antes de guardar' });
+      return;
+    }
 
     try {
-      const res = await axios.post('http://localhost:4000/api/items_presupuesto', payload);
-      setMensaje({ tipo: 'success', texto: 'Ítem guardado correctamente' });
-      setItem({
-        presupuesto_id: '',
-        item: '',
-        recinto: '',
-        ancho: '',
-        alto: '',
-        tipo_ventana: 'Doble Corredera',
-        tipo_apertura: 'Derecha',
-        grada_buque: false,
-        observaciones: false,
-        texto_observaciones: '',
-        adicional: false,
-        cuadros_adicionales: 0,
-        cantidad: '',
-        precio_unitario: ''
-      });
+      for (const it of items) {
+        const payload = {
+          ...it,
+          presupuesto_id: parseInt(it.presupuesto_id),
+          utv: it.utv,
+          utv_monto: it.utv_monto
+        };
+        await axios.post('http://localhost:4000/api/items_presupuesto', payload);
+      }
+      setItems([]);
+      setMensaje({ tipo: 'success', texto: 'Todos los ítems fueron guardados correctamente' });
     } catch (error) {
       console.error(error);
-      setMensaje({ tipo: 'error', texto: 'Error al guardar ítem' });
+      setMensaje({ tipo: 'error', texto: 'Error al guardar los ítems' });
     }
   };
 
@@ -112,9 +159,7 @@ const ItemPresupuestoPage = () => {
     <div className="container mt-4">
       <h3>Ingreso de Ítems del Presupuesto</h3>
       {mensaje && (
-        <div className={`alert alert-${mensaje.tipo === 'error' ? 'danger' : 'success'}`}>
-          {mensaje.texto}
-        </div>
+        <div className={`alert alert-${mensaje.tipo === 'error' ? 'danger' : 'success'}`}>{mensaje.texto}</div>
       )}
 
       <div className="row">
@@ -122,9 +167,7 @@ const ItemPresupuestoPage = () => {
           <select className="form-select" value={clienteSeleccionado} onChange={e => setClienteSeleccionado(e.target.value)}>
             <option value="">Seleccione Cliente</option>
             {clientes.map(cli => (
-              <option key={cli.id} value={cli.id}>
-                {cli.nombre} - {cli.rut}
-              </option>
+              <option key={cli.id} value={cli.id}>{cli.nombre} - {cli.rut}</option>
             ))}
           </select>
         </div>
@@ -133,9 +176,7 @@ const ItemPresupuestoPage = () => {
           <select name="presupuesto_id" className="form-select" value={item.presupuesto_id} onChange={handleChange}>
             <option value="">Seleccione Presupuesto</option>
             {presupuestos.map(p => (
-              <option key={p.id} value={p.id}>
-                #{p.numero} - {p.nombre_obra}
-              </option>
+              <option key={p.id} value={p.id}>#{p.numero} - {p.nombre_obra}</option>
             ))}
           </select>
         </div>
@@ -152,7 +193,6 @@ const ItemPresupuestoPage = () => {
         <div className="col-md-2 mb-3">
           <input type="number" name="alto" className="form-control" placeholder="Alto (mm)" value={item.alto} onChange={handleChange} />
         </div>
-
         <div className="col-md-4 mb-3">
           <select name="tipo_ventana" className="form-select" value={item.tipo_ventana} onChange={handleChange}>
             <option>Doble Corredera</option>
@@ -164,7 +204,6 @@ const ItemPresupuestoPage = () => {
             <option>Otro</option>
           </select>
         </div>
-
         <div className="col-md-4 mb-3">
           <select name="tipo_apertura" className="form-select" value={item.tipo_apertura} onChange={handleChange}>
             <option>Derecha</option>
@@ -172,7 +211,6 @@ const ItemPresupuestoPage = () => {
             <option>Por Definir</option>
           </select>
         </div>
-
         <div className="col-md-2 mb-3 form-check">
           <input type="checkbox" name="grada_buque" className="form-check-input" checked={item.grada_buque} onChange={handleChange} />
           <label className="form-check-label">Grada buque</label>
@@ -181,13 +219,11 @@ const ItemPresupuestoPage = () => {
           <input type="checkbox" name="observaciones" className="form-check-input" checked={item.observaciones} onChange={handleChange} />
           <label className="form-check-label">Observaciones</label>
         </div>
-
         {item.observaciones && (
           <div className="col-md-12 mb-3">
             <textarea name="texto_observaciones" className="form-control" placeholder="Detalle observaciones" value={item.texto_observaciones} onChange={handleChange} />
           </div>
         )}
-
         {!item.observaciones && (
           <>
             <div className="col-md-3 mb-3 form-check">
@@ -201,26 +237,43 @@ const ItemPresupuestoPage = () => {
             )}
           </>
         )}
-
         <div className="col-md-3 mb-3">
           <input type="number" name="cantidad" className="form-control" placeholder="Cantidad de ventanas" value={item.cantidad} onChange={handleChange} />
         </div>
-
         <div className="col-md-3 mb-3">
           <input type="number" name="precio_unitario" className="form-control" placeholder="Precio Unitario" value={item.precio_unitario} onChange={handleChange} />
         </div>
-
         <div className="col-md-3 mb-3">
-          <input className="form-control" disabled value={`UTV total: ${utv}`} />
+          <input className="form-control" disabled value={`UTV total: ${utvActual}`} />
         </div>
         <div className="col-md-3 mb-3">
-          <input className="form-control" disabled value={`Monto UTV: $${utv_monto}`} />
+          <input className="form-control" disabled value={`Monto UTV: $${utvMontoActual}`} />
         </div>
-
-        <div className="col-12">
-          <button className="btn btn-primary" onClick={guardarItem}>Guardar Ítem</button>
+        <div className="col-12 mb-4">
+          <button onClick={agregarItem} className="btn btn-outline-primary px-4">
+            {editIndex !== null ? 'Actualizar Ítem' : 'Agregar Ítem'}
+          </button>
         </div>
       </div>
+
+      <h4>Ítems agregados</h4>
+      {items.map((it, index) => (
+        <div key={index} className="border p-2 mb-2 rounded bg-light">
+          <p><strong>Ítem:</strong> {it.item} | <strong>Recinto:</strong> {it.recinto}</p>
+          <p><strong>Medidas:</strong> {it.ancho} x {it.alto} | <strong>Apertura:</strong> {it.tipo_apertura}</p>
+          <p><strong>Cantidad:</strong> {it.cantidad} | <strong>Precio Unitario:</strong> ${it.precio_unitario}</p>
+          <p><strong>UTV:</strong> {it.utv} | <strong>Monto UTV:</strong> ${it.utv_monto}</p>
+          <div className="d-flex gap-2">
+            <button onClick={() => editarItem(index)} className="btn btn-outline-warning">Editar</button>
+            <button onClick={() => eliminarItem(index)} className="btn btn-outline-danger">Eliminar</button>
+            <button onClick={() => clonarItem(index)} className="btn btn-outline-success">Clonar</button>
+          </div>
+        </div>
+      ))}
+
+      <button onClick={guardarPresupuesto} className="mt-4 btn btn-outline-dark px-5">
+        Guardar Presupuesto
+      </button>
     </div>
   );
 };

@@ -12,7 +12,9 @@ import ProfilePage from './assets/views/ProfilePage';
 import ClientePage from './assets/views/ClientePage';
 import PresupuestoPage from './assets/views/PresupuestoPage';
 import ItemPresupuestoPage from './assets/views/ItemPresupuestoPage';
+import EditarItemsPresupuestoPage from './assets/views/EditarItemsPresupuestoPage';
 import Home from './assets/components/Home';
+import InventarioPage from './assets/views/InventarioPage';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path='IngresoCliente' element={<ClientePage />} />
         <Route path='IngresoPresupuesto' element={<PresupuestoPage />} />
         <Route path='IngresoItems' element={<ItemPresupuestoPage />} />
+        <Route path='EditarPresupuestos' element={<EditarItemsPresupuestoPage />} />
+        <Route path='StockActual' element={<InventarioPage />} />
         <Route path='RegisterPage' element={<RegisterPage />} />
         <Route path='LoginPage' element={<LoginPage />} />
         <Route path='ProfilePage' element={<ProfilePage />} />

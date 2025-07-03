@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatearPrecio } from '../utils/formato'; // ajuste de precio CLP
 import '../styles/sidebar.css'; // Puedes personalizar con tu propio CSS
+import welcomeImage from '../img/AlumceLogo.jpg';
 
 const Sidebar = ({ total }) => {
   const token = true; // Aquí puedes reemplazarlo por un hook de auth
@@ -9,7 +10,13 @@ const Sidebar = ({ total }) => {
   return (
     <nav id="sidebar" className="bg-dark text-white">
       <div className="p-4 pt-5">
-        <h4 className="text-white">ALUMCE Control System</h4>
+        <img
+                src={welcomeImage}
+                alt="Bienvenida Alumce"
+                className="img-fluid mt-4 shadow rounded"
+                style={{ maxWidth: '170px' }}
+              />
+        <h6 className="text-white">Control System</h6>
         <ul className="list-unstyled components mb-5">
 
           <li>
@@ -23,6 +30,7 @@ const Sidebar = ({ total }) => {
               <li><Link to="/IngresoCliente">Ingreso clientes</Link></li>
               <li><Link to="/IngresoPresupuesto">Ingreso presupuesto</Link></li>
               <li><Link to="/IngresoItems">Ingreso ítems</Link></li>
+              <li><Link to="/EditarPresupuestos">Editar Presupuestos</Link></li>
             </ul>
           </li>
 
@@ -30,7 +38,7 @@ const Sidebar = ({ total }) => {
           <li>
             <a href="#bodegaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Bodega</a>
             <ul className="collapse list-unstyled" id="bodegaSubmenu">
-              <li><Link to="#">Stock Actual</Link></li>
+              <li><Link to="/StockActual">Stock Actual</Link></li>
               <li>
                 <a href="#inventarioSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Inventario</a>
                 <ul className="collapse list-unstyled" id="inventarioSubmenu">
