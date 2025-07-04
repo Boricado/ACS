@@ -14,7 +14,7 @@ const PresupuestoPage = () => {
     fecha: ''
   });
 
-  // Cargar clientes al montar el componente
+  // Cargar clientes al iniciar
   useEffect(() => {
     axios.get('http://localhost:4000/api/clientes')
       .then(res => setClientes(res.data))
@@ -24,7 +24,6 @@ const PresupuestoPage = () => {
       });
   }, []);
 
-  // Manejar cambios en los inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPresupuesto(prev => ({
@@ -33,11 +32,47 @@ const PresupuestoPage = () => {
     }));
   };
 
-  // Enviar presupuesto al backend
   const guardarPresupuesto = async () => {
+    const { numero, cliente_id, nombre_obra, direccion, observacion, fecha } = presupuesto;
+
+    if (!numero || !cliente_id || !nombre_obra) {
+      setMensaje({ tipo: 'error', texto: 'Complete los campos obligatorios' });
+      return;
+    }
+
     try {
-      await axios.post('http://localhost:4000/api/presupuestos', presupuesto);
-      setMensaje({ tipo: 'success', texto: 'Presupuesto guardado correctamente' });
+      // Validar duplicado
+      const resValidacion = await axios.get(`http://localhost:4000/api/presupuestos/cliente/${cliente_id}`);
+      const yaExiste = resValidacion.data.some(p => p.numero === numero);
+
+      if (yaExiste) {
+        setMensaje({ tipo: 'error', texto: 'Ya existe un presupuesto con ese número para este cliente' });
+        return;
+      }
+
+      // Guardar presupuesto
+      const res = await axios.post('http://localhost:4000/api/presupuestos', {
+        numero,
+        cliente_id,
+        nombre_obra,
+        direccion,
+        observacion,
+        fecha
+      });
+
+      // Obtener nombre del cliente
+      const clienteEncontrado = clientes.find(c => c.id.toString() === cliente_id);
+      const cliente_nombre = clienteEncontrado?.nombre || 'Sin nombre';
+
+      // Crear seguimiento de obra
+      await axios.post('http://localhost:4000/api/seguimiento_obras', {
+        cliente_nombre,
+        presupuesto_numero: numero,
+        nombre_obra
+      });
+
+      setMensaje({ tipo: 'success', texto: 'Presupuesto y seguimiento guardados correctamente' });
+
       setPresupuesto({
         numero: '',
         cliente_id: '',
@@ -46,9 +81,10 @@ const PresupuestoPage = () => {
         observacion: '',
         fecha: ''
       });
+
     } catch (err) {
-      console.error(err);
-      setMensaje({ tipo: 'error', texto: 'Error al guardar presupuesto' });
+      console.error('Error al guardar:', err.message);
+      setMensaje({ tipo: 'error', texto: 'Error al guardar presupuesto o seguimiento' });
     }
   };
 
@@ -63,7 +99,6 @@ const PresupuestoPage = () => {
       )}
 
       <div className="row">
-        {/* Selector de cliente */}
         <div className="col-md-6 mb-3">
           <select
             name="cliente_id"
@@ -80,7 +115,6 @@ const PresupuestoPage = () => {
           </select>
         </div>
 
-        {/* Número de presupuesto */}
         <div className="col-md-6 mb-3">
           <input
             name="numero"
@@ -91,7 +125,6 @@ const PresupuestoPage = () => {
           />
         </div>
 
-        {/* Nombre de la obra */}
         <div className="col-md-6 mb-3">
           <input
             name="nombre_obra"
@@ -102,7 +135,6 @@ const PresupuestoPage = () => {
           />
         </div>
 
-        {/* Dirección */}
         <div className="col-md-6 mb-3">
           <input
             name="direccion"
@@ -113,7 +145,6 @@ const PresupuestoPage = () => {
           />
         </div>
 
-        {/* Observaciones */}
         <div className="col-12 mb-3">
           <textarea
             name="observacion"
@@ -124,7 +155,6 @@ const PresupuestoPage = () => {
           />
         </div>
 
-        {/* Botón de guardar */}
         <div className="col-12">
           <button className="btn btn-primary" onClick={guardarPresupuesto}>
             Guardar Presupuesto

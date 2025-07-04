@@ -68,19 +68,7 @@ const Sidebar = ({ total }) => {
             <a href="#oficinaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Oficina Técnica</a>
             <ul className="collapse list-unstyled" id="oficinaSubmenu">
               <li><Link to="#">Inventario</Link></li>
-              <li>
-                <a href="#planillasTrabajoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Planillas de Trabajo</a>
-                <ul className="collapse list-unstyled" id="planillasTrabajoSubmenu">
-                  <li><Link to="#">Perfiles</Link></li>
-                  <li><Link to="#">Refuerzos</Link></li>
-                  <li><Link to="#">Herraje</Link></li>
-                  <li><Link to="#">Tornillo</Link></li>
-                  <li><Link to="#">Accesorios</Link></li>
-                  <li><Link to="#">Gomas y cepillos</Link></li>
-                  <li><Link to="#">Vidrios</Link></li>
-                  <li><Link to="#">Material de Instalación</Link></li>
-                </ul>
-              </li>
+              <li><Link to="/OTPautasPage">Pautas de Materiales</Link></li>
               <li><Link to="#">Planillas de Corte</Link></li>
             </ul>
           </li>

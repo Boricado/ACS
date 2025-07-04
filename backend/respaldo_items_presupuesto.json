@@ -1062,5 +1062,24 @@
     "utv_monto": 20000,
     "texto_observaciones": "",
     "adicional": false
+  },
+  {
+    "presupuesto_id": 1,
+    "item": "v2",
+    "recinto": "Living",
+    "ancho": 1000,
+    "alto": 2000,
+    "tipo_apertura": "Derecha",
+    "grada_buque": false,
+    "observaciones": false,
+    "cantidad": 1,
+    "precio_unitario": 250000,
+    "total": 250000,
+    "tipo_ventana": "Doble Corredera",
+    "cuadros_adicionales": 0,
+    "utv": 1,
+    "utv_monto": 20000,
+    "texto_observaciones": "",
+    "adicional": false
   }
 ]

@@ -2,6 +2,7 @@ import express from 'express';
 import pg from 'pg';
 import fs from 'fs';
 import cors from 'cors';
+import otPautasRoutes from './routes/otPautas.js';
 
 const app = express();
 const port = 4000;
@@ -838,6 +839,182 @@ app.put('/api/seguimiento_obras/:id/comentario', async (req, res) => {
   } catch (err) {
     console.error('❌ Error al actualizar comentario:', err.message);
     res.status(500).json({ error: 'Error al actualizar comentario' });
+  }
+});
+
+///////////
+
+app.post('/api/seguimiento_obras', async (req, res) => {
+  const {
+    cliente_nombre,
+    presupuesto_numero,
+    nombre_obra
+  } = req.body;
+
+  try {
+    await pool.query(`
+      INSERT INTO seguimiento_obras (
+        cliente_nombre, presupuesto_numero, nombre_obra,
+        presupuesto, rectificacion, accesorios, gomas_cepillos,
+        herraje, instalacion, perfiles, refuerzos, tornillos,
+        vidrio, planilla_corte, fabricacion, acopio, despacho,
+        recepcion_final, pago, comentario
+      ) VALUES (
+        $1, $2, $3,
+        true, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, ''
+      )
+    `, [cliente_nombre, presupuesto_numero, nombre_obra]);
+
+    res.status(200).json({ message: 'Seguimiento creado correctamente' });
+  } catch (error) {
+    console.error('❌ Error creando seguimiento:', error.message);
+    res.status(500).json({ error: 'Error al crear seguimiento' });
+  }
+});
+
+
+app.get('/api/presupuestos/numero/:numero', async (req, res) => {
+  const { numero } = req.params;
+  try {
+    const result = await pool.query('SELECT 1 FROM presupuestos WHERE numero = $1', [numero]);
+    res.json({ existe: result.rowCount > 0 });
+  } catch (err) {
+    console.error('Error al verificar número de presupuesto:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// BACKEND - Express: Registrar stock reservado
+app.post('/api/ot_stock_reservado', async (req, res) => {
+  const {
+    cliente_id,
+    cliente_nombre,
+    presupuesto_id,
+    presupuesto_numero,
+    nombre_obra,
+    codigo,
+    producto,
+    cantidad,
+    observacion
+  } = req.body;
+
+  try {
+    await pool.query(`
+      INSERT INTO ot_stock_reservado (
+        cliente_id, cliente_nombre,
+        presupuesto_id, presupuesto_numero, nombre_obra,
+        codigo, producto, cantidad, observacion
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `, [
+      cliente_id, cliente_nombre,
+      presupuesto_id, presupuesto_numero, nombre_obra,
+      codigo, producto, cantidad, observacion
+    ]);
+
+    res.status(200).json({ message: 'Stock reservado correctamente' });
+  } catch (error) {
+    console.error('❌ Error al reservar stock:', error.message);
+    res.status(500).json({ error: 'Error al guardar reserva de stock' });
+  }
+});
+
+// Backend dinámico para guardar materiales en tablas ot_pautas_<categoria>
+app.post('/api/ot_pautas/:categoria', async (req, res) => {
+  const { categoria } = req.params;
+  const tabla = `ot_pautas_${categoria.toLowerCase()}`; // ejemplo: ot_pautas_perfiles
+
+  const { cliente_id, presupuesto_id, codigo, producto, cantidad } = req.body;
+
+  const columnasValidas = ['perfiles', 'refuerzos', 'herraje', 'accesorios', 'gomascepillos', 'tornillos', 'vidrio', 'instalacion'];
+  if (!columnasValidas.includes(categoria.toLowerCase())) {
+    return res.status(400).json({ error: 'Categoría no válida' });
+  }
+
+  try {
+    await pool.query(`
+      INSERT INTO ${tabla} (cliente_id, presupuesto_id, codigo, producto, cantidad)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [cliente_id, presupuesto_id, codigo, producto, cantidad]);
+
+    res.status(200).json({ message: `Datos guardados en ${tabla}` });
+  } catch (err) {
+    console.error('❌ Error al guardar pauta:', err.message);
+    res.status(500).json({ error: 'Error al guardar pauta' });
+  }
+});
+
+app.delete('/api/ot_pautas/:categoria/:id', async (req, res) => {
+  const { categoria, id } = req.params;
+  const tabla = `ot_pautas_${categoria.toLowerCase()}`;
+  try {
+    await pool.query(`DELETE FROM ${tabla} WHERE id = $1`, [id]);
+    res.status(200).json({ message: 'Material eliminado correctamente' });
+  } catch (err) {
+    console.error('Error al eliminar material:', err.message);
+    res.status(500).json({ error: 'Error interno al eliminar material' });
+  }
+});
+
+///////////////////
+app.use('/api/ot_pautas', otPautasRoutes);
+
+// Obtener cliente por ID
+app.get('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM clientes WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener cliente por ID:', error.message);
+    res.status(500).json({ error: 'Error al consultar cliente' });
+  }
+});
+
+// Obtener presupuesto por ID
+app.get('/api/presupuestos/id/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM presupuestos WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Presupuesto no encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener presupuesto por ID:', error.message);
+    res.status(500).json({ error: 'Error al consultar presupuesto' });
+  }
+});
+
+
+// Verificar cliente por ID
+app.get('/api/clientes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM clientes WHERE id = $1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al obtener cliente por ID:', err.message);
+    res.status(500).json({ error: 'Error al consultar cliente' });
+  }
+});
+
+// Verificar presupuesto por ID
+app.get('/api/presupuestos/id/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM presupuestos WHERE id = $1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Presupuesto no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al obtener presupuesto por ID:', err.message);
+    res.status(500).json({ error: 'Error al consultar presupuesto' });
   }
 });
 

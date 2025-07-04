@@ -21,6 +21,7 @@ import OCPendientePage from './assets/views/OCPendientePage';
 import IngresosPage from './assets/views/IngresosPage';
 import SalidasPage from './assets/views/SalidasPage';
 import SeguimientoObrasPage from './assets/views/SeguimientoObrasPage';
+import OTPautasPage from './assets/views/OTPautasPage';
 
 function App() {
   return (
@@ -37,6 +38,8 @@ function App() {
         <Route path='StockActual' element={<InventarioPage />} />
         <Route path='IngresosPage' element={<IngresosPage />} />
         <Route path='SalidasPage' element={<SalidasPage />} />
+
+        <Route path='OTPautasPage' element={<OTPautasPage />} />
 
         {/* Rutas de órdenes de compra */}
         <Route path='CrearOCPage' element={<CrearOCPage />} />
