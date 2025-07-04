@@ -59,6 +59,7 @@ const Sidebar = ({ total }) => {
                   <li><Link to="#">Guías de Despacho</Link></li>
                 </ul>
               </li>
+              <li><Link to="#">Solicitudes Bodega</Link></li>
             </ul>
           </li>
 
@@ -88,28 +89,16 @@ const Sidebar = ({ total }) => {
           <li>
             <a href="#adquisicionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Adquisiciones</a>
             <ul className="collapse list-unstyled" id="adquisicionesSubmenu">
-              <li><Link to="#">Inventario</Link></li>
-              <li><Link to="#">Histórico de Compras</Link></li>
-              <li>
-                <a href="#proveedoresSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Proveedores</a>
-                <ul className="collapse list-unstyled" id="proveedoresSubmenu">
-                  <li><Link to="#">Ingreso Proveedores</Link></li>
-                </ul>
-              </li>
+              <li><Link to="/StockActual">Stock Actual</Link></li>
               <li>
                 <a href="#ordenesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Órdenes de Compra</a>
                 <ul className="collapse list-unstyled" id="ordenesSubmenu">
                   <li><Link to="/CrearOCPage">Crear Orden de compra</Link></li>
                   <li><Link to="/EditarOCPage">Editar Orden de compra</Link></li>
-                  <li><Link to="#">OC vigentes</Link></li>
+                  <li><Link to="/OCPendientePage">OC Pendientes/Historico de Compras</Link></li>
                 </ul>
               </li>
-              <li>
-                <a href="#inventarioAdqSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Inventario</a>
-                <ul className="collapse list-unstyled" id="inventarioAdqSubmenu">
-                  <li><Link to="#">Ingreso de inventario</Link></li>
-                </ul>
-              </li>
+              <li><Link to="#">Ingreso Proveedores</Link></li>
               <li><Link to="#">Solicitudes Bodega</Link></li>
             </ul>
           </li>

@@ -17,6 +17,7 @@ import Home from './assets/components/Home';
 import InventarioPage from './assets/views/InventarioPage';
 import CrearOCPage from './assets/views/CrearOCPage';
 import EditarOCPage from './assets/views/EditarOCPage';
+import OCPendientePage from './assets/views/OCPendientePage';
 
 function App() {
   return (
@@ -30,6 +31,10 @@ function App() {
         <Route path='StockActual' element={<InventarioPage />} />
         <Route path='CrearOCPage' element={<CrearOCPage />} />
         <Route path='EditarOCPage' element={<EditarOCPage />} />
+        <Route path='OCPendientePage' element={<OCPendientePage />} />
+        {/* Aquí puedes agregar más rutas según sea necesario */}
+        
+        {/* Rutas de autenticación */}
         <Route path='RegisterPage' element={<RegisterPage />} />
         <Route path='LoginPage' element={<LoginPage />} />
         <Route path='ProfilePage' element={<ProfilePage />} />

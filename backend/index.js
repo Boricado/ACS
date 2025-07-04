@@ -498,6 +498,116 @@ app.delete('/api/items_oc/:id', async (req, res) => {
   }
 });
 
+// Actualizar el comentario de una orden de compra
+app.put('/api/ordenes_compra/:numero_oc', async (req, res) => {
+  try {
+    const { numero_oc } = req.params;
+    const { comentario } = req.body;
+
+    const updateQuery = `
+      UPDATE ordenes_compra
+      SET comentario = $1
+      WHERE numero_oc = $2
+    `;
+
+    await pool.query(updateQuery, [comentario, numero_oc]);
+
+    res.status(200).json({ message: 'Comentario actualizado correctamente' });
+  } catch (error) {
+    console.error('❌ Error al actualizar comentario:', error.message);
+    res.status(500).json({ error: 'Error al actualizar el comentario de la orden de compra' });
+  }
+});
+
+app.get('/api/ordenes_compra_estado', async (req, res) => {
+  const { estado } = req.query;
+
+  try {
+    let ordenesQuery = `
+      SELECT 
+        oc.numero_oc,
+        TO_CHAR(oc.fecha, 'DD-MM-YYYY') AS fecha,
+        oc.proveedor,
+        oc.numero_presupuesto,
+        oc.cliente_id,
+        oc.estado_oc,
+        COALESCE(MAX(doc.observacion), '') AS observacion,
+        SUM(doc.cantidad * doc.precio_unitario) AS total_neto
+      FROM ordenes_compra oc
+      LEFT JOIN detalle_oc doc ON doc.numero_oc = oc.numero_oc
+    `;
+
+    const condiciones = [];
+    const valores = [];
+
+    if (estado && estado !== 'Todas') {
+      condiciones.push(`oc.estado_oc = $${valores.length + 1}`);
+      valores.push(estado.toUpperCase());
+    }
+
+    if (condiciones.length > 0) {
+      ordenesQuery += ` WHERE ` + condiciones.join(' AND ');
+    }
+
+    ordenesQuery += `
+      GROUP BY 
+        oc.numero_oc,
+        oc.fecha,
+        oc.proveedor,
+        oc.numero_presupuesto,
+        oc.cliente_id,
+        oc.estado_oc
+      ORDER BY oc.fecha DESC
+    `;
+
+    const ordenesRes = await pool.query(ordenesQuery, valores);
+    const ordenes = ordenesRes.rows;
+
+    for (const orden of ordenes) {
+      const detallesRes = await pool.query(`
+        SELECT 
+          codigo, 
+          producto, 
+          cantidad, 
+          precio_unitario, 
+          cantidad_llegada
+        FROM detalle_oc
+        WHERE numero_oc = $1
+      `, [orden.numero_oc]);
+
+      orden.detalles = detallesRes.rows;
+    }
+
+    res.json(ordenes);
+  } catch (error) {
+    console.error('❌ Error al obtener órdenes por estado:', error.message);
+    res.status(500).json({ error: 'Error al obtener órdenes' });
+  }
+});
+
+///////////////
+
+app.get('/api/inventario', async (req, res) => {
+  try {
+    const resultado = await pool.query(`
+      SELECT 
+        i.codigo,
+        d.producto,
+        i.stock_actual,
+        i.stock_minimo,
+        i.unidad
+      FROM inventario i
+      LEFT JOIN detalle_oc d ON i.codigo = d.codigo
+    `);
+    res.json(resultado.rows);
+  } catch (err) {
+    console.error('❌ ERROR en /api/inventario:', err.message);
+    res.status(500).json({ error: 'Error al obtener inventario' });
+  }
+});
+
+
+
 
 
 app.listen(port, () => {
