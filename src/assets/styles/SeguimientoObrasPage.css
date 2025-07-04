@@ -1,0 +1,84 @@
+/* Contenedor general */
+.seguimiento-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+}
+
+/* Título principal */
+.seguimiento-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Sección de búsqueda */
+.seguimiento-busqueda {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.seguimiento-busqueda input {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Datos principales */
+.seguimiento-info {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Estructura jerárquica */
+.seguimiento-bloque {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid #ccc;
+}
+
+.seguimiento-item {
+  margin: 4px 0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+/* Estados */
+.item-activo {
+  color: green;
+}
+
+.item-inactivo {
+  color: #333;
+}
+
+/* Comentario */
+.seguimiento-comentario {
+  margin-top: 1.5rem;
+}
+
+.seguimiento-comentario textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  min-height: 80px;
+}
+
+.seguimiento-comentario button {
+  margin-top: 0.5rem;
+}
+
+/* Separador visual */
+.seguimiento-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  background-color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}

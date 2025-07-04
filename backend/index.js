@@ -605,8 +605,241 @@ app.get('/api/inventario', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener inventario' });
   }
 });
+/////////////////
 
+// -----------------------------
+// INGRESAR FACTURA
+// -----------------------------
+app.post('/api/ingresar_factura', async (req, res) => {
+  const ordenes = req.body.ordenes;
+  const client = await pool.connect();
 
+  try {
+    await client.query('BEGIN');
+
+    for (const orden of ordenes) {
+      const numero_oc = orden.numero_oc;
+
+      for (const detalle of orden.detalles) {
+        const {
+          codigo,
+          cantidad_llegada,
+          precio_unitario,
+          observacion = ''
+        } = detalle;
+
+        const costo_neto = (cantidad_llegada || 0) * (precio_unitario || 0);
+
+        await client.query(
+          `UPDATE detalle_oc
+           SET cantidad_llegada = $1,
+               precio_unitario = $2,
+               costo_neto = $3,
+               observacion = $4
+           WHERE numero_oc = $5 AND codigo = $6`,
+          [
+            cantidad_llegada,
+            precio_unitario,
+            costo_neto,
+            observacion,
+            numero_oc,
+            codigo
+          ]
+        );
+      }
+
+      const result = await client.query(
+        `SELECT COUNT(*) FROM detalle_oc
+         WHERE numero_oc = $1 AND (cantidad_llegada IS NULL OR cantidad_llegada < cantidad)`,
+        [numero_oc]
+      );
+
+      const pendientes = parseInt(result.rows[0].count);
+
+      if (pendientes === 0) {
+        await client.query(
+          `UPDATE ordenes_compra
+           SET estado_oc = 'Completa'
+           WHERE numero_oc = $1`,
+          [numero_oc]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: 'Factura ingresada correctamente' });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error al ingresar factura:', error);
+    res.status(500).json({ error: 'Error al ingresar factura' });
+  } finally {
+    client.release();
+  }
+});
+
+////////////////////
+app.post('/api/salidas_stock', async (req, res) => {
+  const { numero_oc, codigo, cantidad_salida } = req.body;
+
+  try {
+    const result = await pool.query(`
+      UPDATE detalle_oc
+      SET salidas_stock = COALESCE(salidas_stock, 0) + $1
+      WHERE numero_oc = $2 AND codigo = $3
+      RETURNING *;
+    `, [cantidad_salida, numero_oc, codigo]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'No se encontró el ítem de OC' });
+    }
+
+    res.json({ message: 'Salida registrada con éxito', item: result.rows[0] });
+  } catch (err) {
+    console.error('Error al registrar salida de stock:', err.message);
+    res.status(500).json({ error: 'Error al registrar salida de stock' });
+  }
+});
+///////////////////////
+
+app.post('/api/registro_salida', async (req, res) => {
+  const {
+    codigo,
+    producto,
+    cantidad_salida,
+    cliente_id,
+    presupuesto_id,
+    cliente_nombre,
+    presupuesto_numero,
+    nombre_obra,
+    precio_unitario,
+    observacion
+  } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const salida = parseInt(cantidad_salida);
+    const precio = parseInt(precio_unitario);
+    const clienteId = parseInt(cliente_id);
+    const presupuestoId = parseInt(presupuesto_id);
+
+    // Verificar si ya existe un registro previo para ese cliente, presupuesto y código
+    const check = await client.query(`
+      SELECT id FROM registro_obras
+      WHERE cliente_id = $1 AND presupuesto_id = $2 AND codigo = $3
+    `, [clienteId, presupuestoId, codigo]);
+
+    if (check.rows.length > 0) {
+      // Ya existe: actualizar cantidad_salidas
+      await client.query(`
+        UPDATE registro_obras
+        SET cantidad_salidas = cantidad_salidas + $1
+        WHERE cliente_id = $2 AND presupuesto_id = $3 AND codigo = $4
+      `, [salida, clienteId, presupuestoId, codigo]);
+    } else {
+      // Obtener cantidad presupuestada desde items_presupuesto
+      const result = await client.query(`
+        SELECT cantidad FROM items_presupuesto
+        WHERE presupuesto_id = $1 AND item = $2
+        LIMIT 1
+      `, [presupuestoId, producto]);
+
+      const cantidad_presupuestada = parseInt(result.rows[0]?.cantidad || 0);
+
+      // Insertar nuevo registro completo
+      await client.query(`
+        INSERT INTO registro_obras (
+          cliente_id, presupuesto_id, cliente_nombre, presupuesto_numero,
+          nombre_obra, codigo, producto, cantidad_presupuestada,
+          cantidad_salidas, precio_unitario, observacion
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `, [
+        clienteId,
+        presupuestoId,
+        cliente_nombre,
+        presupuesto_numero,
+        nombre_obra,
+        codigo,
+        producto,
+        cantidad_presupuestada,
+        salida,
+        precio,
+        observacion || ''
+      ]);
+      await client.query(`
+        INSERT INTO salidas_inventario2 (
+          cliente_nombre,
+          presupuesto_numero,
+          nombre_obra,
+          codigo,
+          producto,
+          cantidad,
+          precio_neto,
+          fecha
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)
+      `, [
+        cliente_nombre,
+        presupuesto_numero,
+        nombre_obra,
+        codigo,
+        producto,
+        salida,
+        salida * precio
+      ]);
+
+    }
+
+    // Actualizar salidas_stock en detalle_oc
+    await client.query(`
+      UPDATE detalle_oc
+      SET salidas_stock = COALESCE(salidas_stock, 0) + $1
+      WHERE codigo = $2
+    `, [salida, codigo]);
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: 'Salida registrada correctamente' });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error en /api/registro_salida:', error.message);
+    res.status(500).json({ error: 'Error al registrar salida' });
+  } finally {
+    client.release();
+  }
+});
+
+//////////////////////////////
+
+// ------------------------------
+// RUTA: Obtener seguimiento obras
+// ------------------------------
+app.get('/api/seguimiento_obras', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM seguimiento_obras ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Error al obtener seguimiento:', err.message);
+    res.status(500).json({ error: 'Error al obtener seguimiento' });
+  }
+});
+
+// ------------------------------
+// RUTA: Actualizar comentario obra
+// ------------------------------
+app.put('/api/seguimiento_obras/:id/comentario', async (req, res) => {
+  const { id } = req.params;
+  const { comentario } = req.body;
+
+  try {
+    await pool.query('UPDATE seguimiento_obras SET comentario = $1 WHERE id = $2', [comentario, id]);
+    res.status(200).json({ message: 'Comentario actualizado correctamente' });
+  } catch (err) {
+    console.error('❌ Error al actualizar comentario:', err.message);
+    res.status(500).json({ error: 'Error al actualizar comentario' });
+  }
+});
 
 
 

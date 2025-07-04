@@ -42,8 +42,8 @@ const Sidebar = ({ total }) => {
               <li>
                 <a href="#inventarioSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Inventario</a>
                 <ul className="collapse list-unstyled" id="inventarioSubmenu">
-                  <li><Link to="#">Ingreso de inventario</Link></li>
-                  <li><Link to="#">Salidas de inventario</Link></li>
+                  <li><Link to="/IngresosPage">Ingreso de inventario</Link></li>
+                  <li><Link to="/SalidasPage">Salidas de inventario</Link></li>
                   <li><Link to="#">Ver stock reservado</Link></li>
                   <li><Link to="#">Solicitud de materiales</Link></li>
                 </ul>
@@ -107,6 +107,7 @@ const Sidebar = ({ total }) => {
           <li>
             <a href="#operacionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Operaciones</a>
             <ul className="collapse list-unstyled" id="operacionesSubmenu">
+              <li><Link to="/SeguimientoObrasPage">Deguimiento Obras</Link></li>
               <li><Link to="#">Programación</Link></li>
               <li><Link to="#">Fabricación</Link></li>
               <li>

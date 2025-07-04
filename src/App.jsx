@@ -17,22 +17,33 @@ import Home from './assets/components/Home';
 import InventarioPage from './assets/views/InventarioPage';
 import CrearOCPage from './assets/views/CrearOCPage';
 import EditarOCPage from './assets/views/EditarOCPage';
-import OCPendientePage from './assets/views/OCPendientePage';
+import OCPendientePage from './assets/views/OCPendientePage'; 
+import IngresosPage from './assets/views/IngresosPage';
+import SalidasPage from './assets/views/SalidasPage';
+import SeguimientoObrasPage from './assets/views/SeguimientoObrasPage';
 
 function App() {
   return (
     <Routes>
       <Route path='/' element={<MainLayout />}>
         <Route index element={<Home />} />
+        {/* Rutas de presupuestos y clientes */}
         <Route path='IngresoCliente' element={<ClientePage />} />
         <Route path='IngresoPresupuesto' element={<PresupuestoPage />} />
         <Route path='IngresoItems' element={<ItemPresupuestoPage />} />
         <Route path='EditarPresupuestos' element={<EditarItemsPresupuestoPage />} />
+
+        {/* Rutas de inventario */}
         <Route path='StockActual' element={<InventarioPage />} />
+        <Route path='IngresosPage' element={<IngresosPage />} />
+        <Route path='SalidasPage' element={<SalidasPage />} />
+
+        {/* Rutas de órdenes de compra */}
         <Route path='CrearOCPage' element={<CrearOCPage />} />
         <Route path='EditarOCPage' element={<EditarOCPage />} />
         <Route path='OCPendientePage' element={<OCPendientePage />} />
-        {/* Aquí puedes agregar más rutas según sea necesario */}
+
+        <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
         
         {/* Rutas de autenticación */}
         <Route path='RegisterPage' element={<RegisterPage />} />
