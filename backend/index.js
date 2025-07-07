@@ -926,7 +926,7 @@ app.post('/api/ot_pautas/:categoria', async (req, res) => {
   const { categoria } = req.params;
   const tabla = `ot_pautas_${categoria.toLowerCase()}`; // ejemplo: ot_pautas_perfiles
 
-  const { cliente_id, presupuesto_id, codigo, producto, cantidad } = req.body;
+  const {  cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad } = req.body;
 
   const columnasValidas = ['perfiles', 'refuerzos', 'herraje', 'accesorios', 'gomascepillos', 'tornillos', 'vidrio', 'instalacion'];
   if (!columnasValidas.includes(categoria.toLowerCase())) {
@@ -935,9 +935,9 @@ app.post('/api/ot_pautas/:categoria', async (req, res) => {
 
   try {
     await pool.query(`
-      INSERT INTO ${tabla} (cliente_id, presupuesto_id, codigo, producto, cantidad)
-      VALUES ($1, $2, $3, $4, $5)
-    `, [cliente_id, presupuesto_id, codigo, producto, cantidad]);
+      INSERT INTO ${tabla} (cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad]);
 
     res.status(200).json({ message: `Datos guardados en ${tabla}` });
   } catch (err) {
@@ -1015,6 +1015,110 @@ app.get('/api/presupuestos/id/:id', async (req, res) => {
   } catch (err) {
     console.error('Error al obtener presupuesto por ID:', err.message);
     res.status(500).json({ error: 'Error al consultar presupuesto' });
+  }
+});
+
+///////////////////StockReservado
+
+// PATCH /api/stock-reservado/:tabla/:id
+app.patch('/api/stock-reservado/:tabla/:id', async (req, res) => {
+  const { tabla, id } = req.params;
+  const { separado } = req.body;
+
+  // Lista blanca para evitar inyecciones SQL
+  const tablasPermitidas = [
+    'ot_pautas_perfiles', 'ot_pautas_refuerzos', 'ot_pautas_tornillos',
+    'ot_pautas_herraje', 'ot_pautas_accesorios', 'ot_pautas_gomascepillos',
+    'ot_pautas_vidrio', 'ot_pautas_instalacion'
+  ];
+
+  if (!tablasPermitidas.includes(tabla)) {
+    return res.status(400).json({ error: 'Tabla no permitida' });
+  }
+
+  try {
+    const query = `UPDATE ${tabla} SET separado = $1 WHERE id = $2`;
+    await pool.query(query, [separado, id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al actualizar separado:', error);
+    res.status(500).json({ error: 'Error al actualizar estado' });
+  }
+});
+
+// ---------------------
+// Rutas para Pautas OT
+// ---------------------
+
+app.get('/api/ot_pautas_perfiles', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_perfiles');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener perfiles' });
+  }
+});
+
+app.get('/api/ot_pautas_refuerzos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_refuerzos');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener refuerzos' });
+  }
+});
+
+app.get('/api/ot_pautas_tornillos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_tornillos');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener tornillos' });
+  }
+});
+
+app.get('/api/ot_pautas_herraje', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_herraje');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener herraje' });
+  }
+});
+
+app.get('/api/ot_pautas_accesorios', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_accesorios');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener accesorios' });
+  }
+});
+
+app.get('/api/ot_pautas_gomascepillos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_gomascepillos');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener gomas y cepillos' });
+  }
+});
+
+app.get('/api/ot_pautas_vidrio', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_vidrio');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener vidrios' });
+  }
+});
+
+app.get('/api/ot_pautas_instalacion', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ot_pautas_instalacion');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener instalación' });
   }
 });
 

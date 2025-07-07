@@ -39,27 +39,10 @@ const Sidebar = ({ total }) => {
             <a href="#bodegaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Bodega</a>
             <ul className="collapse list-unstyled" id="bodegaSubmenu">
               <li><Link to="/StockActual">Stock Actual</Link></li>
-              <li>
-                <a href="#inventarioSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Inventario</a>
-                <ul className="collapse list-unstyled" id="inventarioSubmenu">
-                  <li><Link to="/IngresosPage">Ingreso de inventario</Link></li>
-                  <li><Link to="/SalidasPage">Salidas de inventario</Link></li>
-                  <li><Link to="#">Ver stock reservado</Link></li>
-                  <li><Link to="#">Solicitud de materiales</Link></li>
-                </ul>
-              </li>
-              <li>
-                <a href="#pautasSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Pautas de Oficina Técnica</a>
-                <ul className="collapse list-unstyled" id="pautasSubmenu">
-                  <li><Link to="#">Material</Link></li>
-                  <li><Link to="#">Vidrios</Link></li>
-                  <li><Link to="#">Herrajes</Link></li>
-                  <li><Link to="#">Planillas de corte</Link></li>
-                  <li><Link to="#">Material de instalación y despacho</Link></li>
-                  <li><Link to="#">Guías de Despacho</Link></li>
-                </ul>
-              </li>
-              <li><Link to="#">Solicitudes Bodega</Link></li>
+              <li><Link to="/IngresosPage">Ingreso de inventario</Link></li>
+              <li><Link to="/SalidasPage">Salidas de inventario</Link></li>
+              <li><Link to="/StockReservado">Stock reservado por OT</Link></li>
+              <li><Link to="#">Solicitud de materiales</Link></li>
             </ul>
           </li>
 
@@ -67,9 +50,9 @@ const Sidebar = ({ total }) => {
           <li>
             <a href="#oficinaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Oficina Técnica</a>
             <ul className="collapse list-unstyled" id="oficinaSubmenu">
-              <li><Link to="#">Inventario</Link></li>
+              <li><Link to="/StockActual">Stock Actual</Link></li>
               <li><Link to="/OTPautasPage">Pautas de Materiales</Link></li>
-              <li><Link to="#">Planillas de Corte</Link></li>
+              <li><Link to="#">...Planillas de Corte</Link></li>
             </ul>
           </li>
 
@@ -87,7 +70,7 @@ const Sidebar = ({ total }) => {
                 </ul>
               </li>
               <li><Link to="#">Ingreso Proveedores</Link></li>
-              <li><Link to="#">Solicitudes Bodega</Link></li>
+              <li><Link to="#">Ver solicitudes de Bodega</Link></li>
             </ul>
           </li>
 
@@ -95,20 +78,20 @@ const Sidebar = ({ total }) => {
           <li>
             <a href="#operacionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Operaciones</a>
             <ul className="collapse list-unstyled" id="operacionesSubmenu">
-              <li><Link to="/SeguimientoObrasPage">Deguimiento Obras</Link></li>
-              <li><Link to="#">Programación</Link></li>
-              <li><Link to="#">Fabricación</Link></li>
+              <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
+              <li><Link to="#">...Programación</Link></li>
+              <li><Link to="#">...Fabricación</Link></li>
               <li>
                 <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Despacho</a>
                 <ul className="collapse list-unstyled" id="despachoSubmenu">
-                  <li><Link to="#">Guías de despacho</Link></li>
+                  <li><Link to="#">...Guías de despacho</Link></li>
                 </ul>
               </li>
               <li>
                 <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Pagos</a>
                 <ul className="collapse list-unstyled" id="pagosSubmenu">
-                  <li><Link to="#">Clientes</Link></li>
-                  <li><Link to="#">Proveedores</Link></li>
+                  <li><Link to="#">...Clientes</Link></li>
+                  <li><Link to="#">...Proveedores</Link></li>
                 </ul>
               </li>
             </ul>

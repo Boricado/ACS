@@ -92,6 +92,7 @@ const OTPautasPage = () => {
         await axios.post(`http://localhost:4000/api/ot_pautas/${categoria.toLowerCase()}`, {
           cliente_id: clienteSeleccionado.id,
           presupuesto_id: presupuestoSeleccionado.id,
+          numero_presupuesto: presupuestoSeleccionado.numero, // 👈 este campo es clave
           codigo: i.codigo,
           producto: i.producto,
           cantidad: parseInt(i.cantidad)

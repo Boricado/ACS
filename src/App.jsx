@@ -22,6 +22,7 @@ import IngresosPage from './assets/views/IngresosPage';
 import SalidasPage from './assets/views/SalidasPage';
 import SeguimientoObrasPage from './assets/views/SeguimientoObrasPage';
 import OTPautasPage from './assets/views/OTPautasPage';
+import StockReservado from './assets/views/StockReservado';
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
         <Route path='StockActual' element={<InventarioPage />} />
         <Route path='IngresosPage' element={<IngresosPage />} />
         <Route path='SalidasPage' element={<SalidasPage />} />
+        <Route path='StockReservado' element={<StockReservado />} />
+
+        {/* Rutas de pautas de oficina técnica */}
 
         <Route path='OTPautasPage' element={<OTPautasPage />} />
 
