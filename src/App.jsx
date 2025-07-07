@@ -26,42 +26,53 @@ import StockReservado from './assets/views/StockReservado';
 import BodegaSolicitudesPage from './assets/views/BodegaSolicitudesPage';
 import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
 
+import PrivateRoute from './routes/PrivateRoute';
+
 function App() {
   return (
     <Routes>
-      <Route path='/' element={<MainLayout />}>
+
+      {/* Rutas públicas */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Rutas privadas con layout */}
+      <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
         <Route index element={<Home />} />
-        {/* Rutas de presupuestos y clientes */}
+        
+        {/* Rutas Globales */}
+        <Route path='StockActual' element={<InventarioPage />} />
+
+        {/* Rutas Venta de presupuestos y clientes */}
         <Route path='IngresoCliente' element={<ClientePage />} />
         <Route path='IngresoPresupuesto' element={<PresupuestoPage />} />
         <Route path='IngresoItems' element={<ItemPresupuestoPage />} />
         <Route path='EditarPresupuestos' element={<EditarItemsPresupuestoPage />} />
 
-        {/* Rutas de inventario */}
-        <Route path='StockActual' element={<InventarioPage />} />
+        {/* Rutas Bodega */}
         <Route path='IngresosPage' element={<IngresosPage />} />
         <Route path='SalidasPage' element={<SalidasPage />} />
         <Route path='StockReservado' element={<StockReservado />} />
         <Route path='CrearSolicitudBodegaPage' element={<CrearSolicitudBodegaPage />} />
+        <Route path='BodegaSolicitudesPage' element={<BodegaSolicitudesPage />} />
 
-        {/* Rutas de pautas de oficina técnica */}
-
+        {/* Oficina Técnica */}
         <Route path='OTPautasPage' element={<OTPautasPage />} />
 
-        {/* Rutas de órdenes de compra */}
+        {/* Adquisiciones */}
         <Route path='CrearOCPage' element={<CrearOCPage />} />
         <Route path='EditarOCPage' element={<EditarOCPage />} />
         <Route path='OCPendientePage' element={<OCPendientePage />} />
-        <Route path='BodegaSolicitudesPage' element={<BodegaSolicitudesPage />} />
 
+        {/* Operaciones */}
         <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
-        
-        {/* Rutas de autenticación */}
-        <Route path='RegisterPage' element={<RegisterPage />} />
-        <Route path='LoginPage' element={<LoginPage />} />
+
+        {/* Perfil */}
         <Route path='ProfilePage' element={<ProfilePage />} />
-        <Route path='*' element={<NotFound />} />
       </Route>
+
+      {/* Página no encontrada */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

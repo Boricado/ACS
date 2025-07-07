@@ -3,6 +3,12 @@ import pg from 'pg';
 import fs from 'fs';
 import cors from 'cors';
 import otPautasRoutes from './routes/otPautas.js';
+import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+dotenv.config();
+
 
 const app = express();
 const port = 4000;
@@ -1195,6 +1201,78 @@ app.get('/api/solicitudes', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener solicitudes' });
   }
 });
+
+//////////////////////////
+
+// ----------------------------
+// RUTA: LOGIN DE USUARIO
+// ----------------------------
+app.post('/api/login', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM usuarios WHERE correo = $1 AND activo = true',
+      [correo]
+    );
+
+    const usuario = result.rows[0];
+    if (!usuario) {
+      return res.status(401).json({ mensaje: 'Correo o contraseña incorrectos' });
+    }
+
+    const valid = await bcrypt.compare(contrasena, usuario.contrasena);
+    if (!valid) {
+      return res.status(401).json({ mensaje: 'Correo o contraseña incorrectos' });
+    }
+
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        rol: usuario.rol,
+      },
+      process.env.JWT_SECRET || 'clave_secreta',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '12h' }
+    );
+
+    res.json({
+      token,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        rol: usuario.rol,
+      },
+    });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ mensaje: 'Error del servidor' });
+  }
+});
+
+// ----------------------------
+// RUTA: CAMBIAR CONTRASEÑA
+// ----------------------------
+app.put('/api/usuarios/:id/cambiar-contrasena', async (req, res) => {
+  const { id } = req.params;
+  const { nuevaContrasena } = req.body;
+
+  if (!nuevaContrasena || nuevaContrasena.length < 6) {
+    return res.status(400).json({ mensaje: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+
+  try {
+    const hash = await bcrypt.hash(nuevaContrasena, 10);
+    await pool.query('UPDATE usuarios SET contrasena = $1 WHERE id = $2', [hash, id]);
+    res.json({ mensaje: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ mensaje: 'Error del servidor' });
+  }
+});
+
 
 
 app.listen(port, () => {
