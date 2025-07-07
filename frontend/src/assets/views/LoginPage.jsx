@@ -15,15 +15,14 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
 
-    try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, { correo, contrasena });
-      login(res.data);
-      navigate('/');
-    } catch (err) {
-      console.error('Error de login:', err);
-      setError('Correo o contraseña incorrectos');
-    }
-  };
+  try {
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, { correo, contrasena });
+    login(res.data);
+    navigate('/');
+  } catch (err) {
+    console.error('Error de login:', err);
+    setError('Correo o contraseña incorrectos');
+  }
 
   return (
     <section className="bg-primary py-4 py-md-5 py-xl-8 min-vh-100 d-flex align-items-center">
