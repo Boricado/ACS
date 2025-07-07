@@ -14,7 +14,10 @@ const app = express();
 const port = 4000;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://acs-indol-three.vercel.app', // tu frontend Vercel
+  credentials: true
+}));
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
