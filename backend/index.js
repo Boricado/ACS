@@ -17,11 +17,8 @@ app.use(express.json());
 app.use(cors());
 
 const pool = new pg.Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'ASC',
-  password: 'admin123',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
 app.post('/api/clientes', async (req, res) => {
