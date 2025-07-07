@@ -23,6 +23,8 @@ import SalidasPage from './assets/views/SalidasPage';
 import SeguimientoObrasPage from './assets/views/SeguimientoObrasPage';
 import OTPautasPage from './assets/views/OTPautasPage';
 import StockReservado from './assets/views/StockReservado';
+import BodegaSolicitudesPage from './assets/views/BodegaSolicitudesPage';
+import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
 
 function App() {
   return (
@@ -40,6 +42,7 @@ function App() {
         <Route path='IngresosPage' element={<IngresosPage />} />
         <Route path='SalidasPage' element={<SalidasPage />} />
         <Route path='StockReservado' element={<StockReservado />} />
+        <Route path='CrearSolicitudBodegaPage' element={<CrearSolicitudBodegaPage />} />
 
         {/* Rutas de pautas de oficina técnica */}
 
@@ -49,6 +52,7 @@ function App() {
         <Route path='CrearOCPage' element={<CrearOCPage />} />
         <Route path='EditarOCPage' element={<EditarOCPage />} />
         <Route path='OCPendientePage' element={<OCPendientePage />} />
+        <Route path='BodegaSolicitudesPage' element={<BodegaSolicitudesPage />} />
 
         <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
         

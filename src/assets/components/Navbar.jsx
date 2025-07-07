@@ -42,7 +42,7 @@ const Sidebar = ({ total }) => {
               <li><Link to="/IngresosPage">Ingreso de inventario</Link></li>
               <li><Link to="/SalidasPage">Salidas de inventario</Link></li>
               <li><Link to="/StockReservado">Stock reservado por OT</Link></li>
-              <li><Link to="#">Solicitud de materiales</Link></li>
+              <li><Link to="/CrearSolicitudBodegaPage">Solicitud de materiales</Link></li>
             </ul>
           </li>
 
@@ -70,7 +70,7 @@ const Sidebar = ({ total }) => {
                 </ul>
               </li>
               <li><Link to="#">Ingreso Proveedores</Link></li>
-              <li><Link to="#">Ver solicitudes de Bodega</Link></li>
+              <li><Link to="/BodegaSolicitudesPage">Ver solicitudes de Bodega</Link></li>
             </ul>
           </li>
 

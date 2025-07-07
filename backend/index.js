@@ -1122,6 +1122,79 @@ app.get('/api/ot_pautas_instalacion', async (req, res) => {
   }
 });
 
+//////////////// Solicitudes de Bodega
+
+// -----------------------------
+// Solicitudes de Bodega
+// -----------------------------
+app.post('/api/solicitudes', async (req, res) => {
+  const { codigo, producto, cantidad, solicitante } = req.body;
+
+  const fecha_creacion = new Date().toISOString().split('T')[0];
+  const estado = 'Pendiente';
+
+  try {
+    await pool.query(
+      `INSERT INTO solicitudes (codigo, producto, cantidad, solicitante, estado, fecha_creacion)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [codigo, producto, cantidad, solicitante, estado, fecha_creacion]
+    );
+    res.status(201).json({ mensaje: 'Solicitud creada' });
+  } catch (err) {
+    console.error('❌ Error al guardar solicitud:', err);
+    res.status(500).json({ error: 'Error al guardar solicitud' });
+  }
+});
+
+app.post('/api/solicitudes', async (req, res) => {
+  const { codigo, producto, cantidad, solicitante } = req.body;
+  const fecha_creacion = new Date(); // ← fecha actual
+  const estado = 'Pendiente';
+  const aprobada = false;
+
+  try {
+    await pool.query(
+      'INSERT INTO solicitudes (codigo, producto, cantidad, solicitante, fecha_creacion, estado, aprobada) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [codigo, producto, cantidad, solicitante, fecha_creacion, estado, aprobada]
+    );
+    res.sendStatus(201);
+  } catch (err) {
+    console.error('❌ Error al guardar solicitud:', err);
+    res.status(500).json({ error: 'Error al guardar solicitud' });
+  }
+});
+
+
+// Ruta para actualizar el estado de la solicitud
+app.put('/api/solicitudes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { aprobada } = req.body;
+
+  const nuevoEstado = aprobada ? 'Aprobado' : 'Pendiente';
+  const fechaAprobacion = aprobada ? new Date() : null;
+
+  try {
+    await pool.query(
+      'UPDATE solicitudes SET aprobada = $1, estado = $2, fecha_aprobacion = $3 WHERE id = $4',
+      [aprobada, nuevoEstado, fechaAprobacion, id]
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('❌ Error al actualizar solicitud:', err);
+    res.status(500).json({ error: 'Error al actualizar solicitud' });
+  }
+});
+
+// Ruta para obtener todas las solicitudes
+app.get('/api/solicitudes', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM solicitudes ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Error al obtener solicitudes:', err);
+    res.status(500).json({ error: 'Error al obtener solicitudes' });
+  }
+});
 
 
 app.listen(port, () => {
