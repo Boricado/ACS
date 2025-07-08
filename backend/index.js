@@ -14,10 +14,7 @@ const app = express(); // <- esto debe ir antes de usar app
 
 app.use(express.json());
 
-app.use(cors({
-  origin: 'https://acs-indol-three.vercel.app',
-  credentials: true
-}));
+app.use(cors());
 
 // Montar rutas después de definir `app`
 app.use('/api', usuariosRoutes);
