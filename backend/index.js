@@ -979,7 +979,7 @@ app.delete('/api/ot_pautas/:categoria/:id', async (req, res) => {
 });
 
 ///////////////////
-app.use('/api/ot_pautas', otPautasRoutes);
+//app.use('/api/ot_pautas', otPautasRoutes);
 
 // Obtener cliente por ID
 app.get('/api/clientes/:id', async (req, res) => {
