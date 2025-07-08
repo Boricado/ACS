@@ -11,10 +11,10 @@ import usuariosRoutes from './routes/usuarios.js';
 
 dotenv.config();
 
-app.use('/api', usuariosRoutes);
-
 const app = express();
 const port = 4000;
+
+
 
 // ✅ Permitir tanto frontend local como Vercel
 const corsOptions = {
@@ -25,6 +25,7 @@ const corsOptions = {
   credentials: true
 };
 
+app.use('/api', usuariosRoutes);
 app.use(cors(corsOptions));
 app.use(express.json());
 
