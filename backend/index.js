@@ -7,10 +7,11 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import usuariosRoutes from './routes/usuarios.js';
-app.use('/api', usuariosRoutes);
+
 
 dotenv.config();
 
+app.use('/api', usuariosRoutes);
 
 const app = express();
 const port = 4000;
