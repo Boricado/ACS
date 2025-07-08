@@ -2,7 +2,6 @@ import express from 'express';
 import pg from 'pg';
 import fs from 'fs';
 import cors from 'cors';
-import otPautasRoutes from './routes/otPautas.js';
 import usuariosRoutes from './routes/usuarios.js'; // <- importante
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
@@ -24,7 +23,7 @@ app.use(express.json());
 
 // Montar rutas después de definir `app`
 app.use('/api', usuariosRoutes);
-app.use('/api', otPautasRoutes);
+
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({

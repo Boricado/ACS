@@ -27,7 +27,7 @@ const ClientePage = () => {
 
   try {
     setLoading(true);
-    const res = await axios.post('http://localhost:4000/api/clientes', cliente);
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}api/clientes`, cliente);
     setMensaje({ tipo: 'success', texto: 'Cliente guardado correctamente' });
     setCliente({ nombre: '', rut: '', correo: '', telefono: '', direccion: '' });
   } catch (error) {

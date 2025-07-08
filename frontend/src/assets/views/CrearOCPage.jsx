@@ -18,21 +18,22 @@ const CrearOCPage = () => {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
   const [numeroOC, setNumeroOC] = useState('');
+  const API = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    axios.get('http://localhost:4000/api/materiales')
+useEffect(() => {
+    axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
       .catch(err => console.error('Error al cargar materiales:', err));
 
-    axios.get('http://localhost:4000/api/proveedores')
+    axios.get(`${API}api/proveedores`)
       .then(res => setProveedores(res.data))
       .catch(err => console.error('Error al cargar proveedores:', err));
 
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
 
-    axios.get('http://localhost:4000/api/ultima_oc')
+    axios.get(`${API}api/ultima_oc`)
       .then(res => {
         const ultimo = parseInt(res.data.ultimo || 0);
         setNumeroOC((ultimo + 1).toString());
@@ -44,7 +45,7 @@ const CrearOCPage = () => {
     if (clienteSeleccionado) {
       const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
       setClienteNombre(cliente?.nombre || '');
-      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
         .then(res => setPresupuestos(res.data))
         .catch(err => console.error('Error al obtener presupuestos:', err));
     }
@@ -66,7 +67,7 @@ const CrearOCPage = () => {
 
   const obtenerPrecioUltimo = async (codigo) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/precio-material?codigo=${codigo}`);
+      const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
     } catch (error) {
       console.error('Error al obtener precio desde backend:', error);
@@ -101,7 +102,7 @@ const CrearOCPage = () => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const guardarOC = async () => {
+ const guardarOC = async () => {
     try {
       const itemsConExtras = items.map(i => ({
         ...i,
@@ -109,7 +110,7 @@ const CrearOCPage = () => {
         observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
       }));
 
-      const response = await axios.post('http://localhost:4000/api/ordenes_compra', {
+      const response = await axios.post(`${API}api/ordenes_compra`, {
         numero_oc: numeroOC,
         proveedor,
         fecha,
