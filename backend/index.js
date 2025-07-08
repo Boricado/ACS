@@ -6,6 +6,8 @@ import otPautasRoutes from './routes/otPautas.js';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import usuariosRoutes from './routes/usuarios.js';
+app.use('/api', usuariosRoutes);
 
 dotenv.config();
 
