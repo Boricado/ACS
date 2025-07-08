@@ -3,37 +3,38 @@ import pg from 'pg';
 import fs from 'fs';
 import cors from 'cors';
 import otPautasRoutes from './routes/otPautas.js';
+import usuariosRoutes from './routes/usuarios.js'; // <- importante
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import usuariosRoutes from './routes/usuarios.js';
-
 
 dotenv.config();
 
-const app = express();
-const port = 4000;
+const app = express(); // <- esto debe ir antes de usar app
 
-
-
-// ✅ Permitir tanto frontend local como Vercel
-const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'https://acs-indol-three.vercel.app'
-  ],
-  credentials: true
-};
-
-app.use('/api', usuariosRoutes);
-app.use(cors(corsOptions));
 app.use(express.json());
 
-// 🔧 Conexión a PostgreSQL
+app.use(cors({
+  origin: 'https://acs-indol-three.vercel.app',
+  credentials: true
+}));
+
+// Montar rutas después de definir `app`
+app.use('/api', usuariosRoutes);
+app.use('/api', otPautasRoutes);
+
+// Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
+
+// Ruta base de prueba (opcional)
+app.get('/', (req, res) => {
+  res.send('API funcionando correctamente');
+});
+
+///////////////////////////
 
 app.post('/api/clientes', async (req, res) => {
   const { nombre, rut, correo, telefono, direccion } = req.body;
@@ -1286,6 +1287,8 @@ app.put('/api/usuarios/:id/cambiar-contrasena', async (req, res) => {
 
 
 
+// Puerto de escucha
+const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`✅ Servidor backend escuchando en http://localhost:${port}`);
 });
