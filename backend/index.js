@@ -13,12 +13,19 @@ dotenv.config();
 const app = express();
 const port = 4000;
 
-app.use(express.json());
-app.use(cors({
-  origin: 'https://acs-indol-three.vercel.app', // tu frontend Vercel
+// ✅ Permitir tanto frontend local como Vercel
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'https://acs-indol-three.vercel.app'
+  ],
   credentials: true
-}));
+};
 
+app.use(cors(corsOptions));
+app.use(express.json());
+
+// 🔧 Conexión a PostgreSQL
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
