@@ -972,6 +972,41 @@ app.post('/api/ot_pautas/:categoria', async (req, res) => {
   }
 });
 
+// GET dinámico para obtener materiales por cliente y presupuesto
+app.get('/api/ot_pautas/:categoria', async (req, res) => {
+  const { categoria } = req.params;
+  const { cliente_id, presupuesto_id } = req.query;
+
+  const tablasPermitidas = [
+    'perfiles',
+    'refuerzos',
+    'herraje',
+    'accesorios',
+    'gomascepillos',
+    'tornillos',
+    'vidrio',
+    'instalacion'
+  ];
+
+  if (!tablasPermitidas.includes(categoria.toLowerCase())) {
+    return res.status(400).json({ error: 'Categoría no permitida' });
+  }
+
+  const tabla = `ot_pautas_${categoria.toLowerCase()}`;
+
+  try {
+    const resultado = await pool.query(
+      `SELECT * FROM ${tabla} WHERE cliente_id = $1 AND presupuesto_id = $2 ORDER BY id ASC`,
+      [cliente_id, presupuesto_id]
+    );
+    res.json(resultado.rows);
+  } catch (err) {
+    console.error('❌ Error al obtener pautas:', err.message);
+    res.status(500).json({ error: 'Error interno al obtener pautas' });
+  }
+});
+
+
 app.delete('/api/ot_pautas/:categoria/:id', async (req, res) => {
   const { categoria, id } = req.params;
   const tabla = `ot_pautas_${categoria.toLowerCase()}`;
