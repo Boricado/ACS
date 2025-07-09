@@ -17,7 +17,7 @@
 .seguimiento-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 40px; /* Separación entre tarjetas */
   justify-content: center;
   position: relative;
 }
@@ -54,11 +54,14 @@
   align-items: center;
   margin-bottom: 0.8rem;
   font-weight: bold;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 /* Fecha máxima */
 .seguimiento-fecha {
   font-size: 0.9rem;
+  margin-left: auto;
 }
 
 .seguimiento-fecha.activo {
@@ -112,4 +115,16 @@
 /* Filtro checkbox superior */
 .seguimiento-container .form-check-input {
   margin-right: 8px;
+}
+
+.seguimiento-comentario textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+.seguimiento-comentario button {
+  margin-top: 0.5rem;
 }

@@ -24,6 +24,12 @@ const formatLabel = (key) => {
   return map[key] || key.charAt(0).toUpperCase() + key.slice(1);
 };
 
+const formatFecha = (fechaStr) => {
+  if (!fechaStr) return '';
+  const [y, m, d] = fechaStr.split('T')[0].split('-');
+  return `${d}-${m}-${y}`;
+};
+
 const calcularFechaMaxima = (fecha, dias) => {
   if (!fecha || !dias) return null;
   const f = new Date(fecha);
@@ -43,18 +49,25 @@ const esObraCompleta = (obra) => {
 const SeguimientoObrasPage = () => {
   const [obras, setObras] = useState([]);
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false);
+  const [comentarioEditado, setComentarioEditado] = useState({});
 
   useEffect(() => {
-    axios.get(`${API}api/seguimiento_obras`)
-      .then(res => setObras(res.data))
-      .catch(err => console.error('Error al cargar seguimiento:', err));
+    cargarObras();
   }, []);
+
+  const cargarObras = async () => {
+    try {
+      const res = await axios.get(`${API}api/seguimiento_obras`);
+      setObras(res.data);
+    } catch (err) {
+      console.error('Error al cargar seguimiento:', err);
+    }
+  };
 
   const toggleEtapa = async (obra, campo) => {
     try {
       await axios.put(`${API}api/seguimiento_obras/${obra.id}/toggle`, { campo });
-      const res = await axios.get(`${API}api/seguimiento_obras`);
-      setObras(res.data);
+      cargarObras();
     } catch (err) {
       console.error(`Error al actualizar etapa ${campo}:`, err);
     }
@@ -68,8 +81,7 @@ const SeguimientoObrasPage = () => {
         rectificacion: nuevoEstado,
         rectificacion_plazo_dias: diasPlazo
       });
-      const res = await axios.get(`${API}api/seguimiento_obras`);
-      setObras(res.data);
+      cargarObras();
     } catch (err) {
       console.error('Error al actualizar rectificación:', err);
     }
@@ -81,10 +93,24 @@ const SeguimientoObrasPage = () => {
         rectificacion: obra.rectificacion,
         rectificacion_plazo_dias: nuevoPlazo
       });
-      const res = await axios.get(`${API}api/seguimiento_obras`);
-      setObras(res.data);
+      cargarObras();
     } catch (err) {
       console.error('Error al cambiar días plazo:', err);
+    }
+  };
+
+  const handleComentarioChange = (id, texto) => {
+    setComentarioEditado(prev => ({ ...prev, [id]: texto }));
+  };
+
+  const guardarComentario = async (obra) => {
+    try {
+      await axios.put(`${API}api/seguimiento_obras/${obra.id}/comentario`, {
+        comentario: comentarioEditado[obra.id] || ''
+      });
+      cargarObras();
+    } catch (err) {
+      console.error('Error al guardar comentario:', err);
     }
   };
 
@@ -93,6 +119,7 @@ const SeguimientoObrasPage = () => {
   return (
     <div className="seguimiento-container">
       <h2 className="seguimiento-header">Seguimiento de Obras</h2>
+
       <div className="mb-3">
         <label>
           <input
@@ -105,21 +132,20 @@ const SeguimientoObrasPage = () => {
         </label>
       </div>
 
-      <div className="d-flex flex-wrap justify-content-between">
-        {obrasFiltradas.map((obra, i) => {
+      <div className="seguimiento-grid">
+        {obrasFiltradas.map((obra) => {
           const fechaMaxima = calcularFechaMaxima(obra.rectificacion_fecha, obra.rectificacion_plazo_dias);
           const vencido = esVencido(fechaMaxima);
 
           return (
-            <div key={obra.id} className="seguimiento-card col-md-5">
-              <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                <div><strong>{obra.cliente_nombre} - {obra.presupuesto_numero} - {obra.nombre_obra}</strong></div>
+            <div key={obra.id} className="seguimiento-card">
+              <div className="seguimiento-titulo">
+                <strong>{obra.cliente_nombre} - {obra.presupuesto_numero} - {obra.nombre_obra}</strong>
                 {fechaMaxima && (
-                  <div style={{ color: vencido ? 'red' : 'green' }}>
-                    Fecha Máx: {fechaMaxima}
-                  </div>
+                  <span className={`seguimiento-fecha ${vencido ? 'vencido' : 'activo'}`}>Fecha Máx: {formatFecha(fechaMaxima)}</span>
                 )}
               </div>
+
               <div className="etapas">
                 {etapasPrincipales.map((etapa) => {
                   const agrupacion = Object.entries(agrupaciones).find(([_, subs]) => subs.includes(etapa));
@@ -183,11 +209,27 @@ const SeguimientoObrasPage = () => {
                   }
                 })}
 
-                {obra.comentario && (
-                  <div className="comentario">
-                    <strong>Comentario:</strong> {obra.comentario}
-                  </div>
-                )}
+                <div className="seguimiento-comentario mt-3">
+                  <label><strong>Comentario:</strong></label>
+                  <textarea
+                    className="form-control mt-1"
+                    value={comentarioEditado[obra.id] ?? obra.comentario ?? ''}
+                    onChange={(e) => handleComentarioChange(obra.id, e.target.value)}
+                    placeholder="Escribe un comentario..."
+                    rows={3}
+                  />
+                  <button
+                    className="btn btn-sm btn-primary mt-2"
+                    onClick={() => guardarComentario(obra)}
+                  >
+                    Guardar Comentario
+                  </button>
+                  {obra.comentario_fecha && (
+                    <div className="text-muted mt-1" style={{ fontSize: '0.85rem' }}>
+                      Última edición: {formatFecha(obra.comentario_fecha)}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
