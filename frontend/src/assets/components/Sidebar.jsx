@@ -7,7 +7,7 @@ import welcomeImage from '../img/AlumceLogo.jpg';
 
 const Sidebar = ({ total }) => {
   const { usuario, logout } = useAuth();
-  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático', 'Ventas', 'Bodega', 'Oficina Técnica', 'Adquisiciones'].includes(usuario?.rol);
+  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático', 'Ventas', 'Oficina Técnica', 'Adquisiciones', 'Operaciones'].includes(usuario?.rol);
 
   return (
     <nav id="sidebar" className="bg-dark text-white">
@@ -43,10 +43,11 @@ const Sidebar = ({ total }) => {
               <a href="#bodegaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Bodega</a>
               <ul className="collapse list-unstyled" id="bodegaSubmenu">
                 <li><Link to="/StockActual">Stock Actual</Link></li>
-                <li><Link to="/IngresosPage">Ingreso de inventario</Link></li>
-                <li><Link to="/SalidasPage">Salidas de inventario</Link></li>
+                <li><Link to="/IngresosPage">Ingreso de Facturas/Guias</Link></li>
+                <li><Link to="/SalidasPage">Salidas de Material</Link></li>
                 <li><Link to="/StockReservado">Stock reservado por OT</Link></li>
-                <li><Link to="/CrearSolicitudBodegaPage">Solicitud de materiales</Link></li>
+                <li><Link to="/CrearSolicitudBodegaPage">Solicitud de materiales a OT</Link></li>
+                <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
               </ul>
             </li>
           )}
