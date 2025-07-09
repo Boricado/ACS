@@ -158,7 +158,7 @@ const InventarioPage = () => {
                   </tr>
                   {detalleVisible === item.codigo && (
                     <tr>
-                      <td colSpan="8">
+                      <td colSpan="9">
                         <strong>Reservas:</strong>
                         <ul className="mb-0">
                           {reservas

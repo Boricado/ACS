@@ -20,16 +20,20 @@ const [pautas, setPautas] = useState(
 
 const StockReservado = () => {
   const [obras, setObras] = useState([]);
-  const [pautas, setPautas] = useState({});
+  const [pautas, setPautas] = useState(
+    Object.fromEntries(etapas.map(e => [e.key, []]))
+  );
 
   useEffect(() => {
     const fetchObras = async () => {
       const res = await axios.get(`${API}api/seguimiento_obras`);
       const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
       setObras(obrasFiltradas);
+      console.log('Obras con recepcion_final = false:', obrasFiltradas);
 
       for (const etapa of etapas) {
         const result = await axios.get(`${API}api/${etapa.tabla}`);
+        console.log(`Datos de ${etapa.key}:`, result.data);
         setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
       }
     };
