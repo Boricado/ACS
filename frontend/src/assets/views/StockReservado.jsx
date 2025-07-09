@@ -23,12 +23,12 @@ const StockReservado = () => {
   useEffect(() => {
     const fetchObras = async () => {
       try {
-        const res = await axios.get(`${API}/api/seguimiento_obras`);
+        const res = await axios.get(`${API}api/seguimiento_obras`);
         const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
         setObras(obrasFiltradas);
 
         for (const etapa of etapas) {
-          const result = await axios.get(`${API}/api/${etapa.tabla}`);
+          const result = await axios.get(`${API}api/${etapa.tabla}`);
           setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
         }
       } catch (err) {
@@ -46,7 +46,7 @@ const StockReservado = () => {
 
   const handleToggle = async (tabla, id, nuevoEstado) => {
     try {
-      await axios.patch(`${API}/api/stock-reservado/${tabla}/${id}`, {
+      await axios.patch(`${API}api/stock-reservado/${tabla}/${id}`, {
         separado: nuevoEstado
       });
 
