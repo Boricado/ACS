@@ -12,18 +12,20 @@ const etapas = [
   { key: 'instalacion', tabla: 'ot_pautas_instalacion' }
 ];
 
+const API = import.meta.env.VITE_API_URL;
+
 const StockReservado = () => {
   const [obras, setObras] = useState([]);
   const [pautas, setPautas] = useState({});
 
   useEffect(() => {
     const fetchObras = async () => {
-      const res = await axios.get('http://localhost:4000/api/seguimiento_obras');
+      const res = await axios.get(`${API}api/seguimiento_obras`);
       const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
       setObras(obrasFiltradas);
 
       for (const etapa of etapas) {
-        const result = await axios.get(`http://localhost:4000/api/${etapa.tabla}`);
+        const result = await axios.get(`${API}api/${etapa.tabla}`);
         setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
       }
     };
@@ -33,7 +35,7 @@ const StockReservado = () => {
 
   const handleToggle = async (tabla, id, nuevoEstado) => {
     try {
-      await axios.patch(`http://localhost:4000/api/stock-reservado/${tabla}/${id}`, {
+      await axios.patch(`${API}api/stock-reservado/${tabla}/${id}`, {
         separado: nuevoEstado
       });
       // Actualiza en frontend local
@@ -48,13 +50,13 @@ const StockReservado = () => {
 
   useEffect(() => {
   const fetchObras = async () => {
-    const res = await axios.get('http://localhost:4000/api/seguimiento_obras');
+    const res = await axios.get(`${API}api/seguimiento_obras`);
     const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
     setObras(obrasFiltradas);
     console.log('Obras con recepcion_final = false:', obrasFiltradas); // 👈 DEBUG
 
     for (const etapa of etapas) {
-      const result = await axios.get(`http://localhost:4000/api/${etapa.tabla}`);
+      const result = await axios.get(`${API}api/${etapa.tabla}`);
       console.log(`Datos de ${etapa.key}:`, result.data); // 👈 DEBUG
       setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
     }

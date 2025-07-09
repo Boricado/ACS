@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const OCPendientePage = () => {
   const [ordenes, setOrdenes] = useState([]);
+  const API = import.meta.env.VITE_API_URL;
   const [filtro, setFiltro] = useState({
     numero_oc: '',
     numero_presupuesto: '',
@@ -18,7 +19,7 @@ const OCPendientePage = () => {
 
   const cargarOrdenes = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/ordenes_compra_estado', {
+      const res = await axios.get(`${API}api/ordenes_compra_estado`, {
         params: { estado: filtro.estado }
       });
       setOrdenes(res.data);

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+
 const IngresosPage = () => {
   const [ordenes, setOrdenes] = useState([]);
+  const API = import.meta.env.VITE_API_URL;
   const [filtro, setFiltro] = useState({
     numero_oc: '',
     proveedor: '',
@@ -16,7 +18,7 @@ const IngresosPage = () => {
 
   const cargarOrdenesPendientes = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/ordenes_compra_estado', {
+      const res = await axios.get(`${API}api/ordenes_compra_estado`, {
         params: { estado: 'Pendiente' },
       });
       setOrdenes(res.data);
@@ -86,7 +88,7 @@ const IngresosPage = () => {
         }))
       }));
 
-      await axios.post('http://localhost:4000/api/ingresar_factura', { ordenes: ordenesAEnviar });
+      await axios.post(`${API}api/ingresar_factura`, { ordenes: ordenesAEnviar });
       alert('Factura ingresada exitosamente.');
     } catch (err) {
       console.error('Error al ingresar factura:', err);

@@ -10,13 +10,14 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+  const API = import.meta.env.VITE_API_URL;
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
   try {
-    const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, { correo, contrasena });
+    const res = await axios.post(`${API}api/login`, { correo, contrasena });
     login(res.data);
     navigate('/');
   } catch (err) {

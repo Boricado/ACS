@@ -4,6 +4,7 @@ import axios from 'axios';
 const PresupuestoPage = () => {
   const [clientes, setClientes] = useState([]);
   const [mensaje, setMensaje] = useState(null);
+  const API = import.meta.env.VITE_API_URL;
 
   const [presupuesto, setPresupuesto] = useState({
     numero: '',
@@ -16,7 +17,7 @@ const PresupuestoPage = () => {
 
   // Cargar clientes al iniciar
   useEffect(() => {
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => {
         console.error('Error al cargar clientes:', err);
@@ -42,7 +43,7 @@ const PresupuestoPage = () => {
 
     try {
       // Validar duplicado
-      const resValidacion = await axios.get(`http://localhost:4000/api/presupuestos/cliente/${cliente_id}`);
+      const resValidacion = await axios.get(`${API}api/presupuestos/cliente/${cliente_id}`);
       const yaExiste = resValidacion.data.some(p => p.numero === numero);
 
       if (yaExiste) {
@@ -51,7 +52,7 @@ const PresupuestoPage = () => {
       }
 
       // Guardar presupuesto
-      const res = await axios.post('http://localhost:4000/api/presupuestos', {
+      const res = await axios.post(`${API}api/presupuestos`, {
         numero,
         cliente_id,
         nombre_obra,
@@ -65,7 +66,7 @@ const PresupuestoPage = () => {
       const cliente_nombre = clienteEncontrado?.nombre || 'Sin nombre';
 
       // Crear seguimiento de obra
-      await axios.post('http://localhost:4000/api/seguimiento_obras', {
+      await axios.post(`${API}api/seguimiento_obras`, {
         cliente_nombre,
         presupuesto_numero: numero,
         nombre_obra

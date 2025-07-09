@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
 const ItemPresupuestoPage = () => {
   const [clientes, setClientes] = useState([]);
   const [presupuestos, setPresupuestos] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState('');
+  const API = import.meta.env.VITE_API_URL;
   const [item, setItem] = useState({
     presupuesto_id: '',
     item: '',
@@ -27,14 +29,14 @@ const ItemPresupuestoPage = () => {
   const valorUTV = 20000;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(() => setClientes([]));
   }, []);
 
   useEffect(() => {
     if (clienteSeleccionado) {
-      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
         .then(res => setPresupuestos(res.data))
         .catch(() => setPresupuestos([]));
     } else {
@@ -145,7 +147,7 @@ const ItemPresupuestoPage = () => {
           utv: it.utv,
           utv_monto: it.utv_monto
         };
-        await axios.post('http://localhost:4000/api/items_presupuesto', payload);
+        await axios.post(`${API}api/items_presupuesto`, payload);
       }
       setItems([]);
       setMensaje({ tipo: 'success', texto: 'Todos los ítems fueron guardados correctamente' });

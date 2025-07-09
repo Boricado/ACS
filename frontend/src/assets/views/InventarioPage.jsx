@@ -10,9 +10,10 @@ const InventarioPage = () => {
   const [filtro, setFiltro] = useState('');
   const [mostrarStockCero, setMostrarStockCero] = useState(false);
   const [detalleVisible, setDetalleVisible] = useState(null);
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/inventario')
+    axios.get(`${API}api/inventario`)
       .then(res => {
         console.log("📦 Inventario cargado:", res.data);
         setInventario(res.data);
@@ -31,7 +32,7 @@ const InventarioPage = () => {
 
         let reservasTemp = [];
         for (const tabla of tablas) {
-          const res = await axios.get(`http://localhost:4000/api/${tabla}`);
+          const res = await axios.get(`${API}api/${tabla}`);
           reservasTemp = reservasTemp.concat(
             res.data.map(r => ({
               codigo: r.codigo,
@@ -52,7 +53,7 @@ const InventarioPage = () => {
 
     const fetchClientes = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/clientes');
+        const res = await axios.get(`${API}api/clientes`);
         setClientes(res.data);
       } catch (err) {
         console.error("❌ Error al cargar clientes:", err);

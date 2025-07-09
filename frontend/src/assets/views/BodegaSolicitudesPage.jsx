@@ -4,6 +4,8 @@ import axios from 'axios';
 const BodegaSolicitudesPage = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [filtroPendientes, setFiltroPendientes] = useState(true);
+  const API = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     fetchSolicitudes();
@@ -11,7 +13,7 @@ const BodegaSolicitudesPage = () => {
 
   const fetchSolicitudes = async () => {
     try {
-      const res = await axios.get('http://localhost:4000/api/solicitudes');
+      const res = await axios.get(`${API}api/solicitudes`);
       setSolicitudes(res.data);
     } catch (err) {
       console.error("Error al cargar solicitudes:", err);
@@ -20,8 +22,8 @@ const BodegaSolicitudesPage = () => {
 
   const handleAprobar = async (id, nuevoEstado) => {
     try {
-      await axios.put(`http://localhost:4000/api/solicitudes/${id}`, {
-        aprobada: nuevoEstado
+      await axios.put(`${API}api/solicitudes/${id}`, {
+        aprobada: nuevoEstado,
       });
       fetchSolicitudes();
     } catch (err) {

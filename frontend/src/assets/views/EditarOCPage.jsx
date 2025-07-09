@@ -10,14 +10,15 @@ const EditarOCPage = () => {
   const [mensaje, setMensaje] = useState(null);
   const [comentario, setComentario] = useState('');
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchOrdenes = async () => {
       try {
         const res = await axios.get(
           estadoFiltro === 'Todas'
-            ? 'http://localhost:4000/api/ordenes_compra'
-            : `http://localhost:4000/api/ordenes_compra_estado?estado=${estadoFiltro}`
+            ? `${API}api/ordenes_compra`
+            : `${API}api/ordenes_compra_estado?estado=${estadoFiltro}`
         );
         setOrdenes(res.data);
       } catch {
@@ -27,14 +28,14 @@ const EditarOCPage = () => {
 
     fetchOrdenes();
 
-    axios.get('http://localhost:4000/api/materiales')
+    axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
       .catch(() => setMateriales([]));
   }, [estadoFiltro]);
 
   useEffect(() => {
     if (numeroOCSeleccionado) {
-      axios.get(`http://localhost:4000/api/items_oc/${numeroOCSeleccionado}`)
+      axios.get(`${API}api/items_oc/${numeroOCSeleccionado}`)
         .then(res => {
           setItems(res.data);
           calcularTotales(res.data);
@@ -45,7 +46,7 @@ const EditarOCPage = () => {
 
   const obtenerPrecioUltimo = async (codigo) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/precio-material?codigo=${codigo}`);
+      const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
     } catch (error) {
       console.error('Error al obtener precio desde backend:', error);
@@ -79,7 +80,7 @@ const EditarOCPage = () => {
     const item = items[index];
     if (item.id) {
       try {
-        await axios.delete(`http://localhost:4000/api/items_oc/${item.id}`);
+        await axios.delete(`${API}api/items_oc/${item.id}`);
       } catch (err) {
         console.error('Error al eliminar ítem:', err.message);
       }
@@ -105,18 +106,18 @@ const EditarOCPage = () => {
     try {
       for (const it of items) {
         if (it.id) {
-          await axios.put(`http://localhost:4000/api/items_oc/${it.id}`, it);
+          await axios.put(`${API}api/items_oc/${it.id}`, it);
         } else {
-          await axios.post('http://localhost:4000/api/items_oc', {
+          await axios.post(`${API}api/items_oc`, {
             ...it,
             numero_oc: numeroOCSeleccionado
           });
         }
       }
       if (comentario) {
-        await axios.put(`http://localhost:4000/api/ordenes_compra/${numeroOCSeleccionado}`, { comentario });
+        await axios.put(`${API}api/ordenes_compra/${numeroOCSeleccionado}`, { comentario });
       }
-      const res = await axios.get(`http://localhost:4000/api/items_oc/${numeroOCSeleccionado}`);
+      const res = await axios.get(`${API}api/items_oc/${numeroOCSeleccionado}`);
       setItems(res.data);
       calcularTotales(res.data);
       setMensaje({ tipo: 'success', texto: 'Ítems actualizados correctamente' });

@@ -11,20 +11,21 @@ const OTPautasPage = () => {
   const [materiales, setMateriales] = useState([]);
   const [items, setItems] = useState([]);
   const [pautasCargadas, setPautasCargadas] = useState([]);
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
 
-    axios.get('http://localhost:4000/api/materiales')
+    axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
       .catch(err => console.error('Error al cargar materiales:', err));
   }, []);
 
   useEffect(() => {
     if (clienteSeleccionado?.id) {
-      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado.id}`)
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado.id}`)
         .then(res => setPresupuestos(res.data))
         .catch(err => console.error('Error al cargar presupuestos:', err));
     }
@@ -58,7 +59,7 @@ const OTPautasPage = () => {
 
   const eliminarPautaCargada = async (id) => {
     try {
-      await axios.delete(`http://localhost:4000/api/ot_pautas/${categoria.toLowerCase()}/${id}`);
+      await axios.delete(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`);
       cargarPautas();
     } catch (err) {
       console.error('Error al eliminar pauta:', err);
@@ -67,8 +68,8 @@ const OTPautasPage = () => {
 
   const validarClienteYPresupuesto = async (clienteId, presupuestoId) => {
     try {
-      const clienteRes = await axios.get(`http://localhost:4000/api/clientes/${clienteId}`);
-      const presupuestoRes = await axios.get(`http://localhost:4000/api/presupuestos/id/${presupuestoId}`);
+      const clienteRes = await axios.get(`${API}api/clientes/${clienteId}`);
+      const presupuestoRes = await axios.get(`${API}api/presupuestos/id/${presupuestoId}`);
       return clienteRes.status === 200 && presupuestoRes.status === 200;
     } catch (err) {
       return false;
@@ -89,7 +90,7 @@ const OTPautasPage = () => {
 
     try {
       for (const i of items) {
-        await axios.post(`http://localhost:4000/api/ot_pautas/${categoria.toLowerCase()}`, {
+        await axios.post(`${API}api/ot_pautas/${categoria.toLowerCase()}`, {
           cliente_id: clienteSeleccionado.id,
           presupuesto_id: presupuestoSeleccionado.id,
           numero_presupuesto: presupuestoSeleccionado.numero, // 👈 este campo es clave
@@ -110,7 +111,7 @@ const OTPautasPage = () => {
   const cargarPautas = async () => {
     if (!clienteSeleccionado?.id || !presupuestoSeleccionado?.id || !categoria) return;
     try {
-      const res = await axios.get(`http://localhost:4000/api/ot_pautas/${categoria.toLowerCase()}?cliente_id=${clienteSeleccionado.id}&presupuesto_id=${presupuestoSeleccionado.id}`);
+      const res = await axios.get(`${API}api/ot_pautas/${categoria.toLowerCase()}?cliente_id=${clienteSeleccionado.id}&presupuesto_id=${presupuestoSeleccionado.id}`);
       setPautasCargadas(res.data);
     } catch (err) {
       console.error('Error al cargar pautas:', err);
@@ -119,7 +120,7 @@ const OTPautasPage = () => {
 
   const actualizarPauta = async (id, nuevaCantidad) => {
     try {
-      await axios.put(`http://localhost:4000/api/ot_pautas/${categoria.toLowerCase()}/${id}`, {
+      await axios.put(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`, {
         cantidad: parseInt(nuevaCantidad)
       });
       cargarPautas();

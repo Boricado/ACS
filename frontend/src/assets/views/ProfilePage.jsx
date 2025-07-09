@@ -11,6 +11,7 @@ const ProfilePage = () => {
   const [nuevaContrasena, setNuevaContrasena] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  const API = import.meta.env.VITE_API_URL;
 
   const handleLogout = () => {
     logout();
@@ -26,7 +27,7 @@ const ProfilePage = () => {
     }
 
     try {
-      await axios.put(`http://localhost:4000/api/usuarios/${usuario.id}/cambiar-contrasena`, {
+      await axios.put(`${API}api/usuarios/${usuario.id}/cambiar-contrasena`, {
         nuevaContrasena
       });
       setMensaje('Contraseña actualizada con éxito');

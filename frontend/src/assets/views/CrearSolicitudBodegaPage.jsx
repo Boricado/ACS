@@ -11,9 +11,11 @@ const CrearSolicitudBodegaPage = () => {
   const [solicitante, setSolicitante] = useState('');
   const [items, setItems] = useState([]);
   const [mensaje, setMensaje] = useState(null);
+  const API = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/materiales')
+    axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
       .catch(err => console.error('Error al cargar materiales', err));
   }, []);
@@ -44,7 +46,7 @@ const CrearSolicitudBodegaPage = () => {
   const handleEnviarSolicitud = async () => {
     try {
       await Promise.all(items.map(item =>
-        axios.post('http://localhost:4000/api/solicitudes', item)
+        axios.post(`${API}api/solicitudes`, item)
       ));
       setMensaje('Solicitud enviada correctamente.');
       setItems([]);

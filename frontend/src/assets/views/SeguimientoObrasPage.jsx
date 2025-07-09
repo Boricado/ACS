@@ -8,6 +8,8 @@ const etapasPrincipales = [
   'fabricacion', 'acopio', 'despacho', 'instalacion_2', 'recepcion_final', 'pago'
 ];
 
+const API = import.meta.env.VITE_API_URL;
+
 const agrupaciones = {
   Material: ['perfiles', 'refuerzos', 'tornillos', 'accesorios', 'gomas_cepillos', 'herraje', 'vidrio'],
 };
@@ -26,7 +28,7 @@ const SeguimientoObrasPage = () => {
   const [obras, setObras] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/seguimiento_obras')
+    axios.get(`${API}api/seguimiento_obras`)
       .then(res => setObras(res.data))
       .catch(err => console.error('Error al cargar seguimiento:', err));
   }, []);

@@ -8,16 +8,18 @@ const EditarItemsPresupuestoPage = () => {
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState('');
   const [items, setItems] = useState([]);
   const [mensaje, setMensaje] = useState(null);
+  const API = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(() => setClientes([]));
   }, []);
 
   useEffect(() => {
     if (clienteSeleccionado) {
-      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
         .then(res => setPresupuestos(res.data))
         .catch(() => setPresupuestos([]));
     } else {
@@ -27,7 +29,7 @@ const EditarItemsPresupuestoPage = () => {
 
   useEffect(() => {
     if (presupuestoSeleccionado) {
-      axios.get(`http://localhost:4000/api/items_presupuesto/presupuesto/${presupuestoSeleccionado}`)
+      axios.get(`${API}api/items_presupuesto/presupuesto/${presupuestoSeleccionado}`)
         .then(res => setItems(res.data))
         .catch(() => setItems([]));
     }
@@ -43,7 +45,7 @@ const EditarItemsPresupuestoPage = () => {
     const item = items[index];
     if (item.id) {
       try {
-        await axios.delete(`http://localhost:4000/api/items_presupuesto/${item.id}`);
+        await axios.delete(`${API}api/items_presupuesto/${item.id}`)
       } catch (err) {
         console.error('Error al eliminar ítem:', err.message);
       }
@@ -75,15 +77,15 @@ const EditarItemsPresupuestoPage = () => {
     try {
       for (const it of items) {
         if (it.id) {
-          await axios.put(`http://localhost:4000/api/items_presupuesto/${it.id}`, it);
+          await axios.put(`${API}api/items_presupuesto/${it.id}`, it);
         } else if (presupuestoSeleccionado) {
-          await axios.post('http://localhost:4000/api/items_presupuesto', {
+          await axios.post(`${API}api/items_presupuesto`, {
             ...it,
             presupuesto_id: presupuestoSeleccionado
           });
         }
       }
-      const res = await axios.get(`http://localhost:4000/api/items_presupuesto/presupuesto/${presupuestoSeleccionado}`);
+      const res = await axios.get(`${API}api/items_presupuesto/presupuesto/${presupuestoSeleccionado}`);
       setItems(res.data);
       setMensaje({ tipo: 'success', texto: 'Ítems guardados y actualizados correctamente' });
     } catch (error) {

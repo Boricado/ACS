@@ -7,6 +7,7 @@ const RegisterPage = () => {
     const [confirmPassword, setConfirmPassword] = useState("")
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false);
+    const API = import.meta.env.VITE_API_URL;
 
     // Prevenimos el comportamiento por defecto
     const validarInput = (e) => {

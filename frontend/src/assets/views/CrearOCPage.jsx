@@ -65,19 +65,19 @@ useEffect(() => {
     setTotales({ neto, iva, total });
   }, [items]);
 
-    const obtenerPrecioUltimo = async (codigo) => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}api/precio-material?codigo=${codigo}`);
-        return res.data.precio_unitario;
-      } catch (error) {
-        if (error.response?.status === 404) {
-          console.warn(`No se encontró precio para el código: ${codigo}`);
-        } else {
-          console.error('Error al obtener precio desde backend:', error);
-        }
-        return '';
+  const obtenerPrecioUltimo = async (codigo) => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}api/precio-material?codigo=${codigo}`);
+      return res.data.precio_unitario;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.warn(`No se encontró precio para el código: ${codigo}`);
+      } else {
+        console.error('Error al obtener precio desde backend:', error);
       }
-    };
+      return '';
+    }
+  };
 
   const handleCodigoChange = async (codigo) => {
     const m = materiales.find(m => m.codigo === codigo);

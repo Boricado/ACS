@@ -18,13 +18,14 @@ const SalidasPage = () => {
   const [presupuestoNumero, setPresupuestoNumero] = useState('');
   const [nombreObra, setNombreObra] = useState('');
   const [observacion, setObservacion] = useState('');
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/api/materiales')
+    axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
       .catch(err => console.error('Error al cargar materiales:', err));
 
-    axios.get('http://localhost:4000/api/clientes')
+    axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
   }, []);
@@ -33,7 +34,7 @@ const SalidasPage = () => {
     if (clienteSeleccionado) {
       const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
       setClienteNombre(cliente?.nombre || '');
-      axios.get(`http://localhost:4000/api/presupuestos/cliente/${clienteSeleccionado}`)
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
         .then(res => setPresupuestos(res.data))
         .catch(err => console.error('Error al obtener presupuestos:', err));
     } else {
@@ -51,7 +52,7 @@ const SalidasPage = () => {
 
   const obtenerPrecioUltimo = async (codigo) => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/precio-material?codigo=${codigo}`);
+      const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
     } catch (error) {
       console.error('Error al obtener precio desde backend:', error);
@@ -85,7 +86,7 @@ const SalidasPage = () => {
       const clienteId = parseInt(clienteSeleccionado);
       const presupuestoId = parseInt(presupuestoSeleccionado);
 
-      const res = await axios.post('http://localhost:4000/api/registro_salida', {
+      const res = await axios.post(`${API}api/registro_salida`, {
         codigo,
         producto,
         cantidad_salida: parseInt(cantidadSalida),
