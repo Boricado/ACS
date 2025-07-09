@@ -611,14 +611,18 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
 app.get('/api/inventario', async (req, res) => {
   try {
     const resultado = await pool.query(`
-      SELECT 
+      SELECT DISTINCT ON (i.codigo)
         i.codigo,
         d.producto,
         i.stock_actual,
         i.stock_minimo,
-        i.unidad
+        i.unidad,
+        d.precio_unitario
       FROM inventario i
       LEFT JOIN detalle_oc d ON i.codigo = d.codigo
+      LEFT JOIN ordenes_compra oc ON d.numero_oc = oc.numero_oc
+      WHERE d.precio_unitario IS NOT NULL
+      ORDER BY i.codigo, oc.fecha DESC;
     `);
     res.json(resultado.rows);
   } catch (err) {

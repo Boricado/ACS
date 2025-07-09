@@ -125,7 +125,8 @@ const InventarioPage = () => {
             <th>Stock Actual</th>
             <th>Stock Reservado</th>
             <th>Stock Disponible</th>
-            <th style={{ borderRight: 'double' }}>Unidad</th>
+            <th>Unidad</th> 
+            <th style={{ borderRight: 'double' }}>Último Precio</th>
             <th style={{ borderLeft: 'double' }}>Stock Mínimo</th>
             <th>Estado</th>
           </tr>
@@ -145,6 +146,7 @@ const InventarioPage = () => {
                     <td>{reservado}</td>
                     <td>{parseInt(item.stock_actual) - reservado}</td>
                     <td>{item.unidad}</td>
+                    <td>${item.precio_unitario?.toLocaleString() || '-'}</td>
                     <td>{parseInt(item.stock_minimo)}</td>
                     <td className={
                       parseInt(item.stock_actual) < parseInt(item.stock_minimo)
