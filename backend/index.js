@@ -79,15 +79,25 @@ app.get('/api/clientes', async (req, res) => {
 });
 
 app.post('/api/presupuestos', async (req, res) => {
-  const { numero, cliente_id, nombre_obra, direccion, observacion, fecha } = req.body;
+  const { numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado } = req.body;
+
 
   try {
     const query = `
-      INSERT INTO presupuestos (numero, cliente_id, nombre_obra, direccion, observacion, fecha)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO presupuestos (numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
-    const values = [numero || null, cliente_id || null, nombre_obra || null, direccion || null, observacion || null, fecha || new Date()];
+    const values = [
+        numero || null,
+        cliente_id || null,
+        nombre_obra || null,
+        direccion || null,
+        observacion || null,
+        fecha || new Date(),
+        total_neto_presupuestado || 0
+      ];
+
     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (err) {

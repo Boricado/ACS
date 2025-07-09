@@ -12,7 +12,8 @@ const PresupuestoPage = () => {
     nombre_obra: '',
     direccion: '',
     observacion: '',
-    fecha: ''
+    fecha: '',
+    total_neto_presupuestado: ''
   });
 
   // Cargar clientes al iniciar
@@ -34,7 +35,7 @@ const PresupuestoPage = () => {
   };
 
   const guardarPresupuesto = async () => {
-    const { numero, cliente_id, nombre_obra, direccion, observacion, fecha } = presupuesto;
+    const { numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado } = presupuesto;
 
     if (!numero || !cliente_id || !nombre_obra) {
       setMensaje({ tipo: 'error', texto: 'Complete los campos obligatorios' });
@@ -58,7 +59,8 @@ const PresupuestoPage = () => {
         nombre_obra,
         direccion,
         observacion,
-        fecha
+        fecha,
+        total_neto_presupuestado: Number(total_neto_presupuestado) || 0
       });
 
       // Obtener nombre del cliente
@@ -80,7 +82,8 @@ const PresupuestoPage = () => {
         nombre_obra: '',
         direccion: '',
         observacion: '',
-        fecha: ''
+        fecha: '',
+        total_neto_presupuestado: ''
       });
 
     } catch (err) {
@@ -142,6 +145,17 @@ const PresupuestoPage = () => {
             className="form-control"
             placeholder="Dirección"
             value={presupuesto.direccion}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="col-md-6 mb-3">
+          <input
+            name="total_neto_presupuestado"
+            className="form-control"
+            type="number"
+            placeholder="Presupuestado Neto ($)"
+            value={presupuesto.total_neto_presupuestado}
             onChange={handleChange}
           />
         </div>
