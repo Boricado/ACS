@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import resumenMaterialesRoutes from './routes/resumen_materiales.js';
+import salidasRoutes from './routes/salidas.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(express.json());
 // Montar rutas después de definir `app`
 app.use('/api', usuariosRoutes);
 app.use('/api/resumen-materiales', resumenMaterialesRoutes);
+app.use('/api', salidasRoutes);
 
 
 // Configuración de conexión a PostgreSQL
@@ -848,18 +850,6 @@ app.post('/api/registro_salida', async (req, res) => {
     client.release();
   }
 });
-
-// GET /api/salidas_inventario2
-router.get('/salidas_inventario2', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM salidas_inventario2 ORDER BY fecha DESC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener salidas:', err);
-    res.status(500).json({ error: 'Error al obtener salidas' });
-  }
-});
-
 
 
 //////////////////////////////
