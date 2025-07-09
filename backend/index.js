@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import resumenMaterialesRoutes from './routes/resumen_materiales.js';
 import salidasRoutes from './routes/salidas.js';
+import otPautasRoutes from './routes/ot_pautas.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use('/api', usuariosRoutes);
 app.use('/api/resumen-materiales', resumenMaterialesRoutes);
 app.use('/api', salidasRoutes);
+app.use('/api/ot_pautas', otPautasRoutes);
 
 
 // Configuración de conexión a PostgreSQL
