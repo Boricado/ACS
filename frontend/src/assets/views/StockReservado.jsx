@@ -22,15 +22,17 @@ const StockReservado = () => {
 
   useEffect(() => {
     const fetchObras = async () => {
-      const res = await axios.get(`${API}api/seguimiento_obras`);
-      const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
-      setObras(obrasFiltradas);
-      console.log('Obras con recepcion_final = false:', obrasFiltradas);
+      try {
+        const res = await axios.get(`${API}api/seguimiento_obras`);
+        const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
+        setObras(obrasFiltradas);
 
-      for (const etapa of etapas) {
-        const result = await axios.get(`${API}api/${etapa.tabla}`);
-        console.log(`Datos de ${etapa.key}:`, result.data);
-        setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
+        for (const etapa of etapas) {
+          const result = await axios.get(`${API}api/${etapa.tabla}`);
+          setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
+        }
+      } catch (err) {
+        console.error('Error cargando datos:', err);
       }
     };
 
@@ -42,7 +44,7 @@ const StockReservado = () => {
       await axios.patch(`${API}api/stock-reservado/${tabla}/${id}`, {
         separado: nuevoEstado
       });
-      // Actualiza en frontend local
+
       setPautas(prev => ({
         ...prev,
         [tabla]: (prev[tabla] || []).map(item =>
@@ -53,24 +55,6 @@ const StockReservado = () => {
       console.error('Error al guardar:', err);
     }
   };
-
-  useEffect(() => {
-  const fetchObras = async () => {
-    const res = await axios.get(`${API}api/seguimiento_obras`);
-    const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
-    setObras(obrasFiltradas);
-    console.log('Obras con recepcion_final = false:', obrasFiltradas); // 👈 DEBUG
-
-    for (const etapa of etapas) {
-      const result = await axios.get(`${API}api/${etapa.tabla}`);
-      console.log(`Datos de ${etapa.key}:`, result.data); // 👈 DEBUG
-      setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
-    }
-  };
-
-  fetchObras();
-}, []);
-
 
   return (
     <div className="container">
