@@ -14,12 +14,24 @@ router.get('/', async (req, res) => {
       LEFT JOIN presupuestos p ON so.presupuesto_numero = p.numero
       ORDER BY so.id DESC
     `);
+
+    console.log('✅ Obras cargadas:', obras.rows.length);
+
+    // Revisa si hay algún valor extraño que pueda romper el JSON
+    obras.rows.forEach((o, i) => {
+      if (!o.cliente_nombre || !o.presupuesto_numero || !o.nombre_obra) {
+        console.warn(`⚠️ Registro incompleto en fila ${i}:`, o);
+      }
+    });
+
     res.json(obras.rows);
   } catch (err) {
-    console.error('❌ Error al obtener resumen de obras:', err.message);
+    console.error('❌ Error al obtener resumen de obras:', err.stack || err.message);
     res.status(500).json({ error: 'Error interno al cargar resumen de obras' });
   }
 });
+
+
 
 // GET /api/resumen-materiales/detalle/:presupuesto_numero
 router.get('/detalle/:presupuesto_numero', async (req, res) => {
