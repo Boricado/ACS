@@ -6,32 +6,33 @@ const router = express.Router();
 
 // GET /api/resumen-materiales
 router.get('/', async (req, res) => {
-  try {
-    const obras = await pool.query(`
-      SELECT so.id, so.cliente_nombre, so.presupuesto_numero, so.nombre_obra,
-             p.id AS presupuesto_id, p.total_neto_presupuestado
-      FROM seguimiento_obras so
-      LEFT JOIN presupuestos p ON so.presupuesto_numero = p.numero
-      ORDER BY so.id DESC
-    `);
+  const maxRetries = 3;
+  let intento = 0;
+  let obras = null;
 
-    console.log('✅ Obras cargadas:', obras.rows.length);
-
-    // Revisa si hay algún valor extraño que pueda romper el JSON
-    obras.rows.forEach((o, i) => {
-      if (!o.cliente_nombre || !o.presupuesto_numero || !o.nombre_obra) {
-        console.warn(`⚠️ Registro incompleto en fila ${i}:`, o);
+  while (intento < maxRetries) {
+    try {
+      obras = await pool.query(`
+        SELECT so.id, so.cliente_nombre, so.presupuesto_numero, so.nombre_obra,
+               p.id AS presupuesto_id, p.total_neto_presupuestado
+        FROM seguimiento_obras so
+        LEFT JOIN presupuestos p ON so.presupuesto_numero = p.numero
+        ORDER BY so.id DESC
+      `);
+      break; // Éxito
+    } catch (err) {
+      intento++;
+      console.warn(`🔁 Reintento ${intento}:`, err.message);
+      if (intento === maxRetries) {
+        console.error('❌ Error al obtener resumen de obras tras varios intentos:', err.message);
+        return res.status(500).json({ error: 'Error interno al cargar resumen de obras' });
       }
-    });
-
-    res.json(obras.rows);
-  } catch (err) {
-    console.error('❌ Error al obtener resumen de obras:', err.stack || err.message);
-    res.status(500).json({ error: 'Error interno al cargar resumen de obras' });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo antes de reintentar
+    }
   }
+
+  res.json(obras.rows);
 });
-
-
 
 // GET /api/resumen-materiales/detalle/:presupuesto_numero
 router.get('/detalle/:presupuesto_numero', async (req, res) => {
