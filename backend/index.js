@@ -613,23 +613,25 @@ app.get('/api/inventario', async (req, res) => {
     const resultado = await pool.query(`
       SELECT DISTINCT ON (i.codigo)
         i.codigo,
-        d.producto,
+        COALESCE(d.producto, '') AS producto,
         i.stock_actual,
         i.stock_minimo,
         i.unidad,
-        d.precio_unitario
+        COALESCE(d.precio_unitario, 0) AS precio_unitario
       FROM inventario i
       LEFT JOIN detalle_oc d ON i.codigo = d.codigo
       LEFT JOIN ordenes_compra oc ON d.numero_oc = oc.numero_oc
       WHERE d.precio_unitario IS NOT NULL
-      ORDER BY i.codigo, oc.fecha DESC;
+      ORDER BY i.codigo, oc.fecha DESC
     `);
+
     res.json(resultado.rows);
   } catch (err) {
     console.error('❌ ERROR en /api/inventario:', err.message);
     res.status(500).json({ error: 'Error al obtener inventario' });
   }
 });
+
 /////////////////
 
 // -----------------------------
