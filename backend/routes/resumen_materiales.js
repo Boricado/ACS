@@ -7,15 +7,13 @@ const router = express.Router();
 // GET /api/resumen-materiales
 router.get('/', async (req, res) => {
   try {
-    // Obtener obras y presupuestos
     const obras = await pool.query(`
       SELECT so.id, so.cliente_nombre, so.presupuesto_numero, so.nombre_obra,
              p.id AS presupuesto_id, p.total_neto_presupuestado
       FROM seguimiento_obras so
-      LEFT JOIN presupuestos p ON so.presupuesto_numero = p.numero_presupuesto
+      LEFT JOIN presupuestos p ON so.presupuesto_numero = p.numero
       ORDER BY so.id DESC
     `);
-
     res.json(obras.rows);
   } catch (err) {
     console.error('❌ Error al obtener resumen de obras:', err.message);
@@ -26,6 +24,9 @@ router.get('/', async (req, res) => {
 // GET /api/resumen-materiales/detalle/:presupuesto_numero
 router.get('/detalle/:presupuesto_numero', async (req, res) => {
   const { presupuesto_numero } = req.params;
+
+  console.log('📌 Consultando detalle de materiales para presupuesto:', presupuesto_numero);
+
   try {
     const tablas = [
       'ot_pautas_perfiles', 'ot_pautas_refuerzos', 'ot_pautas_tornillos',
@@ -36,15 +37,19 @@ router.get('/detalle/:presupuesto_numero', async (req, res) => {
     let materiales = [];
 
     for (const tabla of tablas) {
-      const result = await pool.query(`
-        SELECT codigo, producto, cantidad AS stock_reservado, unidad, separado,
-          (SELECT SUM(cantidad) FROM detalle_oc WHERE codigo = t.codigo) AS stock_llegado,
-          (SELECT precio_unitario FROM detalle_oc WHERE codigo = t.codigo ORDER BY id DESC LIMIT 1) AS precio
-        FROM ${tabla} t
-        WHERE numero_presupuesto = $1
-      `, [presupuesto_numero]);
+      try {
+        const result = await pool.query(`
+          SELECT codigo, producto, cantidad AS stock_reservado, unidad, separado,
+            (SELECT SUM(cantidad) FROM detalle_oc WHERE codigo = t.codigo) AS stock_llegado,
+            (SELECT precio_unitario FROM detalle_oc WHERE codigo = t.codigo ORDER BY id DESC LIMIT 1) AS precio
+          FROM ${tabla} t
+          WHERE numero_presupuesto = $1
+        `, [presupuesto_numero]);
 
-      materiales.push(...result.rows);
+        materiales.push(...result.rows);
+      } catch (tablaError) {
+        console.error(`❌ Error en tabla ${tabla}:`, tablaError.message);
+      }
     }
 
     const detalle = materiales.map(mat => {
