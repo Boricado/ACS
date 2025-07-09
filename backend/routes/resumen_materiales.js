@@ -71,4 +71,26 @@ router.get('/detalle/:presupuesto_numero', async (req, res) => {
   }
 });
 
+// PUT /api/resumen-materiales/presupuesto/:id
+router.put('/presupuesto/:id', async (req, res) => {
+  const { id } = req.params;
+  const { total_neto_presupuestado } = req.body;
+
+  if (!total_neto_presupuestado || isNaN(total_neto_presupuestado)) {
+    return res.status(400).json({ error: 'Valor presupuestado inválido' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE presupuestos SET total_neto_presupuestado = $1 WHERE id = $2',
+      [total_neto_presupuestado, id]
+    );
+
+    res.status(200).json({ message: 'Presupuesto actualizado correctamente' });
+  } catch (err) {
+    console.error('❌ Error al actualizar presupuesto:', err.message);
+    res.status(500).json({ error: 'Error interno al actualizar presupuesto' });
+  }
+});
+
 export default router;
