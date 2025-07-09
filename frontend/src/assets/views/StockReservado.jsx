@@ -23,12 +23,12 @@ const StockReservado = () => {
   useEffect(() => {
     const fetchObras = async () => {
       try {
-        const res = await axios.get(`${API}api/seguimiento_obras`);
+        const res = await axios.get(`${API}/api/seguimiento_obras`);
         const obrasFiltradas = res.data.filter(o => !o.recepcion_final);
         setObras(obrasFiltradas);
 
         for (const etapa of etapas) {
-          const result = await axios.get(`${API}api/${etapa.tabla}`);
+          const result = await axios.get(`${API}/api/${etapa.tabla}`);
           setPautas(prev => ({ ...prev, [etapa.key]: result.data }));
         }
       } catch (err) {
@@ -39,15 +39,23 @@ const StockReservado = () => {
     fetchObras();
   }, []);
 
+  const getKeyFromTabla = (tabla) => {
+    const etapa = etapas.find(e => e.tabla === tabla);
+    return etapa ? etapa.key : null;
+  };
+
   const handleToggle = async (tabla, id, nuevoEstado) => {
     try {
-      await axios.patch(`${API}api/stock-reservado/${tabla}/${id}`, {
+      await axios.patch(`${API}/api/stock-reservado/${tabla}/${id}`, {
         separado: nuevoEstado
       });
 
+      const key = getKeyFromTabla(tabla);
+      if (!key) return;
+
       setPautas(prev => ({
         ...prev,
-        [tabla]: (prev[tabla] || []).map(item =>
+        [key]: prev[key].map(item =>
           item.id === id ? { ...item, separado: nuevoEstado } : item
         )
       }));
@@ -63,19 +71,9 @@ const StockReservado = () => {
         <div key={i} className="mb-4 border rounded p-3">
           <h4>{obra.cliente_nombre} - {obra.nombre_obra}</h4>
           {etapas.map(({ key, tabla }) => {
-            const datos = pautas[key]?.filter(p => {
-                const match = String(p.numero_presupuesto) === String(obra.presupuesto_numero);
-                if (!match && key === 'perfiles') {
-                    console.log('No coincide:', {
-                    p_num: p.numero_presupuesto,
-                    obra_num: obra.presupuesto_numero,
-                    p_id: p.id,
-                    obra
-                    });
-                }
-                return match;
-                }) || [];
-                console.log(`Etapa: ${key}, Presupuesto: ${obra.presupuesto_numero}, Ítems filtrados:`, datos);
+            const datos = pautas[key]?.filter(p =>
+              String(p.numero_presupuesto) === String(obra.presupuesto_numero)
+            ) || [];
 
             if (!datos.length) return null;
 
@@ -100,7 +98,7 @@ const StockReservado = () => {
                         <td>
                           <input
                             type="checkbox"
-                            checked={item.separado}
+                            checked={!!item.separado}
                             onChange={() =>
                               handleToggle(tabla, item.id, !item.separado)
                             }
