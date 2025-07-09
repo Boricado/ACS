@@ -849,6 +849,19 @@ app.post('/api/registro_salida', async (req, res) => {
   }
 });
 
+// GET /api/salidas_inventario2
+router.get('/salidas_inventario2', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM salidas_inventario2 ORDER BY fecha DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener salidas:', err);
+    res.status(500).json({ error: 'Error al obtener salidas' });
+  }
+});
+
+
+
 //////////////////////////////
 
 // ------------------------------

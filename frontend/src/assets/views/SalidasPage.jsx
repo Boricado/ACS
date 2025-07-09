@@ -111,6 +111,14 @@ const SalidasPage = () => {
     }
   };
 
+    const [salidasHistorico, setSalidasHistorico] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${API}api/salidas_inventario2`)
+      .then(res => setSalidasHistorico(res.data))
+      .catch(err => console.error('Error al cargar salidas:', err));
+  }, []);
+
   return (
     <div className="container py-4">
       <h2 className="mb-4 text-center">Registrar Salida de Material</h2>
@@ -212,6 +220,40 @@ const SalidasPage = () => {
           Cargar salida
         </button>
       </div>
+     <div className="mt-5">
+        <h4>Historial de Salidas</h4>
+        <div className="table-responsive">
+          <table className="table table-bordered table-sm">
+            <thead className="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>N° Presupuesto</th>
+                <th>Obra</th>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Neto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {salidasHistorico.map((s, idx) => (
+                <tr key={idx}>
+                  <td>{new Date(s.fecha).toLocaleDateString()}</td>
+                  <td>{s.cliente_nombre}</td>
+                  <td>{s.presupuesto_numero}</td>
+                  <td>{s.nombre_obra}</td>
+                  <td>{s.codigo}</td>
+                  <td>{s.producto}</td>
+                  <td>{s.cantidad}</td>
+                  <td>${s.precio_neto?.toLocaleString() || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>    
+
     </div>
   );
 };
