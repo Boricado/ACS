@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 import resumenMaterialesRoutes from './routes/resumen_materiales.js';
 import salidasRoutes from './routes/salidas.js';
 import otPautasRoutes from './routes/ot_pautas.js';
+import seguimientoRoutes from './routes/seguimiento.js';
 
 dotenv.config();
 
@@ -29,7 +30,7 @@ app.use('/api', usuariosRoutes);
 app.use('/api/resumen-materiales', resumenMaterialesRoutes);
 app.use('/api', salidasRoutes);
 app.use('/api/ot_pautas', otPautasRoutes);
-
+app.use('/api/seguimiento_obras', seguimientoRoutes);
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({
