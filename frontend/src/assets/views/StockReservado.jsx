@@ -14,10 +14,6 @@ const etapas = [
 
 const API = import.meta.env.VITE_API_URL;
 
-const [pautas, setPautas] = useState(
-  Object.fromEntries(etapas.map(e => [e.key, []]))
-);
-
 const StockReservado = () => {
   const [obras, setObras] = useState([]);
   const [pautas, setPautas] = useState(
