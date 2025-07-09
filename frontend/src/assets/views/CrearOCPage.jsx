@@ -20,6 +20,22 @@ const CrearOCPage = () => {
   const [numeroOC, setNumeroOC] = useState('');
   const API = import.meta.env.VITE_API_URL;
 
+  const camposObligatoriosIncompletos = () => {
+  if (!clienteSeleccionado || !presupuestoSeleccionado || !proveedor.trim() || !realizadoPor.trim()) {
+    return true;
+  }
+
+  if (items.length === 0) return true;
+
+  for (let i of items) {
+    if (!i.codigo || !i.producto || !i.cantidad || !i.precio_unitario) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 useEffect(() => {
     axios.get(`${API}api/materiales`)
       .then(res => setMateriales(res.data))
@@ -107,7 +123,7 @@ useEffect(() => {
   };
 
 const guardarOC = async () => {
-  if (!clienteSeleccionado || !presupuestoSeleccionado) {
+  if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
     alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
     return;
   }
@@ -134,8 +150,10 @@ const guardarOC = async () => {
     setItems([]);
   } catch (error) {
     console.error('Error al guardar OC:', error);
+    alert('Hubo un error al guardar la OC. Revisa la consola.');
   }
 };
+
 
 return (
     <div className="container py-4">
@@ -253,7 +271,13 @@ return (
       <label>Comentario</label>
       <textarea className="form-control mb-3" rows="2" value={comentario} onChange={(e) => setComentario(e.target.value)} />
 
-      <button className="btn btn-success" onClick={guardarOC}>Guardar Orden de Compra</button>
+      <button
+        className="btn btn-success"
+        onClick={guardarOC}
+        disabled={camposObligatoriosIncompletos()}
+      >
+        Guardar Orden de Compra
+      </button>
     </div>
   );
 };
