@@ -106,33 +106,38 @@ useEffect(() => {
     setItems(items.filter((_, i) => i !== index));
   };
 
- const guardarOC = async () => {
-    try {
-      const itemsConExtras = items.map(i => ({
-        ...i,
-        costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
-        observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
-      }));
+const guardarOC = async () => {
+  if (!clienteSeleccionado || !presupuestoSeleccionado) {
+    alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
+    return;
+  }
 
-      const response = await axios.post(`${API}api/ordenes_compra`, {
-        numero_oc: numeroOC,
-        proveedor,
-        fecha,
-        realizado_por: realizadoPor,
-        comentario,
-        cliente_id: clienteNombre,
-        numero_presupuesto: presupuestoNumero,
-        items: itemsConExtras
-      });
-      alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
-      setItems([]);
-    } catch (error) {
-      console.error('Error al guardar OC:', error);
-    }
-  };
+  try {
+    const itemsConExtras = items.map(i => ({
+      ...i,
+      costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
+      observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
+    }));
 
+    const response = await axios.post(`${API}api/ordenes_compra`, {
+      numero_oc: numeroOC,
+      proveedor,
+      fecha,
+      realizado_por: realizadoPor,
+      comentario,
+      cliente_id: clienteNombre,
+      numero_presupuesto: presupuestoNumero,
+      items: itemsConExtras
+    });
 
-  return (
+    alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
+    setItems([]);
+  } catch (error) {
+    console.error('Error al guardar OC:', error);
+  }
+};
+
+return (
     <div className="container py-4">
       <h2 className="mb-4 text-center">Crear Orden de Compra</h2>
 
