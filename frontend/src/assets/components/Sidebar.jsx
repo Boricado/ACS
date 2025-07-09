@@ -38,7 +38,7 @@ const Sidebar = ({ total }) => {
           )}
 
           {/* Bodega */}
-          {(usuario?.rol === 'Bodega' || accesoTotal) && (
+          {(usuario?.rol === 'Bodega' || usuario?.rol === 'Fábrica' || accesoTotal) && (
             <li>
               <a href="#bodegaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Bodega</a>
               <ul className="collapse list-unstyled" id="bodegaSubmenu">
