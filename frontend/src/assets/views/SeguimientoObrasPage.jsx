@@ -4,7 +4,7 @@ import '../styles/SeguimientoObrasPage.css';
 
 const etapasPrincipales = [
   'presupuesto', 'rectificacion', 'accesorios', 'gomas_cepillos', 'herraje',
-  'perfiles', 'refuerzos', 'tornillos', 'vidrio', 'planilla_de_corte',
+  'perfiles', 'refuerzos', 'tornillos', 'vidrio', 'planilla_corte',
   'fabricacion', 'acopio', 'despacho', 'instalacion', 'recepcion_final', 'pago'
 ];
 
@@ -17,7 +17,7 @@ const agrupaciones = {
 const formatLabel = (key) => {
   const map = {
     instalacion: 'Instalación',
-    planilla_de_corte: 'Planilla de Corte',
+    planilla_corte: 'Planilla de Corte',
     recepcion_final: 'Recepción Final',
     rectificacion: 'Rectificación'
   };
@@ -185,7 +185,7 @@ const SeguimientoObrasPage = () => {
                       </div>
                     );
                   } else if ([
-                    'planilla_de_corte', 'fabricacion', 'acopio', 'despacho', 'instalacion', 'recepcion_final', 'pago'
+                    'planilla_corte', 'fabricacion', 'acopio', 'despacho', 'instalacion', 'recepcion_final', 'pago'
                   ].includes(etapa)) {
                     return (
                       <div key={etapa} className="etapa d-flex align-items-center mb-2">

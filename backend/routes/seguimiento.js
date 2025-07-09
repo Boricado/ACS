@@ -56,7 +56,7 @@ router.put('/:id/toggle', async (req, res) => {
   }
 
   const camposValidos = [
-    'planilla_de_corte',
+    'planilla_corte',
     'fabricacion',
     'acopio',
     'despacho',
