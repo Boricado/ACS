@@ -5,6 +5,8 @@ import './index.css';
 import App from './App.jsx';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx'; // 👈 importa el contexto
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
