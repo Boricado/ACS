@@ -30,7 +30,7 @@ const Sidebar = ({ total }) => {
                 <ul className="collapse list-unstyled" id="ventasSubmenu">
                   <li><Link to="/IngresoCliente">Ingreso clientes</Link></li>
                   <li><Link to="/IngresoPresupuesto">Ingreso presupuesto</Link></li>
-                  <li><Link to="/IngresoItems">Ingreso ítems</Link></li>
+                  <li><Link to="/IngresoItems">... Ingreso ítems</Link></li>
                   <li><Link to="/EditarPresupuestos">... Editar Presupuestos</Link></li>
                 </ul>
               </li>
@@ -58,7 +58,7 @@ const Sidebar = ({ total }) => {
               <ul className="collapse list-unstyled" id="oficinaSubmenu">
                 <li><Link to="/StockActual">Stock Actual</Link></li>
                 <li><Link to="/OTPautasPage">Pautas de Materiales</Link></li>
-                <li><Link to="#">...Planillas de Corte</Link></li>
+                <li><Link to="#">... Planillas de Corte</Link></li>
               </ul>
             </li>
           )}
@@ -77,7 +77,7 @@ const Sidebar = ({ total }) => {
                     <li><Link to="/OCPendientePage">OC Pendientes/Historico de Compras</Link></li>
                   </ul>
                 </li>
-                <li><Link to="#">...Ingreso Proveedores</Link></li>
+                <li><Link to="#">... Ingreso Proveedores</Link></li>
                 <li><Link to="/BodegaSolicitudesPage">Ver solicitudes de Bodega</Link></li>
               </ul>
             </li>
@@ -90,19 +90,19 @@ const Sidebar = ({ total }) => {
               <ul className="collapse list-unstyled" id="operacionesSubmenu">
                 <li><Link to="/ResumenObrasMatPage">Resumen de Obras y Materiales</Link></li>
                 <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
-                <li><Link to="#">...Programación</Link></li>
-                <li><Link to="#">...Fabricación</Link></li>
+                <li><Link to="#">... Programación</Link></li>
+                <li><Link to="#">... Fabricación</Link></li>
                 <li>
                   <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Despacho</a>
                   <ul className="collapse list-unstyled" id="despachoSubmenu">
-                    <li><Link to="#">...Guías de despacho</Link></li>
+                    <li><Link to="#">... Guías de despacho</Link></li>
                   </ul>
                 </li>
                 <li>
                   <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
-                    <li><Link to="#">...Clientes</Link></li>
-                    <li><Link to="#">...Proveedores</Link></li>
+                    <li><Link to="#">... Clientes</Link></li>
+                    <li><Link to="#">... Proveedores</Link></li>
                   </ul>
                 </li>
               </ul>

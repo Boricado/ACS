@@ -92,7 +92,7 @@ const SeguimientoObrasPage = () => {
 
   return (
     <div className="seguimiento-container">
-      <h2>Seguimiento de Obras</h2>
+      <h2 className="seguimiento-header">Seguimiento de Obras</h2>
       <div className="mb-3">
         <label>
           <input
@@ -105,91 +105,89 @@ const SeguimientoObrasPage = () => {
         </label>
       </div>
 
-      <div className="row">
+      <div className="d-flex flex-wrap justify-content-between">
         {obrasFiltradas.map((obra, i) => {
           const fechaMaxima = calcularFechaMaxima(obra.rectificacion_fecha, obra.rectificacion_plazo_dias);
           const vencido = esVencido(fechaMaxima);
 
           return (
-            <div key={obra.id} className="col-md-6">
-              <div className="obra">
-                <div className="obra-titulo">
-                  <strong>{obra.cliente_nombre} - {obra.presupuesto_numero} - {obra.nombre_obra}</strong>
-                  {fechaMaxima && (
-                    <span style={{ marginLeft: '1rem', color: vencido ? 'red' : 'green' }}>
-                      Fecha Máx: {fechaMaxima}
-                    </span>
-                  )}
-                </div>
-                <div className="etapas">
-                  {etapasPrincipales.map((etapa) => {
-                    const agrupacion = Object.entries(agrupaciones).find(([_, subs]) => subs.includes(etapa));
-                    if (agrupacion && agrupacion[1][0] === etapa) {
-                      return (
-                        <div key={agrupacion[0]} className="etapa agrupacion">
-                          <div className="etapa-nombre">
-                            <span className="arrow">⮞</span> <strong>{agrupacion[0]}</strong>
-                          </div>
-                          <div className="subetapas">
-                            {agrupacion[1].map((sub) => (
-                              <div key={sub} className="subetapa">
-                                <span className="arrow">↳</span> {formatLabel(sub)} {obra[sub] ? '✅' : ''}
-                              </div>
-                            ))}
-                          </div>
+            <div key={obra.id} className="seguimiento-card col-md-5">
+              <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                <div><strong>{obra.cliente_nombre} - {obra.presupuesto_numero} - {obra.nombre_obra}</strong></div>
+                {fechaMaxima && (
+                  <div style={{ color: vencido ? 'red' : 'green' }}>
+                    Fecha Máx: {fechaMaxima}
+                  </div>
+                )}
+              </div>
+              <div className="etapas">
+                {etapasPrincipales.map((etapa) => {
+                  const agrupacion = Object.entries(agrupaciones).find(([_, subs]) => subs.includes(etapa));
+                  if (agrupacion && agrupacion[1][0] === etapa) {
+                    return (
+                      <div key={agrupacion[0]} className="etapa agrupacion">
+                        <div className="etapa-nombre">
+                          <span className="arrow">⮞</span> <strong>{agrupacion[0]}</strong>
                         </div>
-                      );
-                    } else if (etapa === 'rectificacion') {
-                      return (
-                        <div key={etapa} className="etapa">
-                          <span className="arrow">⮞</span> {formatLabel(etapa)}
-                          <input
-                            type="checkbox"
-                            className="form-check-input ms-2"
-                            checked={obra.rectificacion || false}
-                            onChange={() => toggleRectificacion(obra)}
-                          />
-                          <input
-                            type="number"
-                            className="form-control d-inline-block ms-2"
-                            style={{ width: '100px' }}
-                            value={obra.rectificacion_plazo_dias || 5}
-                            onChange={(e) => handlePlazoChange(obra, e.target.value)}
-                            title="Días plazo para anotar"
-                          />
+                        <div className="subetapas">
+                          {agrupacion[1].map((sub) => (
+                            <div key={sub} className="subetapa">
+                              <span className="arrow">↳</span> {formatLabel(sub)} {obra[sub] ? '✅' : ''}
+                            </div>
+                          ))}
                         </div>
-                      );
-                    } else if ([
-                      'planilla_de_corte', 'fabricacion', 'acopio', 'despacho', 'instalacion', 'recepcion_final', 'pago'
-                    ].includes(etapa)) {
-                      return (
-                        <div key={etapa} className="etapa">
-                          <span className="arrow">⮞</span> {formatLabel(etapa)}
-                          <input
-                            type="checkbox"
-                            className="form-check-input ms-2"
-                            checked={obra[etapa] || false}
-                            onChange={() => toggleEtapa(obra, etapa)}
-                          />
-                        </div>
-                      );
-                    } else if (!Object.values(agrupaciones).some(subs => subs.includes(etapa))) {
-                      return (
-                        <div key={etapa} className="etapa">
-                          <span className="arrow">⮞</span> {formatLabel(etapa)} {obra[etapa] ? '✅' : ''}
-                        </div>
-                      );
-                    } else {
-                      return null;
-                    }
-                  })}
+                      </div>
+                    );
+                  } else if (etapa === 'rectificacion') {
+                    return (
+                      <div key={etapa} className="etapa d-flex align-items-center mb-2">
+                        <span className="arrow">⮞</span> {formatLabel(etapa)}
+                        <input
+                          type="checkbox"
+                          className="form-check-input ms-2"
+                          checked={obra.rectificacion || false}
+                          onChange={() => toggleRectificacion(obra)}
+                        />
+                        <input
+                          type="number"
+                          className="form-control ms-2"
+                          style={{ width: '80px' }}
+                          value={obra.rectificacion_plazo_dias || 5}
+                          onChange={(e) => handlePlazoChange(obra, e.target.value)}
+                          title="Días plazo para anotar"
+                        />
+                      </div>
+                    );
+                  } else if ([
+                    'planilla_de_corte', 'fabricacion', 'acopio', 'despacho', 'instalacion', 'recepcion_final', 'pago'
+                  ].includes(etapa)) {
+                    return (
+                      <div key={etapa} className="etapa d-flex align-items-center mb-2">
+                        <span className="arrow">⮞</span> {formatLabel(etapa)}
+                        <input
+                          type="checkbox"
+                          className="form-check-input ms-2"
+                          checked={obra[etapa] || false}
+                          onChange={() => toggleEtapa(obra, etapa)}
+                        />
+                      </div>
+                    );
+                  } else if (!Object.values(agrupaciones).some(subs => subs.includes(etapa))) {
+                    return (
+                      <div key={etapa} className="etapa mb-2">
+                        <span className="arrow">⮞</span> {formatLabel(etapa)} {obra[etapa] ? '✅' : ''}
+                      </div>
+                    );
+                  } else {
+                    return null;
+                  }
+                })}
 
-                  {obra.comentario && (
-                    <div className="comentario">
-                      <strong>Comentario:</strong> {obra.comentario}
-                    </div>
-                  )}
-                </div>
+                {obra.comentario && (
+                  <div className="comentario">
+                    <strong>Comentario:</strong> {obra.comentario}
+                  </div>
+                )}
               </div>
             </div>
           );

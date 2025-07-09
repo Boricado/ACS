@@ -71,9 +71,6 @@ const ProfilePage = () => {
         {error && <div className="alert alert-danger">{error}</div>}
 
         <div className="d-flex justify-content-between mt-4">
-          <Link to="/Cart" className="btn btn-outline-dark">
-            Mi carrito <i className="fa-solid fa-cart-shopping"></i>
-          </Link>
           <button className="btn btn-danger" onClick={handleLogout}>
             Cerrar sesión <i className="fa-solid fa-right-from-bracket"></i>
           </button>
