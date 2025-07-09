@@ -7,7 +7,7 @@ import welcomeImage from '../img/AlumceLogo.jpg';
 
 const Sidebar = ({ total }) => {
   const { usuario, logout } = useAuth();
-  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático'].includes(usuario?.rol);
+  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático', 'Ventas', 'Bodega', 'Oficina Técnica', 'Adquisiciones'].includes(usuario?.rol);
 
   return (
     <nav id="sidebar" className="bg-dark text-white">
@@ -31,11 +31,9 @@ const Sidebar = ({ total }) => {
                   <li><Link to="/IngresoCliente">Ingreso clientes</Link></li>
                   <li><Link to="/IngresoPresupuesto">Ingreso presupuesto</Link></li>
                   <li><Link to="/IngresoItems">Ingreso ítems</Link></li>
-                  <li><Link to="/EditarPresupuestos">Editar Presupuestos</Link></li>
+                  <li><Link to="/EditarPresupuestos">... Editar Presupuestos</Link></li>
                 </ul>
               </li>
-              <li><Link to="/StockActual">Stock Actual</Link></li>
-              <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
             </>
           )}
 
@@ -79,7 +77,7 @@ const Sidebar = ({ total }) => {
                     <li><Link to="/OCPendientePage">OC Pendientes/Historico de Compras</Link></li>
                   </ul>
                 </li>
-                <li><Link to="#">Ingreso Proveedores</Link></li>
+                <li><Link to="#">...Ingreso Proveedores</Link></li>
                 <li><Link to="/BodegaSolicitudesPage">Ver solicitudes de Bodega</Link></li>
               </ul>
             </li>
@@ -94,13 +92,13 @@ const Sidebar = ({ total }) => {
                 <li><Link to="#">...Programación</Link></li>
                 <li><Link to="#">...Fabricación</Link></li>
                 <li>
-                  <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Despacho</a>
+                  <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Despacho</a>
                   <ul className="collapse list-unstyled" id="despachoSubmenu">
                     <li><Link to="#">...Guías de despacho</Link></li>
                   </ul>
                 </li>
                 <li>
-                  <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Pagos</a>
+                  <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
                     <li><Link to="#">...Clientes</Link></li>
                     <li><Link to="#">...Proveedores</Link></li>
