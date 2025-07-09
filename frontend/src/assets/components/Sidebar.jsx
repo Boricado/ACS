@@ -88,6 +88,7 @@ const Sidebar = ({ total }) => {
             <li>
               <a href="#operacionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Operaciones</a>
               <ul className="collapse list-unstyled" id="operacionesSubmenu">
+                <li><Link to="/ResumenObrasMatPage">Resumen de Obras y Materiales</Link></li>
                 <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
                 <li><Link to="#">...Programación</Link></li>
                 <li><Link to="#">...Fabricación</Link></li>

@@ -6,6 +6,7 @@ import usuariosRoutes from './routes/usuarios.js'; // <- importante
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import resumenMaterialesRoutes from './routes/resumen_materiales.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Montar rutas después de definir `app`
 app.use('/api', usuariosRoutes);
+app.use('/api/resumen-materiales', resumenMaterialesRoutes);
 
 
 // Configuración de conexión a PostgreSQL

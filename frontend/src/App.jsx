@@ -25,6 +25,7 @@ import OTPautasPage from './assets/views/OTPautasPage';
 import StockReservado from './assets/views/StockReservado';
 import BodegaSolicitudesPage from './assets/views/BodegaSolicitudesPage';
 import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
+import ResumenObrasMatPage from './assets/views/ResumenObrasMatPage';
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -65,6 +66,7 @@ function App() {
         <Route path='OCPendientePage' element={<OCPendientePage />} />
 
         {/* Operaciones */}
+        <Route path='ResumenObrasMatPage' element={<ResumenObrasMatPage />} />
         <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
 
         {/* Perfil */}
