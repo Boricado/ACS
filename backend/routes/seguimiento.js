@@ -1,3 +1,7 @@
+import express from 'express';
+import pool from '../db.js';
+
+const router = express.Router();
 // PUT /api/seguimiento_obras/:id/rectificacion
 router.put('/:id/rectificacion', async (req, res) => {
   const { id } = req.params;
@@ -20,3 +24,5 @@ router.put('/:id/rectificacion', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar rectificación' });
   }
 });
+
+export default router;
