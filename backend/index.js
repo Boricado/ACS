@@ -632,13 +632,14 @@ app.get('/api/inventario', async (req, res) => {
         i.codigo,
         COALESCE(d.producto, '') AS producto,
         i.stock_actual,
+        i.stock_reservado,
+        (i.stock_actual - i.stock_reservado) AS stock_disponible,
         i.stock_minimo,
         i.unidad,
         COALESCE(d.precio_unitario, 0) AS precio_unitario
       FROM inventario i
       LEFT JOIN detalle_oc d ON i.codigo = d.codigo
       LEFT JOIN ordenes_compra oc ON d.numero_oc = oc.numero_oc
-      WHERE d.precio_unitario IS NOT NULL
       ORDER BY i.codigo, oc.fecha DESC
     `);
 
@@ -648,6 +649,7 @@ app.get('/api/inventario', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener inventario' });
   }
 });
+
 
 /////////////////
 
