@@ -5,6 +5,7 @@ const AjusteStock = () => {
   const [inventario, setInventario] = useState([]);
   const [salidas, setSalidas] = useState([]);
   const [ajustes, setAjustes] = useState({});
+  const [filtro, setFiltro] = useState('');
 
   const API = import.meta.env.VITE_API_URL;
 
@@ -43,8 +44,8 @@ const AjusteStock = () => {
       });
 
       alert(`✅ Ajuste realizado por ${Math.abs(diferencia)} unidad${Math.abs(diferencia) === 1 ? '' : 'es'}`);
-      
-      // Actualizar datos
+
+      // Recargar datos
       const [invRes, salRes] = await Promise.all([
         axios.get(`${API}api/inventario`),
         axios.get(`${API}api/salidas_inventario2`)
@@ -52,7 +53,6 @@ const AjusteStock = () => {
       setInventario(invRes.data);
       setSalidas(salRes.data);
       setAjustes(prev => ({ ...prev, [codigo]: '' }));
-
     } catch (err) {
       console.error('❌ Error al ajustar:', err);
       alert('❌ Error al registrar el ajuste');
@@ -62,6 +62,18 @@ const AjusteStock = () => {
   return (
     <div className="container mt-4">
       <h2 className="mb-4 text-center">Ajuste de Stock</h2>
+
+      <div className="mb-3 d-flex justify-content-between">
+        <input
+          type="text"
+          className="form-control"
+          style={{ maxWidth: '400px' }}
+          placeholder="Buscar por código o producto"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+        />
+      </div>
+
       <table className="table table-bordered table-sm align-middle text-center">
         <thead className="table-light">
           <tr>
@@ -75,39 +87,44 @@ const AjusteStock = () => {
         </thead>
         <tbody>
           {inventario.length > 0 ? (
-            inventario.map(({ codigo, producto, stock_actual }) => {
-              const salidasTotales = getSalidas(codigo);
-              const stockReal = parseInt(stock_actual) - salidasTotales;
-              const real = ajustes[codigo] || '';
-              const diferencia = real !== '' ? real - stockReal : '';
-              const color = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : '';
+            inventario
+              .filter(item =>
+                (item.codigo || '').toLowerCase().includes(filtro.toLowerCase()) ||
+                (item.producto || '').toLowerCase().includes(filtro.toLowerCase())
+              )
+              .map(({ codigo, producto, stock_actual }) => {
+                const salidasTotales = getSalidas(codigo);
+                const stockReal = parseInt(stock_actual) - salidasTotales;
+                const real = ajustes[codigo] || '';
+                const diferencia = real !== '' ? real - stockReal : '';
+                const color = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : '';
 
-              return (
-                <tr key={codigo}>
-                  <td>{codigo}</td>
-                  <td>{producto}</td>
-                  <td>{stockReal}</td>
-                  <td>
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      value={real}
-                      onChange={(e) => handleChange(codigo, e.target.value)}
-                    />
-                  </td>
-                  <td className={color}>{diferencia}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      disabled={real === '' || diferencia === 0}
-                      onClick={() => ajustarStock(codigo, producto, parseInt(stock_actual))}
-                    >
-                      Ajustar
-                    </button>
-                  </td>
-                </tr>
-              );
-            })
+                return (
+                  <tr key={codigo}>
+                    <td>{codigo}</td>
+                    <td>{producto}</td>
+                    <td>{stockReal}</td>
+                    <td>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        value={real}
+                        onChange={(e) => handleChange(codigo, e.target.value)}
+                      />
+                    </td>
+                    <td className={color}>{diferencia}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-primary"
+                        disabled={real === '' || diferencia === 0}
+                        onClick={() => ajustarStock(codigo, producto, parseInt(stock_actual))}
+                      >
+                        Ajustar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
           ) : (
             <tr>
               <td colSpan="6">Cargando productos...</td>
