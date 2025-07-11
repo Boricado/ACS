@@ -26,6 +26,7 @@ import StockReservado from './assets/views/StockReservado';
 import BodegaSolicitudesPage from './assets/views/BodegaSolicitudesPage';
 import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
 import ResumenObrasMatPage from './assets/views/ResumenObrasMatPage';
+import AjusteStock from './assets/views/AjusteStock';
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -56,6 +57,7 @@ function App() {
         <Route path='StockReservado' element={<StockReservado />} />
         <Route path='CrearSolicitudBodegaPage' element={<CrearSolicitudBodegaPage />} />
         <Route path='BodegaSolicitudesPage' element={<BodegaSolicitudesPage />} />
+        <Route path='AjusteStock' element={<AjusteStock />} />
 
         {/* Oficina Técnica */}
         <Route path='OTPautasPage' element={<OTPautasPage />} />

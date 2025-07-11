@@ -48,6 +48,7 @@ const Sidebar = ({ total }) => {
                 <li><Link to="/StockReservado">Stock reservado por OT</Link></li>
                 <li><Link to="/CrearSolicitudBodegaPage">Solicitud de materiales a OT</Link></li>
                 <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
+                <li><Link to="/AjusteStock">Ajuste de Stock/ Inventario</Link></li>
               </ul>
             </li>
           )}
