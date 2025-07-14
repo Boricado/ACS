@@ -3,7 +3,7 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// Obtener todos los proveedores
+// GET: Obtener todos los proveedores
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM proveedores ORDER BY id DESC');
@@ -14,13 +14,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Crear un nuevo proveedor
+// POST: Crear un nuevo proveedor
 router.post('/', async (req, res) => {
-  const { nombre, rut, correo, telefono, direccion } = req.body;
+  const {
+    proveedor,
+    rut,
+    vendedor,
+    contacto,
+    banco,
+    tipo_de_cuenta,
+    numero_cuenta
+  } = req.body;
+
   try {
     await pool.query(
-      'INSERT INTO proveedores (nombre, rut, correo, telefono, direccion) VALUES ($1, $2, $3, $4, $5)',
-      [nombre, rut, correo, telefono, direccion]
+      `INSERT INTO proveedores 
+      (proveedor, rut, vendedor, contacto, banco, tipo_de_cuenta, numero_cuenta)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [proveedor, rut, vendedor, contacto, banco, tipo_de_cuenta, numero_cuenta]
     );
     res.status(201).json({ mensaje: 'Proveedor creado correctamente' });
   } catch (error) {
@@ -29,14 +40,31 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Editar proveedor existente
+// PUT: Actualizar proveedor existente
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, rut, correo, telefono, direccion } = req.body;
+  const {
+    proveedor,
+    rut,
+    vendedor,
+    contacto,
+    banco,
+    tipo_de_cuenta,
+    numero_cuenta
+  } = req.body;
+
   try {
     await pool.query(
-      'UPDATE proveedores SET nombre = $1, rut = $2, correo = $3, telefono = $4, direccion = $5 WHERE id = $6',
-      [nombre, rut, correo, telefono, direccion, id]
+      `UPDATE proveedores SET
+      proveedor = $1,
+      rut = $2,
+      vendedor = $3,
+      contacto = $4,
+      banco = $5,
+      tipo_de_cuenta = $6,
+      numero_cuenta = $7
+      WHERE id = $8`,
+      [proveedor, rut, vendedor, contacto, banco, tipo_de_cuenta, numero_cuenta, id]
     );
     res.json({ mensaje: 'Proveedor actualizado correctamente' });
   } catch (error) {

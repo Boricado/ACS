@@ -5,11 +5,13 @@ const ProveedorPage = () => {
   const API = import.meta.env.VITE_API_URL;
   const [proveedores, setProveedores] = useState([]);
   const [form, setForm] = useState({
-    nombre: '',
+    proveedor: '',
     rut: '',
-    correo: '',
-    telefono: '',
-    direccion: ''
+    vendedor: '',
+    contacto: '',
+    banco: '',
+    tipo_de_cuenta: '',
+    numero_cuenta: ''
   });
   const [editandoId, setEditandoId] = useState(null);
 
@@ -32,18 +34,26 @@ const ProveedorPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.proveedor.trim()) {
+      alert('El nombre del proveedor es obligatorio.');
+      return;
+    }
+
     try {
       if (editandoId) {
         await axios.put(`${API}api/proveedores/${editandoId}`, form);
       } else {
         await axios.post(`${API}api/proveedores`, form);
       }
+
       setForm({
-        nombre: '',
+        proveedor: '',
         rut: '',
-        correo: '',
-        telefono: '',
-        direccion: ''
+        vendedor: '',
+        contacto: '',
+        banco: '',
+        tipo_de_cuenta: '',
+        numero_cuenta: ''
       });
       setEditandoId(null);
       obtenerProveedores();
@@ -52,9 +62,9 @@ const ProveedorPage = () => {
     }
   };
 
-  const editarProveedor = (proveedor) => {
-    setForm(proveedor);
-    setEditandoId(proveedor.id);
+  const editarProveedor = (p) => {
+    setForm(p);
+    setEditandoId(p.id);
   };
 
   return (
@@ -63,55 +73,25 @@ const ProveedorPage = () => {
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="row g-2">
           <div className="col-md-4">
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Nombre"
-              required
-            />
+            <input type="text" name="proveedor" value={form.proveedor} onChange={handleChange} className="form-control" placeholder="Nombre del proveedor" required />
           </div>
           <div className="col-md-4">
-            <input
-              type="text"
-              name="rut"
-              value={form.rut}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="RUT"
-            />
+            <input type="text" name="rut" value={form.rut} onChange={handleChange} className="form-control" placeholder="RUT" />
           </div>
           <div className="col-md-4">
-            <input
-              type="email"
-              name="correo"
-              value={form.correo}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Correo"
-            />
+            <input type="text" name="vendedor" value={form.vendedor} onChange={handleChange} className="form-control" placeholder="Vendedor" />
           </div>
           <div className="col-md-4">
-            <input
-              type="text"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Teléfono"
-            />
+            <input type="text" name="contacto" value={form.contacto} onChange={handleChange} className="form-control" placeholder="Contacto" />
           </div>
-          <div className="col-md-8">
-            <input
-              type="text"
-              name="direccion"
-              value={form.direccion}
-              onChange={handleChange}
-              className="form-control"
-              placeholder="Dirección"
-            />
+          <div className="col-md-4">
+            <input type="text" name="banco" value={form.banco} onChange={handleChange} className="form-control" placeholder="Banco" />
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="tipo_de_cuenta" value={form.tipo_de_cuenta} onChange={handleChange} className="form-control" placeholder="Tipo de cuenta" />
+          </div>
+          <div className="col-md-4">
+            <input type="text" name="numero_cuenta" value={form.numero_cuenta} onChange={handleChange} className="form-control" placeholder="Número de cuenta" />
           </div>
         </div>
         <button type="submit" className="btn btn-success mt-3">
@@ -125,20 +105,24 @@ const ProveedorPage = () => {
           <tr>
             <th>Nombre</th>
             <th>RUT</th>
-            <th>Correo</th>
-            <th>Teléfono</th>
-            <th>Dirección</th>
+            <th>Vendedor</th>
+            <th>Contacto</th>
+            <th>Banco</th>
+            <th>Tipo de cuenta</th>
+            <th>N° Cuenta</th>
             <th>Acción</th>
           </tr>
         </thead>
         <tbody>
           {proveedores.map((p) => (
             <tr key={p.id}>
-              <td>{p.nombre}</td>
-              <td>{p.rut}</td>
-              <td>{p.correo}</td>
-              <td>{p.telefono}</td>
-              <td>{p.direccion}</td>
+              <td>{p.proveedor || ''}</td>
+              <td>{p.rut || ''}</td>
+              <td>{p.vendedor || ''}</td>
+              <td>{p.contacto || ''}</td>
+              <td>{p.banco || ''}</td>
+              <td>{p.tipo_de_cuenta || ''}</td>
+              <td>{p.numero_cuenta || ''}</td>
               <td>
                 <button className="btn btn-primary btn-sm" onClick={() => editarProveedor(p)}>
                   Editar
