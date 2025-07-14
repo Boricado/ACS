@@ -49,6 +49,12 @@ app.get('/', (req, res) => {
 
 ///////////////////////////
 
+app.get('/ping', (req, res) => {
+  res.status(200).send('Pong!');
+});
+
+//////////////////
+
 app.post('/api/clientes', async (req, res) => {
   const { nombre, rut, correo, telefono, direccion } = req.body;
 
