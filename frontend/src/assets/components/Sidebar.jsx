@@ -77,6 +77,7 @@ const Sidebar = ({ total }) => {
                     <li><Link to="/CrearOCPage">Crear Orden de compra</Link></li>
                     <li><Link to="/EditarOCPage">Editar Orden de compra</Link></li>
                     <li><Link to="/OCPendientePage">OC Pendientes/Historico de Compras</Link></li>
+                    <li><Link to="/ProveedorPage">Crear/ Editar Proveedores</Link></li>
                   </ul>
                 </li>
                 <li><Link to="#">... Ingreso Proveedores</Link></li>

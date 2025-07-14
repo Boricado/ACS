@@ -27,6 +27,7 @@ import BodegaSolicitudesPage from './assets/views/BodegaSolicitudesPage';
 import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
 import ResumenObrasMatPage from './assets/views/ResumenObrasMatPage';
 import AjusteStock from './assets/views/AjusteStock';
+import ProveedorPage from './assets/views/ProveedorPage';
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -66,6 +67,7 @@ function App() {
         <Route path='CrearOCPage' element={<CrearOCPage />} />
         <Route path='EditarOCPage' element={<EditarOCPage />} />
         <Route path='OCPendientePage' element={<OCPendientePage />} />
+        <Route path='ProveedorPage' element={<ProveedorPage />} />
 
         {/* Operaciones */}
         <Route path='ResumenObrasMatPage' element={<ResumenObrasMatPage />} />
