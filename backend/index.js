@@ -580,7 +580,7 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
         oc.cliente_id,
         oc.estado_oc,
         oc.factura,
-        oc.fecha_factura
+        oc.fecha_factura,
         COALESCE(MAX(doc.observacion), '') AS observacion,
         SUM(doc.cantidad * doc.precio_unitario) AS total_neto
       FROM ordenes_compra oc
