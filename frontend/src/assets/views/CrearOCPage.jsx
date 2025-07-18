@@ -148,6 +148,17 @@ const guardarOC = async () => {
     });
 
     alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
+            generarPDF_OC({
+          numeroOC,
+          proveedor,
+          fecha,
+          realizadoPor,
+          clienteNombre,
+          presupuestoNumero,
+          items,
+          totales,
+          comentario,
+        });
     setItems([]);
   } catch (error) {
     console.error('Error al guardar OC:', error);
