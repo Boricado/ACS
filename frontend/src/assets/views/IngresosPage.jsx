@@ -19,7 +19,7 @@ const IngresosPage = () => {
   const cargarOrdenesPendientes = async () => {
     try {
       const res = await axios.get(`${API}api/ordenes_compra_estado`, {
-        params: { estado: 'Pendiente' },
+        params: { estado: 'PENDIENTE' },
       });
       setOrdenes(res.data);
     } catch (err) {
@@ -90,6 +90,8 @@ const IngresosPage = () => {
 
       await axios.post(`${API}api/ingresar_factura`, { ordenes: ordenesAEnviar });
       alert('Factura ingresada exitosamente.');
+        // 🔁 Vuelve a cargar solo las OC pendientes
+        await cargarOrdenesPendientes();
     } catch (err) {
       console.error('Error al ingresar factura:', err);
       alert('Hubo un error al ingresar la factura.');

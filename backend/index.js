@@ -589,7 +589,7 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
     const valores = [];
 
     if (estado && estado !== 'Todas') {
-      condiciones.push(`oc.estado_oc = $${valores.length + 1}`);
+      condiciones.push(`UPPER(oc.estado_oc) = $${valores.length + 1}`);
       valores.push(estado.toUpperCase());
     }
 
