@@ -6,9 +6,11 @@ const IngresosPage = () => {
   const [ordenes, setOrdenes] = useState([]);
   const API = import.meta.env.VITE_API_URL;
   const [filtro, setFiltro] = useState({
-    numero_oc: '',
-    proveedor: '',
-    observacion: '',
+      numero_oc: '',
+      proveedor: '',
+      codigo: '',
+      material: '',
+      observacion: '',
   });
   const [detallesVisibles, setDetallesVisibles] = useState({});
 
@@ -74,7 +76,9 @@ const IngresosPage = () => {
   const filtrarOrdenes = ordenes.filter(o =>
     o.numero_oc.toString().includes(filtro.numero_oc) &&
     o.proveedor.toLowerCase().includes(filtro.proveedor.toLowerCase()) &&
-    o.observacion?.toLowerCase().includes(filtro.observacion.toLowerCase())
+    o.observacion?.toLowerCase().includes(filtro.observacion.toLowerCase()) &&
+    (filtro.codigo ? o.detalles.some(d => d.codigo?.toLowerCase().includes(filtro.codigo.toLowerCase())) : true) &&
+    (filtro.material ? o.detalles.some(d => d.producto?.toLowerCase().includes(filtro.material.toLowerCase())) : true)
   );
 
   const handleIngresarFactura = async () => {
@@ -102,9 +106,11 @@ const IngresosPage = () => {
     <div className="container mt-4">
       <h4>Ingresos de Inventario</h4>
 
-      <div className="d-flex mb-3 gap-2">
+      <div className="d-flex flex-wrap mb-3 gap-2">
         <input name="numero_oc" className="form-control" placeholder="N° OC" value={filtro.numero_oc} onChange={handleFiltroChange} />
         <input name="proveedor" className="form-control" placeholder="Proveedor" value={filtro.proveedor} onChange={handleFiltroChange} />
+        <input name="codigo" className="form-control" placeholder="Código" value={filtro.codigo || ''} onChange={handleFiltroChange} />
+        <input name="material" className="form-control" placeholder="Material" value={filtro.material || ''} onChange={handleFiltroChange} />
         <input name="observacion" className="form-control" placeholder="Obra" value={filtro.observacion} onChange={handleFiltroChange} />
         <select className="form-select" disabled>
           <option>Pendiente</option>
