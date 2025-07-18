@@ -579,6 +579,8 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
         oc.numero_presupuesto,
         oc.cliente_id,
         oc.estado_oc,
+        oc.factura,
+        oc.fecha_factura
         COALESCE(MAX(doc.observacion), '') AS observacion,
         SUM(doc.cantidad * doc.precio_unitario) AS total_neto
       FROM ordenes_compra oc
@@ -703,6 +705,19 @@ app.post('/api/ingresar_factura', async (req, res) => {
           ]
         );
       }
+      
+      // Actualizar la orden de compra con la factura y fecha
+            await client.query(
+        `UPDATE ordenes_compra
+        SET factura = $1,
+            fecha_factura = $2
+        WHERE numero_oc = $3`,
+        [
+          orden.factura || null,
+          orden.fecha_factura || null,
+          numero_oc
+        ]
+      );
 
       const result = await client.query(
         `SELECT COUNT(*) FROM detalle_oc

@@ -1,6 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
 
 const IngresosPage = () => {
   const [ordenes, setOrdenes] = useState([]);
@@ -79,19 +79,19 @@ const IngresosPage = () => {
 
   const handleIngresarFactura = async () => {
     try {
-      // Preparamos datos con observacion para enviar al backend
       const ordenesAEnviar = ordenes.map(orden => ({
         ...orden,
+        factura: orden.factura || '',
+        fecha_factura: orden.fecha_factura || '',
         detalles: orden.detalles.map(d => ({
           ...d,
-          observacion: d.observacion || orden.observacion // heredamos si es necesario
+          observacion: d.observacion || orden.observacion
         }))
       }));
 
       await axios.post(`${API}api/ingresar_factura`, { ordenes: ordenesAEnviar });
       alert('Factura ingresada exitosamente.');
-        // 🔁 Vuelve a cargar solo las OC pendientes
-        await cargarOrdenesPendientes();
+      await cargarOrdenesPendientes();
     } catch (err) {
       console.error('Error al ingresar factura:', err);
       alert('Hubo un error al ingresar la factura.');
@@ -120,6 +120,39 @@ const IngresosPage = () => {
               <strong>Proveedor:</strong> {o.proveedor} &nbsp;|&nbsp;
               <strong>Fecha:</strong> {o.fecha} &nbsp;|&nbsp;
               <strong>Obra:</strong> {o.observacion}
+            </div>
+
+            <div className="row mt-2 mb-3">
+              <div className="col-md-6">
+                <label>N° Factura</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={o.factura || ''}
+                  onChange={(e) =>
+                    setOrdenes(prev =>
+                      prev.map(oc => oc.numero_oc === o.numero_oc
+                        ? { ...oc, factura: e.target.value }
+                        : oc)
+                    )
+                  }
+                />
+              </div>
+              <div className="col-md-6">
+                <label>Fecha Factura</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={o.fecha_factura ? new Date(o.fecha_factura).toISOString().split('T')[0] : ''}
+                  onChange={(e) =>
+                    setOrdenes(prev =>
+                      prev.map(oc => oc.numero_oc === o.numero_oc
+                        ? { ...oc, fecha_factura: e.target.value }
+                        : oc)
+                    )
+                  }
+                />
+              </div>
             </div>
 
             {detallesVisibles[o.numero_oc] && (
