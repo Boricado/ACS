@@ -14,6 +14,7 @@ const CrearOCPage = () => {
   const [items, setItems] = useState([]);
   const [item, setItem] = useState({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
   const [proveedor, setProveedor] = useState('');
+  const [rutProveedor, setRutProveedor] = useState('');
   const [comentario, setComentario] = useState('');
   const [realizadoPor, setRealizadoPor] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
@@ -22,40 +23,23 @@ const CrearOCPage = () => {
   const API = import.meta.env.VITE_API_URL;
 
   const camposObligatoriosIncompletos = () => {
-  if (!clienteSeleccionado || !presupuestoSeleccionado || !proveedor.trim() || !realizadoPor.trim()) {
-    return true;
-  }
-
-  if (items.length === 0) return true;
-
-  for (let i of items) {
-    if (!i.codigo || !i.producto || !i.cantidad || !i.precio_unitario) {
-      return true;
+    if (!clienteSeleccionado || !presupuestoSeleccionado || !proveedor.trim() || !realizadoPor.trim()) return true;
+    if (items.length === 0) return true;
+    for (let i of items) {
+      if (!i.codigo || !i.producto || !i.cantidad || !i.precio_unitario) return true;
     }
-  }
+    return false;
+  };
 
-  return false;
-};
-
-useEffect(() => {
-    axios.get(`${API}api/materiales`)
-      .then(res => setMateriales(res.data))
-      .catch(err => console.error('Error al cargar materiales:', err));
-
-    axios.get(`${API}api/proveedores`)
-      .then(res => setProveedores(res.data))
-      .catch(err => console.error('Error al cargar proveedores:', err));
-
-    axios.get(`${API}api/clientes`)
-      .then(res => setClientes(res.data))
-      .catch(err => console.error('Error al cargar clientes:', err));
-
+  useEffect(() => {
+    axios.get(`${API}api/materiales`).then(res => setMateriales(res.data));
+    axios.get(`${API}api/proveedores`).then(res => setProveedores(res.data));
+    axios.get(`${API}api/clientes`).then(res => setClientes(res.data));
     axios.get(`${API}api/ultima_oc`)
       .then(res => {
         const ultimo = parseInt(res.data.ultimo || 0);
         setNumeroOC((ultimo + 1).toString());
-      })
-      .catch(err => console.error('Error al obtener último número OC:', err));
+      });
   }, []);
 
   useEffect(() => {
@@ -63,8 +47,7 @@ useEffect(() => {
       const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
       setClienteNombre(cliente?.nombre || '');
       axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
-        .then(res => setPresupuestos(res.data))
-        .catch(err => console.error('Error al obtener presupuestos:', err));
+        .then(res => setPresupuestos(res.data));
     }
   }, [clienteSeleccionado]);
 
@@ -84,14 +67,10 @@ useEffect(() => {
 
   const obtenerPrecioUltimo = async (codigo) => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}api/precio-material?codigo=${codigo}`);
+      const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
     } catch (error) {
-      if (error.response?.status === 404) {
-        console.warn(`No se encontró precio para el código: ${codigo}`);
-      } else {
-        console.error('Error al obtener precio desde backend:', error);
-      }
+      console.warn('Error al obtener precio:', error);
       return '';
     }
   };
@@ -99,13 +78,13 @@ useEffect(() => {
   const handleCodigoChange = async (codigo) => {
     const m = materiales.find(m => m.codigo === codigo);
     const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
-    setItem({ ...item, codigo, producto: m ? m.producto : '', precio_unitario: precio });
+    setItem({ ...item, codigo, producto: m?.producto || '', precio_unitario: precio });
   };
 
   const handleProductoChange = async (producto) => {
     const m = materiales.find(m => m.producto === producto);
     const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
-    setItem({ ...item, producto, codigo: m ? m.codigo : '', precio_unitario: precio });
+    setItem({ ...item, producto, codigo: m?.codigo || '', precio_unitario: precio });
   };
 
   const agregarItem = async () => {
@@ -123,48 +102,52 @@ useEffect(() => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-const guardarOC = async () => {
-  if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
-    alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
-    return;
-  }
+  const guardarOC = async () => {
+    if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
+      alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
+      return;
+    }
 
-  try {
-    const itemsConExtras = items.map(i => ({
-      ...i,
-      costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
-      observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
-    }));
+    try {
+      const itemsConExtras = items.map(i => ({
+        ...i,
+        costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
+        observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
+      }));
 
-    const response = await axios.post(`${API}api/ordenes_compra`, {
-      numero_oc: numeroOC,
-      proveedor,
-      fecha,
-      realizado_por: realizadoPor,
-      comentario,
-      cliente_id: clienteNombre,
-      numero_presupuesto: presupuestoNumero,
-      items: itemsConExtras
-    });
+      const response = await axios.post(`${API}api/ordenes_compra`, {
+        numero_oc: numeroOC,
+        proveedor,
+        fecha,
+        realizado_por: realizadoPor,
+        comentario,
+        cliente_id: clienteNombre,
+        numero_presupuesto: presupuestoNumero,
+        items: itemsConExtras
+      });
 
-    alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
-            generarPDF_OC({
-          numeroOC,
-          proveedor,
-          fecha,
-          realizadoPor,
-          clienteNombre,
-          presupuestoNumero,
-          items,
-          totales,
-          comentario,
-        });
-    setItems([]);
-  } catch (error) {
-    console.error('Error al guardar OC:', error);
-    alert('Hubo un error al guardar la OC. Revisa la consola.');
-  }
-};
+      alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
+
+      // ✅ Generar PDF con RUT
+      generarPDF_OC({
+        numeroOC,
+        proveedor,
+        rutProveedor,
+        fecha,
+        realizadoPor,
+        clienteNombre,
+        presupuestoNumero,
+        items,
+        totales,
+        comentario
+      });
+
+      setItems([]);
+    } catch (error) {
+      console.error('Error al guardar OC:', error);
+      alert('Hubo un error al guardar la OC. Revisa la consola.');
+    }
+  };
 
 
 return (
@@ -178,7 +161,21 @@ return (
         </div>
         <div className="col-md-4">
           <label>Proveedor</label>
-          <input type="text" className="form-control" list="lista_proveedores" value={proveedor} onChange={(e) => setProveedor(e.target.value)} placeholder="Buscar proveedor" />
+            <input
+              type="text"
+              className="form-control"
+              list="lista_proveedores"
+              value={proveedor}
+              onChange={(e) => {
+                const nombre = e.target.value;
+                setProveedor(nombre);
+                const prov = proveedores.find(p => p.nombre === nombre);
+                setRutProveedor(prov?.rut || '');
+              }}
+              placeholder="Buscar proveedor"
+            />
+            <small className="text-muted">RUT: {rutProveedor}</small>
+
           <datalist id="lista_proveedores">
             {proveedores.map(p => (<option key={p.id} value={p.nombre} />))}
           </datalist>
@@ -297,6 +294,7 @@ return (
           generarPDF_OC({
             numeroOC,
             proveedor,
+            rutProveedor,
             fecha,
             realizadoPor,
             clienteNombre,
