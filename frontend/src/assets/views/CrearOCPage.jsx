@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { generarPDF_OC } from '../utils/generarPDF_OC';
 
 const CrearOCPage = () => {
   const [materiales, setMateriales] = useState([]);
@@ -277,6 +278,25 @@ return (
         disabled={camposObligatoriosIncompletos()}
       >
         Guardar Orden de Compra
+      </button>
+
+      <button
+        className="btn btn-secondary ms-2"
+        onClick={() =>
+          generarPDF_OC({
+            numeroOC,
+            proveedor,
+            fecha,
+            realizadoPor,
+            clienteNombre,
+            presupuestoNumero,
+            items,
+            totales,
+            comentario,
+          })
+        }
+      >
+        Generar PDF
       </button>
     </div>
   );
