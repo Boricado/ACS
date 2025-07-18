@@ -606,7 +606,9 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
         oc.proveedor,
         oc.numero_presupuesto,
         oc.cliente_id,
-        oc.estado_oc
+        oc.estado_oc,
+        oc.factura,
+        oc.fecha_factura
       ORDER BY oc.fecha DESC
     `;
 
@@ -634,6 +636,7 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener órdenes' });
   }
 });
+
 
 ///////////////
 
