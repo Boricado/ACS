@@ -106,16 +106,29 @@ const IngresosPage = () => {
     <div className="container mt-4">
       <h4>Ingresos de Inventario</h4>
 
-      <div className="d-flex flex-wrap mb-3 gap-2">
-        <input name="numero_oc" className="form-control" placeholder="N° OC" value={filtro.numero_oc} onChange={handleFiltroChange} />
-        <input name="proveedor" className="form-control" placeholder="Proveedor" value={filtro.proveedor} onChange={handleFiltroChange} />
-        <input name="codigo" className="form-control" placeholder="Código" value={filtro.codigo || ''} onChange={handleFiltroChange} />
-        <input name="material" className="form-control" placeholder="Material" value={filtro.material || ''} onChange={handleFiltroChange} />
-        <input name="observacion" className="form-control" placeholder="Obra" value={filtro.observacion} onChange={handleFiltroChange} />
-        <select className="form-select" disabled>
-          <option>Pendiente</option>
-        </select>
+      <div className="row g-2 mb-3">
+        <div className="col-12 col-md-4 col-lg-2">
+          <input name="numero_oc" className="form-control" placeholder="N° OC" value={filtro.numero_oc} onChange={handleFiltroChange} />
+        </div>
+        <div className="col-12 col-md-4 col-lg-2">
+          <input name="proveedor" className="form-control" placeholder="Proveedor" value={filtro.proveedor} onChange={handleFiltroChange} />
+        </div>
+        <div className="col-12 col-md-4 col-lg-2">
+          <input name="codigo" className="form-control" placeholder="Código" value={filtro.codigo || ''} onChange={handleFiltroChange} />
+        </div>
+        <div className="col-12 col-md-4 col-lg-2">
+          <input name="material" className="form-control" placeholder="Material" value={filtro.material || ''} onChange={handleFiltroChange} />
+        </div>
+        <div className="col-12 col-md-4 col-lg-2">
+          <input name="observacion" className="form-control" placeholder="Obra" value={filtro.observacion} onChange={handleFiltroChange} />
+        </div>
+        <div className="col-12 col-md-4 col-lg-2">
+          <select className="form-select" disabled>
+            <option>Pendiente</option>
+          </select>
+        </div>
       </div>
+
 
       {filtrarOrdenes.map((o, i) => {
         const { totalNeto, iva, total } = calcularTotales(o.detalles);
