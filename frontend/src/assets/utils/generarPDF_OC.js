@@ -2,13 +2,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // Logo ALUMCE en base64 (usa el nuevo si cambiaste de imagen)
-const logoBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAqADIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD1DXL7xPFrEsem+T9kUArlUJ6DPVgeuav+Hb7VJIp/7bMKOGHlbSvI79D9KnvZ7dLmRXtpnIIyyuADwPetC1ji2K8LylOwYnH5GtHUvHlsjNU7S5rsf9rt/wDntH/30KlOSDg4PrS0VmaFFba/H3tRDf8AbAD+tKltfBCG1AM3Y+QBj9au0UAIoIUAnJxyfWilooAx9UttaluQdOureGIqMiWHeQ2evX0xVJrTxYAFTUrMY7/ZuD+Ga3ZL2GKRo2J3DsBUscolBKhgPUjGatVGlay+5Gbppu9397OcFp4uLAHVbID1+yf/AGVSrZ+KRndq9mfQi0xj/wAeroaKftX2X3IXsl3f3s5z7N4nRT5mrWSgD75tsDP0zTY08RrMgk1rTzGrDeRbgZHp97iukZFdSrqGU9iMisqTRSwZVljCk55Rjx/31R7R9l9yH7Jd397NYHIyOlFNRdkar1wAKKzNCvJayPceatwyjqF5x/OrKghQGIJxyQMVkXTMNSYBjjI4z9KsaWSRLkk8igDQooooAKM56VBcn5VHY5BHrVZB5QxH8gPOF4oA0KKB0ooA/9k=';
+const logoBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAOACgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDsb3xx4ifxHrGnadaWzx6eXbLnBYL0A45Y9hWdP8R/EMDXitFZn7LHHI+M8h9uMcf7YrV1Hwdq7avf3On6ytmtzdm5Yxowc+isQeQOePc1BL4Iv7i7muJptMc3ChZ08iQLIAQVzh+MbRjGPxr04+w0ul+J5kvb3dm/wEm8aeLYbuCAWdnL5909ojKxwHU4JPHA6nPoD6VFN8QdatUUXsunWszlzHG+8lwpK5JC4UEqcZ/lU0ng7XpfPzrVspnjZHK25H3nZyRzwfmYZHYkUk/gfULx2kvJ9MuZcsY5JLZ8x7iWIADYIySQGBxmmlQ6pfiDdbo3+Bas/Geuf2xpFrdwweVfyRrlY5BtDLu4YqFbgjoTRTNP8D3aa9pd9Pc2Za0kjLNFE4aQIoUA5YjoB0AorkxKgmuQ68O5tPnP/9k=';
 
 export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realizadoPor, clienteNombre, presupuestoNumero, items, totales, comentario }) => {
   const doc = new jsPDF();
 
   // Insertar logo (proporción ajustada)
-  doc.addImage(logoBase64, 'JPEG', 10, 10, 40, 20);
+  doc.addImage(logoBase64, 'JPEG', 10, 10, 40, 16);
 
   // Título a la derecha
   doc.setFont('helvetica', 'bold');
@@ -50,9 +50,9 @@ export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realiz
   // Totales a la derecha
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text(`TOTAL NETO: $${totales.neto.toLocaleString()}`, 200, finalY + 10, { align: 'right' });
-  doc.text(`IVA 19%: $${totales.iva.toLocaleString()}`, 200, finalY + 17, { align: 'right' });
-  doc.text(`TOTAL: $${totales.total.toLocaleString()}`, 200, finalY + 24, { align: 'right' });
+  doc.text(`TOTAL NETO: $${totales.neto.toLocaleString()}   `, 200, finalY + 10, { align: 'right' });
+  doc.text(`IVA 19%: $${totales.iva.toLocaleString()}   `, 200, finalY + 17, { align: 'right' });
+  doc.text(`TOTAL: $${totales.total.toLocaleString()}   `, 200, finalY + 24, { align: 'right' });
 
   // Cliente y presupuesto
   doc.setFontSize(10);
@@ -75,7 +75,7 @@ export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realiz
     doc.text(`Realizado por: ${realizadoPor}`, 10, firmasY);
 
     doc.line(150, firmasY - 2, 200, firmasY - 2); // línea superior centrada
-    doc.text('Autorizado', 170, firmasY + 3, { align: 'center' });
+    doc.text('    Autorizado', 170, firmasY + 3, { align: 'center' });
 
   // Guardar PDF con nombre incluyendo proveedor
   const nombreArchivo = `OC_${numeroOC}_${proveedor.replace(/ /g, '_')}.pdf`;
