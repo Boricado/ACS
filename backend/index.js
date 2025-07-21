@@ -441,19 +441,15 @@ app.get('/api/materiales', async (req, res) => {
 
 // ✅ POST: Crear nuevo material con todos los campos
 app.post('/api/materiales', async (req, res) => {
-  const {
-    codigo, producto, unidad = 'UN', proveedor = '',
-    categoria = '', medida = '', stock_min = 0,
-    sub_categoria = '', tipo = '', hoja_fijacion = '',
-    precio_unitario = 0
-  } = req.body;
+  const { codigo, producto } = req.body;
+
+  const medida = 'UNIDAD';
+  const stock_min = 0;
 
   try {
     await pool.query(
-      `INSERT INTO materiales (codigo, producto, unidad, proveedor, categoria, medida, stock_min, sub_categoria, tipo, hoja_fijacion, precio_unitario)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [codigo.trim(), producto.trim(), unidad.trim(), proveedor.trim(), categoria.trim(),
-       medida.trim(), stock_min, sub_categoria.trim(), tipo.trim(), hoja_fijacion.trim(), precio_unitario]
+      'INSERT INTO materiales (codigo, producto, medida, stock_min) VALUES ($1, $2, $3, $4)',
+      [codigo.trim(), producto.trim(), medida, stock_min]
     );
     res.status(201).json({ mensaje: 'Material creado correctamente' });
   } catch (err) {
@@ -461,7 +457,6 @@ app.post('/api/materiales', async (req, res) => {
     res.status(500).json({ error: 'Error al crear material' });
   }
 });
-
 
 
 

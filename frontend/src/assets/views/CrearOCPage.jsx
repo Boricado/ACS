@@ -67,13 +67,14 @@ const CrearOCPage = () => {
     setTotales({ neto, iva, total });
   }, [items]);
 
- const obtenerPrecioUltimo = async (codigo) => {
+  const obtenerPrecioUltimo = async (codigo) => {
     if (esNuevoProducto) return '';
+    if (!codigo) return '';
     try {
       const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
     } catch (error) {
-      console.warn('Error al obtener precio:', error);
+      console.warn('Error al obtener precio:', error.response?.status === 404 ? 'Material no encontrado' : error);
       return '';
     }
   };
@@ -117,19 +118,10 @@ const CrearOCPage = () => {
 
       if (confirmar) {
         try {
-          await axios.post(`${API}api/materiales`, {
-            codigo: item.codigo.trim(),
-            producto: item.producto.trim(),
-            unidad: item.unidad || 'UN',
-            proveedor: proveedor || '',
-            categoria: '',
-            medida: '',
-            stock_min: 0,
-            sub_categoria: '',
-            tipo: '',
-            hoja_fijacion: '',
-            precio_unitario: parseFloat(item.precio_unitario) || 0
-          });
+        await axios.post(`${API}api/materiales`, {
+          codigo: item.codigo.trim(),
+          producto: item.producto.trim()
+        });
 
           const res = await axios.get(`${API}api/materiales`);
           setMateriales(res.data);
