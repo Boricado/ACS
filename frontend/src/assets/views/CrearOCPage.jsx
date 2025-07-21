@@ -87,16 +87,62 @@ const CrearOCPage = () => {
     setItem({ ...item, producto, codigo: m?.codigo || '', precio_unitario: precio });
   };
 
-  const agregarItem = async () => {
-    let precio = item.precio_unitario;
-    if (!precio && item.codigo) {
-      precio = await obtenerPrecioUltimo(item.codigo);
+  const handleAgregarItem = async () => {
+  if (!nuevoItem.codigo || !nuevoItem.producto || !nuevoItem.cantidad || !nuevoItem.precio_unitario) {
+    alert('Por favor completa todos los campos del ítem.');
+    return;
+  }
+
+  const existeMaterial = materiales.some(mat => mat.codigo?.trim() === nuevoItem.codigo.trim());
+
+  // Si no existe, preguntar y crear nuevo material
+  if (!existeMaterial) {
+    const confirmar = window.confirm(`El código "${nuevoItem.codigo}" no existe. ¿Deseas crear este nuevo material?`);
+
+    if (confirmar) {
+      try {
+        await axios.post(`${API}api/materiales`, {
+          codigo: nuevoItem.codigo.trim(),
+          producto: nuevoItem.producto.trim(),
+          unidad: nuevoItem.unidad || 'UN',
+          proveedor: proveedorSeleccionado || '',
+          categoria: categoriaSeleccionada || '',
+        });
+
+        // recargar materiales actualizados
+        const res = await axios.get(`${API}api/materiales`);
+        setMateriales(res.data);
+
+      } catch (error) {
+        console.error('Error al crear nuevo material:', error);
+        alert('Hubo un error al crear el nuevo material.');
+        return;
+      }
+    } else {
+      return; // Cancelar la adición si no confirma
     }
-    if (item.codigo && item.producto && item.cantidad && precio) {
-      setItems([...items, { ...item, precio_unitario: precio }]);
-      setItem({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
+  }
+
+  // Agregar ítem a la lista
+  setItems(prev => [
+    ...prev,
+    {
+      ...nuevoItem,
+      cantidad: parseFloat(nuevoItem.cantidad),
+      precio_unitario: parseFloat(nuevoItem.precio_unitario),
+      total: parseFloat(nuevoItem.cantidad) * parseFloat(nuevoItem.precio_unitario),
     }
-  };
+  ]);
+
+  // Limpiar inputs
+  setNuevoItem({
+    codigo: '',
+    producto: '',
+    cantidad: '',
+    precio_unitario: '',
+    unidad: 'UN'
+  });
+};
 
   const eliminarItem = (index) => {
     setItems(items.filter((_, i) => i !== index));
@@ -233,7 +279,7 @@ return (
         </div>
       </div>
 
-      <button className="btn btn-primary mb-3" onClick={agregarItem}>Añadir elemento</button>
+      <button className="btn btn-primary mb-3" onClick={handleAgregarItem}>Añadir elemento</button>
 
       {items.length > 0 && (
         <table className="table table-bordered table-hover text-center">
