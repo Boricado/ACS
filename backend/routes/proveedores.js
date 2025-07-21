@@ -3,10 +3,22 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// GET: Obtener todos los proveedores
+// GET: Obtener todos los proveedores con campos renombrados para frontend
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM proveedores ORDER BY id DESC');
+    const result = await pool.query(`
+      SELECT 
+        id,
+        proveedor AS nombre,
+        rut,
+        vendedor,
+        contacto,
+        banco,
+        tipo_de_cuenta,
+        numero_cuenta
+      FROM proveedores
+      ORDER BY proveedor
+    `);
     res.json(result.rows);
   } catch (error) {
     console.error('Error al obtener proveedores:', error);
@@ -56,13 +68,13 @@ router.put('/:id', async (req, res) => {
   try {
     await pool.query(
       `UPDATE proveedores SET
-      proveedor = $1,
-      rut = $2,
-      vendedor = $3,
-      contacto = $4,
-      banco = $5,
-      tipo_de_cuenta = $6,
-      numero_cuenta = $7
+        proveedor = $1,
+        rut = $2,
+        vendedor = $3,
+        contacto = $4,
+        banco = $5,
+        tipo_de_cuenta = $6,
+        numero_cuenta = $7
       WHERE id = $8`,
       [proveedor, rut, vendedor, contacto, banco, tipo_de_cuenta, numero_cuenta, id]
     );
