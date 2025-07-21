@@ -428,16 +428,6 @@ app.get('/api/ordenes_compra', async (req, res) => {
 
 
 
-app.get('/api/proveedores', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT id, proveedor AS nombre FROM proveedores ORDER BY proveedor');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener proveedores:', err.message);
-    res.status(500).json({ error: 'Error al obtener proveedores' });
-  }
-});
-
 app.get('/api/materiales', async (req, res) => {
   try {
     const result = await pool.query('SELECT codigo, producto, precio_unitario FROM materiales ORDER BY producto');
