@@ -439,25 +439,38 @@ app.get('/api/materiales', async (req, res) => {
   }
 });
 
-// ✅ POST: Crear nuevo material con todos los campos
+// POST: Crear nuevo material y agregarlo también al inventario
 app.post('/api/materiales', async (req, res) => {
   const { codigo, producto } = req.body;
-
   const medida = 'UNIDAD';
   const stock_min = 0;
 
   try {
+    // 1. Insertar en `materiales` (o actualizar si ya existe)
     await pool.query(
-      'INSERT INTO materiales (codigo, producto, medida, stock_min) VALUES ($1, $2, $3, $4)',
+      `INSERT INTO materiales (codigo, producto, medida, stock_min)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (codigo) DO UPDATE SET producto = EXCLUDED.producto`,
       [codigo.trim(), producto.trim(), medida, stock_min]
     );
-    res.status(201).json({ mensaje: 'Material creado correctamente' });
+
+    // 2. Insertar o actualizar en `inventario`
+    await pool.query(
+      `INSERT INTO inventario (codigo, producto, unidad, stock_min, stock_actual, stock_reservado)
+       VALUES ($1, $2, $3, $4, 0, 0)
+       ON CONFLICT (codigo) DO UPDATE SET 
+         producto = EXCLUDED.producto,
+         unidad = EXCLUDED.unidad,
+         stock_min = EXCLUDED.stock_min`,
+      [codigo.trim(), producto.trim(), medida, stock_min]
+    );
+
+    res.status(201).json({ mensaje: 'Material creado o actualizado correctamente' });
   } catch (err) {
-    console.error('Error al crear material:', err.message);
-    res.status(500).json({ error: 'Error al crear material' });
+    console.error('Error al crear/actualizar material:', err.message);
+    res.status(500).json({ error: 'Error al crear o actualizar material' });
   }
 });
-
 
 
 app.get('/api/ultima_oc', async (req, res) => {
