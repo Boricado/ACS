@@ -83,3 +83,12 @@
 #sidebar .btn-link:hover {
   background-color: #6a0dad;
 }
+
+
+/* Enlace activo */
+#sidebar ul li a.active-link {
+  background-color: #37006a;  /* Un tono más oscuro que el hover */
+  color: #ffffff;
+  font-weight: bold;
+  border-radius: 4px;
+}

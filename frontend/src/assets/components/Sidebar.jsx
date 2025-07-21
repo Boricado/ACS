@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { formatearPrecio } from '../utils/formato';
 import { useAuth } from '../../context/AuthContext';
 import '../styles/sidebar.css';
@@ -20,7 +20,7 @@ const Sidebar = ({ total }) => {
         />
         <h6 className="text-white">Control System v0.3b</h6>
         <ul className="list-unstyled components mb-5">
-          <li><Link to="/">Inicio</Link></li>
+          <li><NavLink to="/" className={({ isActive }) => isActive ? 'active-link' : ''}>Inicio</NavLink></li>
 
           {/* Ventas */}
           {(usuario?.rol === 'Ventas' || accesoTotal) && (
@@ -28,10 +28,10 @@ const Sidebar = ({ total }) => {
               <li>
                 <a href="#ventasSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Ventas</a>
                 <ul className="collapse list-unstyled" id="ventasSubmenu">
-                  <li><Link to="/IngresoCliente">Ingreso clientes</Link></li>
-                  <li><Link to="/IngresoPresupuesto">Ingreso presupuesto</Link></li>
-                  <li><Link to="/IngresoItems">... Ingreso ítems</Link></li>
-                  <li><Link to="/EditarPresupuestos">... Editar Presupuestos</Link></li>
+                  <li><NavLink to="/IngresoCliente" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso clientes</NavLink></li>
+                  <li><NavLink to="/IngresoPresupuesto" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso presupuesto</NavLink></li>
+                  <li><NavLink to="/IngresoItems" className={({ isActive }) => isActive ? 'active-link' : ''}>... Ingreso ítems</NavLink></li>
+                  <li><NavLink to="/EditarPresupuestos" className={({ isActive }) => isActive ? 'active-link' : ''}>... Editar Presupuestos</NavLink></li>
                 </ul>
               </li>
             </>
@@ -42,13 +42,13 @@ const Sidebar = ({ total }) => {
             <li>
               <a href="#bodegaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Bodega</a>
               <ul className="collapse list-unstyled" id="bodegaSubmenu">
-                <li><Link to="/StockActual">Stock Actual</Link></li>
-                <li><Link to="/IngresosPage">Ingreso de Facturas/Guias</Link></li>
-                <li><Link to="/SalidasPage">Salidas de Material</Link></li>
-                <li><Link to="/StockReservado">Stock reservado por OT</Link></li>
-                <li><Link to="/CrearSolicitudBodegaPage">Solicitud de materiales a OT</Link></li>
-                <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
-                <li><Link to="/AjusteStock">Ajuste de Stock/ Inventario</Link></li>
+                <li><NavLink to="/StockActual" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock Actual</NavLink></li>
+                <li><NavLink to="/IngresosPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso de Facturas/Guias</NavLink></li>
+                <li><NavLink to="/SalidasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Salidas de Material</NavLink></li>
+                <li><NavLink to="/StockReservado" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock reservado por OT</NavLink></li>
+                <li><NavLink to="/CrearSolicitudBodegaPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Solicitud de materiales a OT</NavLink></li>
+                <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
+                <li><NavLink to="/AjusteStock" className={({ isActive }) => isActive ? 'active-link' : ''}>Ajuste de Stock/ Inventario</NavLink></li>
               </ul>
             </li>
           )}
@@ -58,9 +58,9 @@ const Sidebar = ({ total }) => {
             <li>
               <a href="#oficinaSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Oficina Técnica</a>
               <ul className="collapse list-unstyled" id="oficinaSubmenu">
-                <li><Link to="/StockActual">Stock Actual</Link></li>
-                <li><Link to="/OTPautasPage">Pautas de Materiales</Link></li>
-                <li><Link to="#">... Planillas de Corte</Link></li>
+                <li><NavLink to="/StockActual" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock Actual</NavLink></li>
+                <li><NavLink to="/OTPautasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Pautas de Materiales</NavLink></li>
+                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Planillas de Corte</NavLink></li>
               </ul>
             </li>
           )}
@@ -70,18 +70,18 @@ const Sidebar = ({ total }) => {
             <li>
               <a href="#adquisicionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Adquisiciones</a>
               <ul className="collapse list-unstyled" id="adquisicionesSubmenu">
-                <li><Link to="/StockActual">Stock Actual</Link></li>
+                <li><NavLink to="/StockActual" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock Actual</NavLink></li>
                 <li>
                   <a href="#ordenesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Órdenes de Compra</a>
                   <ul className="collapse list-unstyled" id="ordenesSubmenu">
-                    <li><Link to="/CrearOCPage">Crear Orden de compra</Link></li>
-                    <li><Link to="/EditarOCPage">Editar Orden de compra</Link></li>
-                    <li><Link to="/OCPendientePage">OC Pendientes/Historico de Compras</Link></li>
-                    <li><Link to="/ProveedorPage">Crear/ Editar Proveedores</Link></li>
+                    <li><NavLink to="/CrearOCPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Crear Orden de compra</NavLink></li>
+                    <li><NavLink to="/EditarOCPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Editar Orden de compra</NavLink></li>
+                    <li><NavLink to="/OCPendientePage" className={({ isActive }) => isActive ? 'active-link' : ''}>OC Pendientes/Historico de Compras</NavLink></li>
+                    <li><NavLink to="/ProveedorPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Crear/ Editar Proveedores</NavLink></li>
                   </ul>
                 </li>
-                <li><Link to="#">... Ingreso Proveedores</Link></li>
-                <li><Link to="/BodegaSolicitudesPage">Ver solicitudes de Bodega</Link></li>
+                <li><NavLink to="#">... Ingreso Proveedores</NavLink></li>
+                <li><NavLink to="/BodegaSolicitudesPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Ver solicitudes de Bodega</NavLink></li>
               </ul>
             </li>
           )}
@@ -91,21 +91,21 @@ const Sidebar = ({ total }) => {
             <li>
               <a href="#operacionesSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Operaciones</a>
               <ul className="collapse list-unstyled" id="operacionesSubmenu">
-                <li><Link to="/ResumenObrasMatPage">Resumen de Obras y Materiales</Link></li>
-                <li><Link to="/SeguimientoObrasPage">Seguimiento Obras</Link></li>
-                <li><Link to="#">... Programación</Link></li>
-                <li><Link to="#">... Fabricación</Link></li>
+                <li><NavLink to="/ResumenObrasMatPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Resumen de Obras y Materiales</NavLink></li>
+                <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
+                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Programación</NavLink></li>
+                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Fabricación</NavLink></li>
                 <li>
                   <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Despacho</a>
                   <ul className="collapse list-unstyled" id="despachoSubmenu">
-                    <li><Link to="#">... Guías de despacho</Link></li>
+                    <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Guías de despacho</NavLink></li>
                   </ul>
                 </li>
                 <li>
                   <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
-                    <li><Link to="#">... Clientes</Link></li>
-                    <li><Link to="#">... Proveedores</Link></li>
+                    <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Clientes</NavLink></li>
+                    <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Proveedores</NavLink></li>
                   </ul>
                 </li>
               </ul>
@@ -115,7 +115,7 @@ const Sidebar = ({ total }) => {
           {/* Perfil y logout */}
           {usuario ? (
             <>
-              <li><Link to="/ProfilePage"><i className="fa-solid fa-user-lock"></i> {usuario.nombre}</Link></li>
+              <li><NavLink to="/ProfilePage" className={({ isActive }) => isActive ? 'active-link' : ''}><i className="fa-solid fa-user-lock"></i> {usuario.nombre}</NavLink></li>
               <li>
                 <button onClick={logout} className="btn btn-link text-white">
                   <i className="fa-solid fa-lock"></i> Logout
@@ -124,8 +124,8 @@ const Sidebar = ({ total }) => {
             </>
           ) : (
             <>
-              <li><Link to="/LoginPage"><i className="fa-solid fa-lock-open"></i> Login</Link></li>
-              <li><Link to="/RegisterPage"><i className="fa-solid fa-user-lock"></i> Registrar</Link></li>
+              <li><NavLink to="/LoginPage" className={({ isActive }) => isActive ? 'active-link' : ''}><i className="fa-solid fa-lock-open"></i> Login</NavLink></li>
+              <li><NavLink to="/RegisterPage" className={({ isActive }) => isActive ? 'active-link' : ''}><i className="fa-solid fa-user-lock"></i> Registrar</NavLink></li>
             </>
           )}
 
