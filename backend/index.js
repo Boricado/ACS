@@ -428,6 +428,7 @@ app.get('/api/ordenes_compra', async (req, res) => {
 
 
 
+// GET: Obtener materiales
 app.get('/api/materiales', async (req, res) => {
   try {
     const result = await pool.query('SELECT codigo, producto, precio_unitario FROM materiales ORDER BY producto');
@@ -437,6 +438,23 @@ app.get('/api/materiales', async (req, res) => {
     res.status(500).json({ error: 'Error al consultar materiales' });
   }
 });
+
+// ✅ POST: Crear nuevo material
+app.post('/api/materiales', async (req, res) => {
+  const { codigo, producto, unidad = 'UN', proveedor = '', categoria = '' } = req.body;
+
+  try {
+    await pool.query(
+      'INSERT INTO materiales (codigo, producto, unidad, proveedor, categoria) VALUES ($1, $2, $3, $4, $5)',
+      [codigo.trim(), producto.trim(), unidad.trim(), proveedor.trim(), categoria.trim()]
+    );
+    res.status(201).json({ mensaje: 'Material creado correctamente' });
+  } catch (err) {
+    console.error('Error al crear material:', err.message);
+    res.status(500).json({ error: 'Error al crear material' });
+  }
+});
+
 
 app.get('/api/ultima_oc', async (req, res) => {
   try {
