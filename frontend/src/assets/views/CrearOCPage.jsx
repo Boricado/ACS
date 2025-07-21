@@ -70,6 +70,7 @@ const CrearOCPage = () => {
   }, [items]);
 
   const obtenerPrecioUltimo = async (codigo) => {
+    if (esNuevoProducto) return '';
     try {
       const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
       return res.data.precio_unitario;
@@ -99,7 +100,7 @@ const CrearOCPage = () => {
 
     const existeMaterial = materiales.some(mat => mat.codigo?.trim() === item.codigo.trim());
 
-    if (!existeMaterial) {
+    if (!existeMaterial && esNuevoProducto) {
       const confirmar = window.confirm(`El código "${item.codigo}" no existe. ¿Deseas crear este nuevo material?`);
 
       if (confirmar) {
@@ -109,7 +110,13 @@ const CrearOCPage = () => {
             producto: item.producto.trim(),
             unidad: item.unidad || 'UN',
             proveedor: proveedor || '',
-            categoria: '', // si no manejas categoría aún
+            categoria: '',
+            medida: '',
+            stock_min: 0,
+            sub_categoria: '',
+            tipo: '',
+            hoja_fijacion: '',
+            precio_unitario: parseFloat(item.precio_unitario) || 0
           });
 
           const res = await axios.get(`${API}api/materiales`);
@@ -134,13 +141,8 @@ const CrearOCPage = () => {
       }
     ]);
 
-    setItem({
-      codigo: '',
-      producto: '',
-      cantidad: '',
-      precio_unitario: '',
-      unidad: 'UN',
-    });
+    setItem({ codigo: '', producto: '', cantidad: '', precio_unitario: '', unidad: 'UN' });
+    setAdvertenciaProductoExistente('');
   };
 
   const eliminarItem = (index) => {
@@ -264,7 +266,7 @@ return (
             const codigo = e.target.value;
 
             if (esNuevoProducto) {
-              setItem({ ...item, codigo });
+              setItem({ ...item, codigo, producto: '', precio_unitario: '' });
               const existe = materiales.some(m => m.codigo === codigo);
               setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
               return;
@@ -285,7 +287,7 @@ return (
             const producto = e.target.value;
 
             if (esNuevoProducto) {
-              setItem({ ...item, producto });
+              setItem({ ...item, codigo, producto: '', precio_unitario: '' });
               const existe = materiales.some(m => m.producto === producto);
               setAdvertenciaProductoExistente(existe ? '⚠️ Este nombre de producto ya existe.' : '');
               return;
