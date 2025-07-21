@@ -278,7 +278,7 @@ return (
             const codigo = e.target.value;
 
             if (esNuevoProducto) {
-              setItem({ ...item, codigo, producto: '', precio_unitario: '' });
+              setItem(prev => ({ ...prev, codigo }));
               const existe = materiales.some(m => m.codigo === codigo);
               setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
               return;
@@ -298,18 +298,19 @@ return (
           <input type="text" className="form-control" list="productos" value={item.producto} onChange={async (e) => {
             const producto = e.target.value;
 
-            if (esNuevoProducto) {
-              setItem({ ...item, codigo, producto: '', precio_unitario: '' });
-              const existe = materiales.some(m => m.producto === producto);
-              setAdvertenciaProductoExistente(existe ? '⚠️ Este nombre de producto ya existe.' : '');
-              return;
-            }
+          if (esNuevoProducto) {
+            setItem(prev => ({ ...prev, producto }));
+            const existe = materiales.some(m => m.producto === producto);
+            setAdvertenciaProductoExistente(existe ? '⚠️ Este nombre de producto ya existe.' : '');
+            return;
+          }
+
 
             const m = materiales.find(m => m.producto === producto);
             const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
-            setItem({ ...item, producto, codigo: m ? m.codigo : '', precio_unitario: precio });
+            setItem({ ...item, producto, codigo: m?.codigo || '', precio_unitario: precio });
             setAdvertenciaProductoExistente('');
-          }} placeholder="Nombre del producto" />
+          }}   placeholder="Nombre del producto" />
           <datalist id="productos">
             {materiales.map(m => <option key={m.producto} value={m.producto} />)}
           </datalist>
