@@ -70,7 +70,7 @@ export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realiz
   // Firmas
   doc.setFontSize(10);
   const firmasY = finalY + 80;
-  doc.text('_________________________', 10, firmasY);
+  doc.text('', 10, firmasY);
   doc.text('Realizado por', 10, firmasY + 5);
   doc.text(realizadoPor, 10, firmasY + 10);
 

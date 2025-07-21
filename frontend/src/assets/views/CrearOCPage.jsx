@@ -102,11 +102,16 @@ const CrearOCPage = () => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const guardarOC = async () => {
-    if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
-      alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
-      return;
-    }
+const guardarOC = async () => {
+  if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
+    alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
+    return;
+  }
+
+  if (!proveedores.some(p => p.nombre.trim().toLowerCase() === proveedor.trim().toLowerCase())) {
+    alert('El proveedor ingresado no es válido o no existe en la base de datos.');
+    return;
+  }
 
     try {
       const itemsConExtras = items.map(i => ({
@@ -161,23 +166,25 @@ return (
         </div>
         <div className="col-md-4">
           <label>Proveedor</label>
-            <input
-              type="text"
-              className="form-control"
-              list="lista_proveedores"
-              value={proveedor}
-              onChange={(e) => {
-                const nombre = e.target.value;
-                setProveedor(nombre);
-                const prov = proveedores.find(p => p.nombre === nombre);
-                setRutProveedor(prov?.rut || '');
-              }}
-              placeholder="Buscar proveedor"
-            />
-            <small className="text-muted">RUT: {rutProveedor}</small>
+          <input
+            type="text"
+            className="form-control"
+            list="lista_proveedores"
+            value={proveedor}
+            onChange={(e) => {
+              const nombre = e.target.value;
+              setProveedor(nombre);
+              const prov = proveedores.find(p => p.nombre.trim().toLowerCase() === nombre.trim().toLowerCase());
+              setRutProveedor(prov?.rut || '');
+            }}
+            placeholder="Buscar proveedor"
+          />
+          <small className="text-muted">RUT: {rutProveedor}</small>
 
           <datalist id="lista_proveedores">
-            {proveedores.map(p => (<option key={p.id} value={p.nombre} />))}
+            {proveedores.map(p => (
+              <option key={p.id} value={p.nombre} />
+            ))}
           </datalist>
         </div>
         <div className="col-md-3">
