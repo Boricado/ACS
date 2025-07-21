@@ -12,7 +12,7 @@ const CrearOCPage = () => {
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState('');
   const [presupuestoNumero, setPresupuestoNumero] = useState('');
   const [items, setItems] = useState([]);
-  const [item, setItem] = useState({ codigo: '', producto: '', cantidad: '', precio_unitario: '' });
+  const [item, setItem] = useState({ codigo: '', producto: '', cantidad: '', precio_unitario: '', unidad: 'UN' });
   const [proveedor, setProveedor] = useState('');
   const [rutProveedor, setRutProveedor] = useState('');
   const [comentario, setComentario] = useState('');
@@ -39,19 +39,17 @@ const CrearOCPage = () => {
     axios.get(`${API}api/materiales`).then(res => setMateriales(res.data));
     axios.get(`${API}api/proveedores`).then(res => setProveedores(res.data));
     axios.get(`${API}api/clientes`).then(res => setClientes(res.data));
-    axios.get(`${API}api/ultima_oc`)
-      .then(res => {
-        const ultimo = parseInt(res.data.ultimo || 0);
-        setNumeroOC((ultimo + 1).toString());
-      });
+    axios.get(`${API}api/ultima_oc`).then(res => {
+      const ultimo = parseInt(res.data.ultimo || 0);
+      setNumeroOC((ultimo + 1).toString());
+    });
   }, []);
 
   useEffect(() => {
     if (clienteSeleccionado) {
       const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
       setClienteNombre(cliente?.nombre || '');
-      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
-        .then(res => setPresupuestos(res.data));
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`).then(res => setPresupuestos(res.data));
     }
   }, [clienteSeleccionado]);
 
@@ -69,7 +67,7 @@ const CrearOCPage = () => {
     setTotales({ neto, iva, total });
   }, [items]);
 
-  const obtenerPrecioUltimo = async (codigo) => {
+ const obtenerPrecioUltimo = async (codigo) => {
     if (esNuevoProducto) return '';
     try {
       const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
@@ -81,15 +79,29 @@ const CrearOCPage = () => {
   };
 
   const handleCodigoChange = async (codigo) => {
-    const m = materiales.find(m => m.codigo === codigo);
-    const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
-    setItem({ ...item, codigo, producto: m?.producto || '', precio_unitario: precio });
+    if (esNuevoProducto) {
+      setItem(prev => ({ ...prev, codigo }));
+      const existe = materiales.some(m => m.codigo === codigo);
+      setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
+    } else {
+      const m = materiales.find(m => m.codigo === codigo);
+      const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
+      setItem({ ...item, codigo, producto: m?.producto || '', precio_unitario: precio });
+      setAdvertenciaProductoExistente('');
+    }
   };
 
   const handleProductoChange = async (producto) => {
-    const m = materiales.find(m => m.producto === producto);
-    const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
-    setItem({ ...item, producto, codigo: m?.codigo || '', precio_unitario: precio });
+    if (esNuevoProducto) {
+      setItem(prev => ({ ...prev, producto }));
+      const existe = materiales.some(m => m.producto === producto);
+      setAdvertenciaProductoExistente(existe ? '⚠️ Este nombre de producto ya existe.' : '');
+    } else {
+      const m = materiales.find(m => m.producto === producto);
+      const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
+      setItem({ ...item, producto, codigo: m?.codigo || '', precio_unitario: precio });
+      setAdvertenciaProductoExistente('');
+    }
   };
 
   const handleAgregarItem = async () => {
