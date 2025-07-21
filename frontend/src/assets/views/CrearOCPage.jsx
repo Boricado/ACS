@@ -166,7 +166,7 @@ return (
         </div>
         <div className="col-md-4">
           <label>Proveedor</label>
-          <input
+         <input
             type="text"
             className="form-control"
             list="lista_proveedores"
@@ -174,13 +174,14 @@ return (
             onChange={(e) => {
               const nombre = e.target.value;
               setProveedor(nombre);
-              const prov = proveedores.find(p => p.nombre.trim().toLowerCase() === nombre.trim().toLowerCase());
+              const prov = proveedores.find(
+                p => p.nombre && p.nombre.trim().toLowerCase() === nombre.trim().toLowerCase()
+              );
               setRutProveedor(prov?.rut || '');
             }}
             placeholder="Buscar proveedor"
           />
           <small className="text-muted">RUT: {rutProveedor}</small>
-
           <datalist id="lista_proveedores">
             {proveedores.map(p => (
               <option key={p.id} value={p.nombre} />
