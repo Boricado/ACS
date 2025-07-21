@@ -442,45 +442,26 @@ app.get('/api/materiales', async (req, res) => {
 // ✅ POST: Crear nuevo material con todos los campos
 app.post('/api/materiales', async (req, res) => {
   const {
-    codigo,
-    producto,
-    categoria,
-    medida,
-    stock_min,
-    sub_categoria,
-    tipo,
-    hoja_fijacion,
-    precio_unitario,
-    unidad = 'UN',
-    proveedor = ''
+    codigo, producto, unidad = 'UN', proveedor = '',
+    categoria = '', medida = '', stock_min = 0,
+    sub_categoria = '', tipo = '', hoja_fijacion = '',
+    precio_unitario = 0
   } = req.body;
 
   try {
     await pool.query(
-      `INSERT INTO materiales (
-        codigo, producto, unidad, proveedor, categoria, medida, stock_min, sub_categoria, tipo, hoja_fijacion, precio_unitario
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [
-        codigo?.trim(),
-        producto?.trim(),
-        unidad?.trim(),
-        proveedor?.trim(),
-        categoria?.trim() || '',
-        medida?.trim() || '',
-        parseInt(stock_min) || 0,
-        sub_categoria?.trim() || '',
-        tipo?.trim() || '',
-        hoja_fijacion?.trim() || '',
-        parseFloat(precio_unitario) || 0
-      ]
+      `INSERT INTO materiales (codigo, producto, unidad, proveedor, categoria, medida, stock_min, sub_categoria, tipo, hoja_fijacion, precio_unitario)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [codigo.trim(), producto.trim(), unidad.trim(), proveedor.trim(), categoria.trim(),
+       medida.trim(), stock_min, sub_categoria.trim(), tipo.trim(), hoja_fijacion.trim(), precio_unitario]
     );
-
     res.status(201).json({ mensaje: 'Material creado correctamente' });
   } catch (err) {
     console.error('Error al crear material:', err.message);
     res.status(500).json({ error: 'Error al crear material' });
   }
 });
+
 
 
 
