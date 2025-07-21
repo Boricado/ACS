@@ -20,6 +20,10 @@ const CrearOCPage = () => {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
   const [numeroOC, setNumeroOC] = useState('');
+  const [esNuevoProducto, setEsNuevoProducto] = useState(false);
+  const [advertenciaProductoExistente, setAdvertenciaProductoExistente] = useState('');
+
+
   const API = import.meta.env.VITE_API_URL;
 
   const camposObligatoriosIncompletos = () => {
@@ -173,6 +177,7 @@ const guardarOC = async () => {
       });
 
       alert(`OC N° ${response.data.numero_oc} creada con éxito.`);
+      window.location.reload();
 
       // ✅ Generar PDF con RUT
       generarPDF_OC({
@@ -239,14 +244,36 @@ return (
         </div>
       </div>
 
+      <div className="form-check form-switch my-2">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          checked={esNuevoProducto}
+          onChange={() => setEsNuevoProducto(!esNuevoProducto)}
+          id="nuevoProductoToggle"
+        />
+        <label className="form-check-label" htmlFor="nuevoProductoToggle">
+          Nuevo producto
+        </label>
+      </div>
+
       <div className="row mb-3">
         <div className="col-md-4">
           <label>Código</label>
           <input type="text" className="form-control" list="codigos" value={item.codigo} onChange={async (e) => {
             const codigo = e.target.value;
+
+            if (esNuevoProducto) {
+              setItem({ ...item, codigo });
+              const existe = materiales.some(m => m.codigo === codigo);
+              setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
+              return;
+            }
+
             const m = materiales.find(m => m.codigo === codigo);
             const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
             setItem({ ...item, codigo, producto: m ? m.producto : '', precio_unitario: precio });
+            setAdvertenciaProductoExistente('');
           }} placeholder="Código del producto" />
           <datalist id="codigos">
             {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
@@ -256,9 +283,18 @@ return (
           <label>Producto</label>
           <input type="text" className="form-control" list="productos" value={item.producto} onChange={async (e) => {
             const producto = e.target.value;
+
+            if (esNuevoProducto) {
+              setItem({ ...item, producto });
+              const existe = materiales.some(m => m.producto === producto);
+              setAdvertenciaProductoExistente(existe ? '⚠️ Este nombre de producto ya existe.' : '');
+              return;
+            }
+
             const m = materiales.find(m => m.producto === producto);
             const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
             setItem({ ...item, producto, codigo: m ? m.codigo : '', precio_unitario: precio });
+            setAdvertenciaProductoExistente('');
           }} placeholder="Nombre del producto" />
           <datalist id="productos">
             {materiales.map(m => <option key={m.producto} value={m.producto} />)}
@@ -274,7 +310,23 @@ return (
         </div>
       </div>
 
-      <button className="btn btn-primary mb-3" onClick={handleAgregarItem}>Añadir elemento</button>
+      {advertenciaProductoExistente && (
+        <div className="alert alert-warning py-1 mt-1" role="alert">
+          {advertenciaProductoExistente}
+        </div>
+      )}
+
+      <button
+        className="btn btn-primary mb-3"
+        onClick={handleAgregarItem}
+        disabled={
+          !item.codigo || !item.producto || !item.cantidad || !item.precio_unitario ||
+          (esNuevoProducto && advertenciaProductoExistente)
+        }
+      >
+        Añadir elemento
+      </button>
+
 
       {items.length > 0 && (
         <table className="table table-bordered table-hover text-center">
