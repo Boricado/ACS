@@ -88,61 +88,56 @@ const CrearOCPage = () => {
   };
 
   const handleAgregarItem = async () => {
-  if (!nuevoItem.codigo || !nuevoItem.producto || !nuevoItem.cantidad || !nuevoItem.precio_unitario) {
-    alert('Por favor completa todos los campos del ítem.');
-    return;
-  }
+    if (!item.codigo || !item.producto || !item.cantidad || !item.precio_unitario) {
+      alert('Por favor completa todos los campos del ítem.');
+      return;
+    }
 
-  const existeMaterial = materiales.some(mat => mat.codigo?.trim() === nuevoItem.codigo.trim());
+    const existeMaterial = materiales.some(mat => mat.codigo?.trim() === item.codigo.trim());
 
-  // Si no existe, preguntar y crear nuevo material
-  if (!existeMaterial) {
-    const confirmar = window.confirm(`El código "${nuevoItem.codigo}" no existe. ¿Deseas crear este nuevo material?`);
+    if (!existeMaterial) {
+      const confirmar = window.confirm(`El código "${item.codigo}" no existe. ¿Deseas crear este nuevo material?`);
 
-    if (confirmar) {
-      try {
-        await axios.post(`${API}api/materiales`, {
-          codigo: nuevoItem.codigo.trim(),
-          producto: nuevoItem.producto.trim(),
-          unidad: nuevoItem.unidad || 'UN',
-          proveedor: proveedorSeleccionado || '',
-          categoria: categoriaSeleccionada || '',
-        });
+      if (confirmar) {
+        try {
+          await axios.post(`${API}api/materiales`, {
+            codigo: item.codigo.trim(),
+            producto: item.producto.trim(),
+            unidad: item.unidad || 'UN',
+            proveedor: proveedor || '',
+            categoria: '', // si no manejas categoría aún
+          });
 
-        // recargar materiales actualizados
-        const res = await axios.get(`${API}api/materiales`);
-        setMateriales(res.data);
-
-      } catch (error) {
-        console.error('Error al crear nuevo material:', error);
-        alert('Hubo un error al crear el nuevo material.');
-        return;
+          const res = await axios.get(`${API}api/materiales`);
+          setMateriales(res.data);
+        } catch (error) {
+          console.error('Error al crear nuevo material:', error);
+          alert('Hubo un error al crear el nuevo material.');
+          return;
+        }
+      } else {
+        return; // Cancelado por el usuario
       }
-    } else {
-      return; // Cancelar la adición si no confirma
     }
-  }
 
-  // Agregar ítem a la lista
-  setItems(prev => [
-    ...prev,
-    {
-      ...nuevoItem,
-      cantidad: parseFloat(nuevoItem.cantidad),
-      precio_unitario: parseFloat(nuevoItem.precio_unitario),
-      total: parseFloat(nuevoItem.cantidad) * parseFloat(nuevoItem.precio_unitario),
-    }
-  ]);
+    setItems(prev => [
+      ...prev,
+      {
+        ...item,
+        cantidad: parseFloat(item.cantidad),
+        precio_unitario: parseFloat(item.precio_unitario),
+        total: parseFloat(item.cantidad) * parseFloat(item.precio_unitario),
+      }
+    ]);
 
-  // Limpiar inputs
-  setNuevoItem({
-    codigo: '',
-    producto: '',
-    cantidad: '',
-    precio_unitario: '',
-    unidad: 'UN'
-  });
-};
+    setItem({
+      codigo: '',
+      producto: '',
+      cantidad: '',
+      precio_unitario: '',
+      unidad: 'UN',
+    });
+  };
 
   const eliminarItem = (index) => {
     setItems(items.filter((_, i) => i !== index));
