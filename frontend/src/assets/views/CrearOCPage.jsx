@@ -250,15 +250,15 @@ return (
         </div>
       </div>
 
-      <div className="form-check form-switch my-2">
+      <div className="d-flex align-items-center my-2">
         <input
-          className="form-check-input"
+          className="form-check-input me-2"
           type="checkbox"
           checked={esNuevoProducto}
           onChange={() => setEsNuevoProducto(!esNuevoProducto)}
           id="nuevoProductoToggle"
         />
-        <label className="form-check-label" htmlFor="nuevoProductoToggle">
+        <label className="form-check-label mb-0" htmlFor="nuevoProductoToggle">
           Nuevo producto
         </label>
       </div>
