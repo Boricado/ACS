@@ -96,30 +96,66 @@ app.get('/api/clientes', async (req, res) => {
 app.post('/api/presupuestos', async (req, res) => {
   const { numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado } = req.body;
 
+  const client = await pool.connect();
 
   try {
-    const query = `
+    await client.query('BEGIN');
+
+    const insertPresupuestoQuery = `
       INSERT INTO presupuestos (numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
-    const values = [
-        numero || null,
-        cliente_id || null,
-        nombre_obra || null,
-        direccion || null,
-        observacion || null,
-        fecha || new Date(),
-        total_neto_presupuestado || 0
-      ];
+    const presupuestoValues = [
+      numero || null,
+      cliente_id || null,
+      nombre_obra || null,
+      direccion || null,
+      observacion || null,
+      fecha || new Date(),
+      total_neto_presupuestado || 0
+    ];
 
-    const result = await pool.query(query, values);
-    res.status(201).json(result.rows[0]);
+    const resultPresupuesto = await client.query(insertPresupuestoQuery, presupuestoValues);
+    const presupuesto = resultPresupuesto.rows[0];
+
+    // Obtener nombre del cliente desde la tabla clientes
+    const clienteRes = await client.query('SELECT nombre FROM clientes WHERE id = $1', [cliente_id]);
+    const cliente_nombre = clienteRes.rows[0]?.nombre || '';
+
+    // Insertar en seguimiento_obras
+    const insertSeguimientoQuery = `
+      INSERT INTO seguimiento_obras (
+        cliente_nombre, presupuesto_numero, nombre_obra, presupuesto,
+        rectificación, accesorios, gomas_cepillos, herraje, instalación,
+        perfiles, refuerzos, tornillos, vidrio, planilla_corte, fabricación,
+        acopio, despacho, recepcion_final, pago
+      )
+      VALUES ($1, $2, $3, true,
+              false, false, false, false, false,
+              false, false, false, false, false, false,
+              false, false, false, false);
+    `;
+    const seguimientoValues = [
+      cliente_nombre,
+      numero,
+      nombre_obra
+    ];
+
+    await client.query(insertSeguimientoQuery, seguimientoValues);
+
+    await client.query('COMMIT');
+    res.status(201).json(presupuesto);
+
   } catch (err) {
-    console.error('Error al insertar presupuesto:', err.message);
-    res.status(500).json({ error: 'Error al guardar presupuesto' });
+    await client.query('ROLLBACK');
+    console.error('Error al insertar presupuesto o seguimiento:', err.message);
+    res.status(500).json({ error: 'Error al guardar presupuesto o seguimiento' });
+  } finally {
+    client.release();
   }
 });
+
 
 app.post('/api/items_presupuesto', async (req, res) => {
   const {
