@@ -327,11 +327,36 @@ return (
         </div>
         <div className="col-md-2">
           <label>Cantidad</label>
-          <input type="number" className="form-control" placeholder="Cantidad" value={item.cantidad} onChange={(e) => setItem({ ...item, cantidad: e.target.value })} />
+          <input
+            type="text"
+            inputMode="decimal"
+            className="form-control"
+            placeholder="Cantidad"
+            value={item.cantidad}
+            onChange={(e) => {
+              const valor = e.target.value.replace(',', '.');
+              if (!isNaN(valor) || valor === '') {
+                setItem({ ...item, cantidad: valor });
+              }
+            }}
+          />
+
         </div>
         <div className="col-md-2">
           <label>Precio Neto</label>
-          <input type="number" className="form-control" placeholder="Precio neto" value={item.precio_unitario} onChange={(e) => setItem({ ...item, precio_unitario: e.target.value })} />
+          <input
+            type="text"
+            inputMode="decimal"
+            className="form-control"
+            placeholder="Precio neto"
+            value={item.precio_unitario}
+            onChange={(e) => {
+              const valor = e.target.value.replace(',', '.'); // permite usar coma
+              if (!isNaN(valor) || valor === '') {
+                setItem({ ...item, precio_unitario: valor });
+              }
+            }}
+          />
         </div>
       </div>
 
