@@ -266,25 +266,42 @@ return (
       <div className="row mb-3">
         <div className="col-md-4">
           <label>Código</label>
-          <input type="text" className="form-control" list="codigos" value={item.codigo} onChange={async (e) => {
-            const codigo = e.target.value;
-
-            if (esNuevoProducto) {
+          <input
+            type="text"
+            className="form-control"
+            list="codigos"
+            value={item.codigo}
+            onChange={(e) => {
+              const codigo = e.target.value;
               setItem(prev => ({ ...prev, codigo }));
-              const existe = materiales.some(m => m.codigo === codigo);
-              setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
-              return;
-            }
 
-            const m = materiales.find(m => m.codigo === codigo);
-            const precio = m?.precio_unitario || await obtenerPrecioUltimo(codigo);
-            setItem({ ...item, codigo, producto: m ? m.producto : '', precio_unitario: precio });
-            setAdvertenciaProductoExistente('');
-          }} placeholder="Código del producto" />
-          <datalist id="codigos">
-            {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
-          </datalist>
-        </div>
+              if (esNuevoProducto) {
+                const existe = materiales.some(m => m.codigo === codigo);
+                setAdvertenciaProductoExistente(existe ? '⚠️ Este código ya existe en la base de datos.' : '');
+                return;
+              }
+
+              const m = materiales.find(m => m.codigo === codigo);
+              setItem(prev => ({
+                ...prev,
+                producto: m?.producto || '',
+                precio_unitario: m?.precio_unitario || ''
+              }));
+
+              if (!m?.precio_unitario) {
+                obtenerPrecioUltimo(codigo).then(precio =>
+                  setItem(prev => ({ ...prev, precio_unitario: precio }))
+                );
+              }
+
+              setAdvertenciaProductoExistente('');
+            }}
+            placeholder="Código del producto"
+            />
+            <datalist id="codigos">
+              {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
+            </datalist>
+          </div>
         <div className="col-md-4">
           <label>Producto</label>
           <input type="text" className="form-control" list="productos" value={item.producto} onChange={async (e) => {
