@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     const result = await pool.query(`
       SELECT 
         id,
-        proveedor AS nombre,
+        proveedor,
         rut,
         vendedor,
         contacto,
