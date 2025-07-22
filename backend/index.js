@@ -127,8 +127,8 @@ app.post('/api/presupuestos', async (req, res) => {
     const insertSeguimientoQuery = `
       INSERT INTO seguimiento_obras (
         cliente_nombre, presupuesto_numero, nombre_obra, presupuesto,
-        rectificación, accesorios, gomas_cepillos, herraje, instalación,
-        perfiles, refuerzos, tornillos, vidrio, planilla_corte, fabricación,
+        rectificacion, accesorios, gomas_cepillos, herraje, instalacion,
+        perfiles, refuerzos, tornillos, vidrio, planilla_corte, fabricacion,
         acopio, despacho, recepcion_final, pago
       )
       VALUES ($1, $2, $3, true,
