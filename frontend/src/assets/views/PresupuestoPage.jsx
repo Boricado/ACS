@@ -37,7 +37,7 @@ const PresupuestoPage = () => {
   const guardarPresupuesto = async () => {
     const { numero, cliente_id, nombre_obra, direccion, observacion, fecha, total_neto_presupuestado } = presupuesto;
 
-    if (!numero || !cliente_id || !nombre_obra) {
+    if (!numero || !cliente_id) {
       setMensaje({ tipo: 'error', texto: 'Complete los campos obligatorios' });
       return;
     }
@@ -116,7 +116,7 @@ const PresupuestoPage = () => {
           <input
             name="numero"
             className="form-control"
-            placeholder="Número Presupuesto"
+            placeholder="Número Presupuesto *"
             value={presupuesto.numero}
             onChange={handleChange}
           />

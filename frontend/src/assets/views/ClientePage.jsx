@@ -20,8 +20,8 @@ const ClientePage = () => {
   };
 
   const guardarCliente = async () => {
-  if (!cliente.nombre || !cliente.rut) {
-    setMensaje({ tipo: 'error', texto: 'Nombre y RUT son obligatorios' });
+  if (!cliente.nombre) {
+    setMensaje({ tipo: 'error', texto: 'Nombre es obligatorio' });
     return;
   }
 
@@ -44,7 +44,7 @@ return (
     <form className="container">
       <div className="row mb-3">
         <div className="col-md-4">
-          <label className="form-label">Nombre</label>
+          <label className="form-label">Nombre *</label>
           <input
             type="text"
             name="nombre"
