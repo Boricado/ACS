@@ -67,13 +67,6 @@ const PresupuestoPage = () => {
       const clienteEncontrado = clientes.find(c => c.id.toString() === cliente_id);
       const cliente_nombre = clienteEncontrado?.nombre || 'Sin nombre';
 
-      // Crear seguimiento de obra
-      await axios.post(`${API}api/seguimiento_obras`, {
-        cliente_nombre,
-        presupuesto_numero: numero,
-        nombre_obra
-      });
-
       setMensaje({ tipo: 'success', texto: 'Presupuesto y seguimiento guardados correctamente' });
 
       setPresupuesto({
