@@ -61,7 +61,11 @@ const CrearOCPage = () => {
   }, [presupuestoSeleccionado]);
 
   useEffect(() => {
-    const neto = items.reduce((sum, i) => sum + (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0), 0);
+    const neto = items.reduce((sum, i) => {
+      const cantidad = parseFloat(i.cantidad) || 0;
+      const precio = parseFloat(i.precio_unitario) || 0;
+      return sum + (cantidad * precio);
+    }, 0);
     const iva = Math.round(neto * 0.19);
     const total = neto + iva;
     setTotales({ neto, iva, total });
@@ -167,7 +171,7 @@ const guardarOC = async () => {
     try {
       const itemsConExtras = items.map(i => ({
         ...i,
-        costo_neto: (parseInt(i.cantidad) || 0) * (parseInt(i.precio_unitario) || 0),
+        costo_neto: (parseFloat(i.cantidad) || 0) * (parseFloat(i.precio_unitario) || 0),
         observacion: comentario?.trim() || `${clienteNombre} - Presupuesto ${presupuestoNumero}`
       }));
 
