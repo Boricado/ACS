@@ -400,8 +400,8 @@ return (
                 <td>{i.codigo}</td>
                 <td>{i.producto}</td>
                 <td>{i.cantidad}</td>
-                <td>${parseInt(i.precio_unitario).toLocaleString()}</td>
-                <td>${(i.cantidad * i.precio_unitario).toLocaleString()}</td>
+                <td>${parseFloat(i.precio_unitario)}</td>
+                <td>${(i.cantidad * i.precio_unitario)}</td>
                 <td><button className="btn btn-sm btn-danger" onClick={() => eliminarItem(idx)}>X</button></td>
               </tr>
             ))}
