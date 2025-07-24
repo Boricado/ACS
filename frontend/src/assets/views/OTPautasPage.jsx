@@ -238,7 +238,7 @@ const OTPautasPage = () => {
             <tbody>
               {pautasCargadas.map((p, idx) => (
                 <tr key={idx}>
-                  <td>{p.id}</td>
+                  <td>{idx + 1}</td>
                   <td>{p.codigo}</td>
                   <td>{p.producto}</td>
                   <td>
@@ -246,15 +246,34 @@ const OTPautasPage = () => {
                       type="number"
                       className="form-control form-control-sm"
                       value={p.cantidad}
-                      onChange={(e) => actualizarPauta(p.id, e.target.value)}
+                      onChange={(e) => {
+                        const nuevaCantidad = e.target.value;
+                        setPautasCargadas(prev => {
+                          const actualizadas = [...prev];
+                          actualizadas[idx] = { ...actualizadas[idx], cantidad: nuevaCantidad };
+                          return actualizadas;
+                        });
+                      }}
                     />
                   </td>
-                  <td>
-                    <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id)}>X</button>
+                  <td className="d-flex gap-1">
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => actualizarPauta(p.id, p.cantidad)}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => eliminarPautaCargada(p.id)}
+                    >
+                      X
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       )}
