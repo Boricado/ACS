@@ -81,26 +81,32 @@ const IngresosPage = () => {
     (filtro.material ? o.detalles.some(d => d.producto?.toLowerCase().includes(filtro.material.toLowerCase())) : true)
   );
 
-  const handleIngresarFactura = async () => {
+  const handleIngresarFactura = async (numeroOC) => {
+    const orden = ordenes.find(o => o.numero_oc === numeroOC);
+
+    if (!orden.factura || !orden.fecha_factura) {
+      alert(`Debe ingresar número y fecha de factura para la OC ${numeroOC}`);
+      return;
+    }
+
     try {
-      const ordenesAEnviar = ordenes.map(orden => ({
+      const ordenActualizada = {
         ...orden,
-        factura: orden.factura || '',
-        fecha_factura: orden.fecha_factura || '',
         detalles: orden.detalles.map(d => ({
           ...d,
           observacion: d.observacion || orden.observacion
         }))
-      }));
+      };
 
-      await axios.post(`${API}api/ingresar_factura`, { ordenes: ordenesAEnviar });
-      alert('Factura ingresada exitosamente.');
+      await axios.post(`${API}api/ingresar_factura`, { ordenes: [ordenActualizada] });
+      alert(`Factura OC ${numeroOC} ingresada exitosamente.`);
       await cargarOrdenesPendientes();
     } catch (err) {
       console.error('Error al ingresar factura:', err);
       alert('Hubo un error al ingresar la factura.');
     }
   };
+
 
   return (
     <div className="container mt-4">
@@ -159,20 +165,24 @@ const IngresosPage = () => {
               </div>
               <div className="col-md-6">
                 <label>Fecha Factura</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={o.fecha_factura ? new Date(o.fecha_factura).toISOString().split('T')[0] : ''}
-                  onChange={(e) =>
-                    setOrdenes(prev =>
-                      prev.map(oc => oc.numero_oc === o.numero_oc
-                        ? { ...oc, fecha_factura: e.target.value }
-                        : oc)
-                    )
-                  }
-                />
+                <div className="input-group">
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={o.fecha_factura ? new Date(o.fecha_factura).toISOString().split('T')[0] : ''}
+                    onChange={(e) =>
+                      setOrdenes(prev =>
+                        prev.map(oc => oc.numero_oc === o.numero_oc
+                          ? { ...oc, fecha_factura: e.target.value }
+                          : oc)
+                      )
+                    }
+                  />
+                  <button className="btn btn-primary" onClick={() => handleIngresarFactura(o.numero_oc)}>
+                    Ingresar
+                  </button>
+                </div>
               </div>
-            </div>
 
             {detallesVisibles[o.numero_oc] && (
               <div className="mt-3">
@@ -236,11 +246,6 @@ const IngresosPage = () => {
         );
       })}
 
-      <div className="text-end">
-        <button className="btn btn-primary" onClick={handleIngresarFactura}>
-          Ingresar Factura
-        </button>
-      </div>
     </div>
   );
 };
