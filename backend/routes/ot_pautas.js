@@ -13,7 +13,6 @@ const camposSeguimientoValidos = [
 const insertarYActualizar = async (req, res, tabla, campoSeguimiento) => {
   const { cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad } = req.body;
 
-  // Validación básica
   if (!cliente_id || !presupuesto_id || !numero_presupuesto || !codigo || !producto || !cantidad) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
   }
@@ -23,14 +22,12 @@ const insertarYActualizar = async (req, res, tabla, campoSeguimiento) => {
   }
 
   try {
-    // Insertar ítem en la tabla correspondiente
     await pool.query(
       `INSERT INTO ${tabla} (cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad)
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad]
     );
 
-    // Actualizar el campo booleano correspondiente en seguimiento_obras
     await pool.query(
       `UPDATE seguimiento_obras SET ${campoSeguimiento} = TRUE WHERE presupuesto_numero = $1`,
       [numero_presupuesto]
@@ -52,5 +49,52 @@ router.post('/accesorios', (req, res) => insertarYActualizar(req, res, 'ot_pauta
 router.post('/gomascepillos', (req, res) => insertarYActualizar(req, res, 'ot_pautas_gomascepillos', 'gomas_cepillos'));
 router.post('/vidrio', (req, res) => insertarYActualizar(req, res, 'ot_pautas_vidrio', 'vidrio'));
 router.post('/instalacion', (req, res) => insertarYActualizar(req, res, 'ot_pautas_instalacion', 'instalacion'));
+
+// Rutas PUT para actualizar cantidad en cada tabla
+router.put('/perfiles/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_perfiles');
+});
+router.put('/refuerzos/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_refuerzos');
+});
+router.put('/tornillos/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_tornillos');
+});
+router.put('/herraje/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_herraje');
+});
+router.put('/accesorios/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_accesorios');
+});
+router.put('/gomascepillos/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_gomascepillos');
+});
+router.put('/vidrio/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_vidrio');
+});
+router.put('/instalacion/:id', async (req, res) => {
+  actualizarCantidad(req, res, 'ot_pautas_instalacion');
+});
+
+// Función reutilizable para PUT cantidad
+const actualizarCantidad = async (req, res, tabla) => {
+  const { id } = req.params;
+  const { cantidad } = req.body;
+
+  if (!id || cantidad === undefined) {
+    return res.status(400).json({ error: 'ID o cantidad faltante' });
+  }
+
+  try {
+    await pool.query(
+      `UPDATE ${tabla} SET cantidad = $1 WHERE id = $2`,
+      [cantidad, id]
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(`Error al actualizar pauta en ${tabla}:`, err);
+    res.status(500).json({ error: `Error al actualizar pauta en ${tabla}` });
+  }
+};
 
 export default router;
