@@ -46,7 +46,7 @@ router.put('/:id/comentario', async (req, res) => {
   }
 });
 
-// PUT /api/seguimiento_obras/:id/toggle
+// ✅ RUTA UNIFICADA: PUT /api/seguimiento_obras/:id/toggle
 router.put('/:id/toggle', async (req, res) => {
   const { id } = req.params;
   const { campo } = req.body;
@@ -55,41 +55,7 @@ router.put('/:id/toggle', async (req, res) => {
     return res.status(400).json({ error: 'Campo no proporcionado' });
   }
 
-  const camposValidos = [
-    'planilla_corte',
-    'fabricacion',
-    'acopio',
-    'despacho',
-    'instalacion',
-    'recepcion_final',
-    'pago'
-  ];
-
-  if (!camposValidos.includes(campo)) {
-    return res.status(400).json({ error: 'Campo no válido' });
-  }
-
-  try {
-    const result = await pool.query(
-      `UPDATE seguimiento_obras
-       SET ${campo} = NOT COALESCE(${campo}, false)
-       WHERE id = $1
-       RETURNING ${campo}`,
-      [id]
-    );
-    res.json({ mensaje: `Campo ${campo} actualizado`, nuevoValor: result.rows[0][campo] });
-  } catch (error) {
-    console.error('Error al hacer toggle de etapa:', error);
-    res.status(500).json({ error: 'Error interno al actualizar etapa' });
-  }
-});
-
-// Toggle manual de etapa de seguimiento (materiales u otros)
-router.put('/:id/toggle', async (req, res) => {
-  const { id } = req.params;
-  const { campo } = req.body;
-
-  // Lista blanca de campos permitidos
+  // Lista blanca unificada con todos los campos posibles a toggle
   const camposPermitidos = [
     'perfiles', 'refuerzos', 'tornillos', 'herraje',
     'accesorios', 'gomas_cepillos', 'vidrio', 'instalacion',
@@ -103,15 +69,17 @@ router.put('/:id/toggle', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE seguimiento_obras SET ${campo} = NOT ${campo} WHERE id = $1 RETURNING ${campo}`,
+      `UPDATE seguimiento_obras
+       SET ${campo} = NOT COALESCE(${campo}, false)
+       WHERE id = $1
+       RETURNING ${campo}`,
       [id]
     );
-    res.json({ [campo]: result.rows[0][campo] });
+    res.json({ mensaje: `Campo ${campo} actualizado`, nuevoValor: result.rows[0][campo] });
   } catch (err) {
     console.error('Error al hacer toggle:', err);
     res.status(500).json({ error: 'Error al actualizar etapa' });
   }
 });
-
 
 export default router;

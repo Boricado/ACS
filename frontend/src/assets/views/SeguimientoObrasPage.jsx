@@ -166,7 +166,6 @@ const SeguimientoObrasPage = () => {
                                 checked={obra[sub] || false}
                                 onChange={() => toggleEtapa(obra, sub)}
                               />
-                              {obra[sub] && <span className="ms-3">✅</span>}
                             </div>
                           ))}
                         </div>
