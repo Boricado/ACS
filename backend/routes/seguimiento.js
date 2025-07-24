@@ -84,4 +84,34 @@ router.put('/:id/toggle', async (req, res) => {
   }
 });
 
+// Toggle manual de etapa de seguimiento (materiales u otros)
+router.put('/:id/toggle', async (req, res) => {
+  const { id } = req.params;
+  const { campo } = req.body;
+
+  // Lista blanca de campos permitidos
+  const camposPermitidos = [
+    'perfiles', 'refuerzos', 'tornillos', 'herraje',
+    'accesorios', 'gomas_cepillos', 'vidrio', 'instalacion',
+    'planilla_corte', 'fabricacion', 'acopio', 'despacho',
+    'recepcion_final', 'pago'
+  ];
+
+  if (!camposPermitidos.includes(campo)) {
+    return res.status(400).json({ error: 'Campo no permitido' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE seguimiento_obras SET ${campo} = NOT ${campo} WHERE id = $1 RETURNING ${campo}`,
+      [id]
+    );
+    res.json({ [campo]: result.rows[0][campo] });
+  } catch (err) {
+    console.error('Error al hacer toggle:', err);
+    res.status(500).json({ error: 'Error al actualizar etapa' });
+  }
+});
+
+
 export default router;

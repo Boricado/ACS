@@ -158,8 +158,15 @@ const SeguimientoObrasPage = () => {
                         </div>
                         <div className="subetapas">
                           {agrupacion[1].map((sub) => (
-                            <div key={sub} className="subetapa">
-                              <span className="arrow">↳</span> {formatLabel(sub)} {obra[sub] ? '✅' : ''}
+                            <div key={sub} className="subetapa d-flex align-items-center mb-1">
+                              <span className="arrow me-2">↳</span> {formatLabel(sub)}
+                              <input
+                                type="checkbox"
+                                className="toggle-switch ms-2"
+                                checked={obra[sub] || false}
+                                onChange={() => toggleEtapa(obra, sub)}
+                              />
+                              {obra[sub] && <span className="ms-3">✅</span>}
                             </div>
                           ))}
                         </div>
