@@ -170,7 +170,7 @@ const SeguimientoObrasPage = () => {
                         <span className="arrow">⮞</span> {formatLabel(etapa)}
                         <input
                           type="checkbox"
-                          className="form-check-input ms-2"
+                          className="toggle-switch ms-3"
                           checked={obra.rectificacion || false}
                           onChange={() => toggleRectificacion(obra)}
                         />
@@ -192,7 +192,7 @@ const SeguimientoObrasPage = () => {
                         <span className="arrow">⮞</span> {formatLabel(etapa)}
                         <input
                           type="checkbox"
-                          className="form-check-input ms-2"
+                          className="toggle-switch ms-3"
                           checked={obra[etapa] || false}
                           onChange={() => toggleEtapa(obra, etapa)}
                         />

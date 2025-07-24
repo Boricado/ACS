@@ -1,0 +1,9 @@
+/* Checkbox estilo clásico, con check verde al activarse */
+.toggle-switch {
+  appearance: auto; /* Usa el checkbox nativo del sistema */
+  accent-color: #28a745; /* Verde Bootstrap */
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-left: 0.5rem; /* opcional, para separar del texto */
+}
