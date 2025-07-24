@@ -137,114 +137,115 @@ const IngresosPage = () => {
 
 
       {filtrarOrdenes.map((o, i) => {
-        const { totalNeto, iva, total } = calcularTotales(o.detalles);
-        return (
-          <div key={i} className="mb-4 border rounded p-3 bg-light text-start">
-            <div onClick={() => toggleDetalle(o.numero_oc)} style={{ cursor: 'pointer' }}>
-              <strong>N° OC:</strong> {o.numero_oc} &nbsp;|&nbsp;
-              <strong>Proveedor:</strong> {o.proveedor} &nbsp;|&nbsp;
-              <strong>Fecha:</strong> {o.fecha} &nbsp;|&nbsp;
-              <strong>Obra:</strong> {o.observacion}
-            </div>
+  const { totalNeto, iva, total } = calcularTotales(o.detalles);
+  return (
+    <div key={i} className="mb-4 border rounded p-3 bg-light text-start">
+      <div onClick={() => toggleDetalle(o.numero_oc)} style={{ cursor: 'pointer' }}>
+        <strong>N° OC:</strong> {o.numero_oc} &nbsp;|&nbsp;
+        <strong>Proveedor:</strong> {o.proveedor} &nbsp;|&nbsp;
+        <strong>Fecha:</strong> {o.fecha} &nbsp;|&nbsp;
+        <strong>Obra:</strong> {o.observacion}
+      </div>
 
-            <div className="row mt-2 mb-3">
-              <div className="col-md-6">
-                <label>N° Factura</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={o.factura || ''}
-                  onChange={(e) =>
-                    setOrdenes(prev =>
-                      prev.map(oc => oc.numero_oc === o.numero_oc
-                        ? { ...oc, factura: e.target.value }
-                        : oc)
-                    )
-                  }
-                />
-              </div>
-              <div className="col-md-6">
-                <label>Fecha Factura</label>
-                <div className="input-group">
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={o.fecha_factura ? new Date(o.fecha_factura).toISOString().split('T')[0] : ''}
-                    onChange={(e) =>
-                      setOrdenes(prev =>
-                        prev.map(oc => oc.numero_oc === o.numero_oc
-                          ? { ...oc, fecha_factura: e.target.value }
-                          : oc)
-                      )
-                    }
-                  />
-                  <button className="btn btn-primary" onClick={() => handleIngresarFactura(o.numero_oc)}>
-                    Ingresar
-                  </button>
-                </div>
-              </div>
-
-            {detallesVisibles[o.numero_oc] && (
-              <div className="mt-3">
-                <table className="table table-bordered table-sm text-center">
-                  <thead>
-                    <tr>
-                      <th>Código</th>
-                      <th>Producto</th>
-                      <th>Cantidad Total</th>
-                      <th>Precio Unitario</th>
-                      <th>Cant. Llegadas</th>
-                      <th>Total Neto</th>
-                      <th>Cant. Pendientes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {o.detalles.map((d, idx) => {
-                      const totalNeto = (d.cantidad_llegada || 0) * (d.precio_unitario || 0);
-                      const pendientes = (d.cantidad || 0) - (d.cantidad_llegada || 0);
-                      return (
-                        <tr key={idx}>
-                          <td>{d.codigo}</td>
-                          <td>{d.producto}</td>
-                          <td>{d.cantidad}</td>
-                          <td>
-                            <input
-                              type="number"
-                              className="form-control form-control-sm"
-                              value={d.precio_unitario}
-                              onChange={(e) => handleInputChange(o.numero_oc, idx, 'precio_unitario', e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              className={`form-control form-control-sm text-center bg-${pendientes === 0 ? 'success' : 'secondary'} text-white`}
-                              value={d.cantidad_llegada || ''}
-                              onChange={(e) => handleInputChange(o.numero_oc, idx, 'cantidad_llegada', e.target.value)}
-                            />
-                          </td>
-                          <td>${totalNeto.toLocaleString()}</td>
-                          <td>
-                            <span className={`badge bg-${pendientes > 0 ? 'danger' : 'success'}`}>
-                              {pendientes} {pendientes > 0 ? '⚠️' : '✔️'}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                <div className="text-end">
-                  <p><strong>Total Neto:</strong> ${totalNeto.toLocaleString()}</p>
-                  <p><strong>IVA 19%:</strong> ${iva.toLocaleString()}</p>
-                  <p><strong>Total:</strong> ${total.toLocaleString()}</p>
-                </div>
-              </div>
-            )}
+      <div className="row mt-2 mb-3">
+        <div className="col-md-6">
+          <label>N° Factura</label>
+          <input
+            type="text"
+            className="form-control"
+            value={o.factura || ''}
+            onChange={(e) =>
+              setOrdenes(prev =>
+                prev.map(oc => oc.numero_oc === o.numero_oc
+                  ? { ...oc, factura: e.target.value }
+                  : oc)
+              )
+            }
+          />
+        </div>
+        <div className="col-md-6">
+          <label>Fecha Factura</label>
+          <div className="input-group">
+            <input
+              type="date"
+              className="form-control"
+              value={o.fecha_factura ? new Date(o.fecha_factura).toISOString().split('T')[0] : ''}
+              onChange={(e) =>
+                setOrdenes(prev =>
+                  prev.map(oc => oc.numero_oc === o.numero_oc
+                    ? { ...oc, fecha_factura: e.target.value }
+                    : oc)
+                )
+              }
+            />
+            <button className="btn btn-primary" onClick={() => handleIngresarFactura(o.numero_oc)}>
+              Ingresar
+            </button>
           </div>
-        );
-      })}
+        </div>
+      </div>
+
+      {detallesVisibles[o.numero_oc] && (
+        <div className="mt-3">
+          <table className="table table-bordered table-sm text-center">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Cantidad Total</th>
+                <th>Precio Unitario</th>
+                <th>Cant. Llegadas</th>
+                <th>Total Neto</th>
+                <th>Cant. Pendientes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {o.detalles.map((d, idx) => {
+                const totalNeto = (d.cantidad_llegada || 0) * (d.precio_unitario || 0);
+                const pendientes = (d.cantidad || 0) - (d.cantidad_llegada || 0);
+                return (
+                  <tr key={idx}>
+                    <td>{d.codigo}</td>
+                    <td>{d.producto}</td>
+                    <td>{d.cantidad}</td>
+                    <td>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        value={d.precio_unitario}
+                        onChange={(e) => handleInputChange(o.numero_oc, idx, 'precio_unitario', e.target.value)}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        className={`form-control form-control-sm text-center bg-${pendientes === 0 ? 'success' : 'secondary'} text-white`}
+                        value={d.cantidad_llegada || ''}
+                        onChange={(e) => handleInputChange(o.numero_oc, idx, 'cantidad_llegada', e.target.value)}
+                      />
+                    </td>
+                    <td>${totalNeto.toLocaleString()}</td>
+                    <td>
+                      <span className={`badge bg-${pendientes > 0 ? 'danger' : 'success'}`}>
+                        {pendientes} {pendientes > 0 ? '⚠️' : '✔️'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <div className="text-end">
+            <p><strong>Total Neto:</strong> ${totalNeto.toLocaleString()}</p>
+            <p><strong>IVA 19%:</strong> ${iva.toLocaleString()}</p>
+            <p><strong>Total:</strong> ${total.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+    </div> 
+  );
+})}
 
     </div>
   );
