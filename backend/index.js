@@ -767,6 +767,15 @@ app.post('/api/ingresar_factura', async (req, res) => {
             codigo
           ]
         );
+
+          if (cantidad_llegada && cantidad_llegada > 0) {
+          await client.query(
+            `UPDATE inventario
+            SET stock_actual = stock_actual + $1
+            WHERE codigo = $2`,
+            [cantidad_llegada, codigo]
+          );
+        }
       }
       
       // Actualizar la orden de compra con la factura y fecha
