@@ -11,7 +11,7 @@ const etapas = [
   { key: 'vidrio', tabla: 'ot_pautas_vidrio' },
   { key: 'instalacion', tabla: 'ot_pautas_instalacion' }
 ];
-
+//
 const API = import.meta.env.VITE_API_URL;
 
 const StockReservado = () => {

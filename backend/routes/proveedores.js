@@ -2,7 +2,7 @@ import express from 'express';
 import pool from '../db.js';
 
 const router = express.Router();
-
+//
 // GET: Obtener todos los proveedores con campos renombrados para frontend
 router.get('/', async (req, res) => {
   try {
