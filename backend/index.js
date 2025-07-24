@@ -707,8 +707,6 @@ app.get('/api/inventario', async (req, res) => {
         i.codigo,
         COALESCE(d.producto, '') AS producto,
         i.stock_actual,
-        i.stock_reservado,
-        (i.stock_actual - i.stock_reservado) AS stock_disponible,
         i.stock_minimo,
         i.unidad,
         COALESCE(d.precio_unitario, 0) AS precio_unitario
@@ -718,7 +716,53 @@ app.get('/api/inventario', async (req, res) => {
       ORDER BY i.codigo, oc.fecha DESC
     `);
 
-    res.json(resultado.rows);
+    const inventarioBase = resultado.rows;
+
+    // Obtener stock reservado por código, sumando todas las pautas activas
+    const reservadoQuery = await pool.query(`
+      SELECT codigo, SUM(cantidad) AS total_reservado
+      FROM (
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_perfiles
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_refuerzos
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_tornillos
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_herraje
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_accesorios
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_gomascepillos
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_vidrio
+        UNION ALL
+        SELECT codigo, cantidad, numero_presupuesto FROM ot_pautas_instalacion
+      ) AS pautas
+      WHERE numero_presupuesto IN (
+        SELECT presupuesto_numero FROM seguimiento_obras WHERE recepcion_final = false
+      )
+      GROUP BY codigo
+    `);
+
+    const stockReservadoMap = {};
+    reservadoQuery.rows.forEach(row => {
+      stockReservadoMap[row.codigo] = parseInt(row.total_reservado);
+    });
+
+    // Combinar stock reservado en el inventario final
+    const inventarioFinal = inventarioBase.map(item => {
+      const reservado = stockReservadoMap[item.codigo] || 0;
+      const disponible = item.stock_actual - reservado;
+
+      return {
+        ...item,
+        stock_reservado: reservado,
+        stock_disponible: disponible
+      };
+    });
+
+    res.json(inventarioFinal);
+
   } catch (err) {
     console.error('❌ ERROR en /api/inventario:', err.message);
     res.status(500).json({ error: 'Error al obtener inventario' });
