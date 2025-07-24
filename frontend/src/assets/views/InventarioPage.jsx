@@ -5,9 +5,6 @@ import axios from 'axios';
 
 const InventarioPage = () => {
   const [inventario, setInventario] = useState([]);
-  const [reservas, setReservas] = useState([]);
-  const [salidas, setSalidas] = useState([]);
-  const [clientes, setClientes] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [mostrarStockCero, setMostrarStockCero] = useState(false);
   const [detalleVisible, setDetalleVisible] = useState(null);
@@ -20,74 +17,6 @@ const InventarioPage = () => {
       .catch(err => console.error("❌ Error al cargar inventario:", err));
   }, []);
 
-  useEffect(() => {
-    const fetchReservas = async () => {
-      try {
-        const tablas = [
-          'ot_pautas_perfiles', 'ot_pautas_refuerzos', 'ot_pautas_tornillos',
-          'ot_pautas_herraje', 'ot_pautas_accesorios', 'ot_pautas_gomascepillos',
-          'ot_pautas_vidrio', 'ot_pautas_instalacion'
-        ];
-
-        let reservasTemp = [];
-        for (const tabla of tablas) {
-          const res = await axios.get(`${API}api/${tabla}`);
-          reservasTemp = reservasTemp.concat(
-            res.data.map(r => ({
-              codigo: r.codigo,
-              producto: r.producto,
-              cantidad: parseInt(r.cantidad),
-              presupuesto: r.numero_presupuesto,
-              cliente_id: r.cliente_id,
-              nombre_obra: r.nombre_obra
-            }))
-          );
-        }
-
-        setReservas(reservasTemp);
-      } catch (err) {
-        console.error("❌ Error al cargar reservas:", err);
-      }
-    };
-
-    const fetchClientes = async () => {
-      try {
-        const res = await axios.get(`${API}api/clientes`);
-        setClientes(res.data);
-      } catch (err) {
-        console.error("❌ Error al cargar clientes:", err);
-      }
-    };
-
-    const fetchSalidas = async () => {
-      try {
-        const res = await axios.get(`${API}api/salidas_inventario2`);
-        setSalidas(res.data);
-      } catch (err) {
-        console.error("❌ Error al cargar salidas:", err);
-      }
-    };
-
-    fetchReservas();
-    fetchClientes();
-    fetchSalidas();
-  }, []);
-
-  const getReservado = (codigo) =>
-    reservas
-      .filter(r => r.codigo === codigo)
-      .reduce((sum, r) => sum + r.cantidad, 0);
-
-  const getSalidas = (codigo) =>
-    salidas
-      .filter(s => s.codigo === codigo)
-      .reduce((sum, s) => sum + parseInt(s.cantidad), 0);
-
-  const getClienteNombre = (id) => {
-    const cliente = clientes.find(c => c.id === id);
-    return cliente ? cliente.nombre : `ID ${id}`;
-  };
-
   const toggleDetalles = (codigo) => {
     setDetalleVisible(detalleVisible === codigo ? null : codigo);
   };
@@ -98,11 +27,7 @@ const InventarioPage = () => {
       (item.producto || '').toLowerCase().includes(filtro.toLowerCase())
     )
     .filter(item => mostrarStockCero || parseInt(item.stock_actual) > 0)
-    .sort((a, b) => {
-      const aReservado = getReservado(a.codigo);
-      const bReservado = getReservado(b.codigo);
-      return bReservado - aReservado;
-    });
+    .sort((a, b) => parseInt(b.stock_reservado) - parseInt(a.stock_reservado));
 
   return (
     <div className="container py-4">
@@ -140,7 +65,7 @@ const InventarioPage = () => {
             <th>Stock Reservado</th>
             <th>Stock Disponible</th>
             <th>Unidad</th>
-            <th style={{ borderRight: 'double' }}>Último Precio</th>
+            <th style={{ borderRight: 'double' }}>Ultimo Precio</th>
             <th style={{ borderLeft: 'double' }}>Stock Mínimo</th>
             <th>Estado</th>
           </tr>
@@ -148,11 +73,10 @@ const InventarioPage = () => {
         <tbody>
           {inventarioFiltrado.length > 0 ? (
             inventarioFiltrado.map((item, index) => {
-              const reservado = getReservado(item.codigo);
-              const salidasRealizadas = getSalidas(item.codigo);
-              const stockReal = parseInt(item.stock_actual) - salidasRealizadas;
-              const stockDisponible = stockReal - reservado;
-              const rowClass = reservado > 0 ? 'table-warning' : '';
+              const rowClass = parseInt(item.stock_reservado) > 0 ? 'table-warning' : '';
+              const stockReal = parseInt(item.stock_actual);
+              const stockReservado = parseInt(item.stock_reservado);
+              const stockDisponible = parseInt(item.stock_disponible);
 
               return (
                 <React.Fragment key={index}>
@@ -160,7 +84,7 @@ const InventarioPage = () => {
                     <td>{item.codigo}</td>
                     <td>{item.producto || '-'}</td>
                     <td>{stockReal}</td>
-                    <td>{reservado}</td>
+                    <td>{stockReservado}</td>
                     <td>{stockDisponible}</td>
                     <td>{item.unidad}</td>
                     <td>${item.precio_unitario?.toLocaleString() || '-'}</td>
@@ -177,15 +101,7 @@ const InventarioPage = () => {
                     <tr>
                       <td colSpan="9">
                         <strong>Reservas:</strong>
-                        <ul className="mb-0">
-                          {reservas
-                            .filter(r => r.codigo === item.codigo)
-                            .map((r, i) => (
-                              <li key={i}>
-                                Cliente: {getClienteNombre(r.cliente_id)} - Presupuesto: {r.presupuesto} - Obra: {r.nombre_obra} - Cantidad: {r.cantidad}
-                              </li>
-                            ))}
-                        </ul>
+                        <p>Consulta el backend para ver detalle de reservas activas.</p>
                       </td>
                     </tr>
                   )}
