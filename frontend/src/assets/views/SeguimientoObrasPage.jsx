@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../styles/SeguimientoObrasPage.css';
+import '../styles/toggleSeguimiento.css';
 
 const etapasPrincipales = [
   'presupuesto', 'rectificacion', 'accesorios', 'gomas_cepillos', 'herraje',
