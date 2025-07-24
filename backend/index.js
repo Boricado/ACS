@@ -769,6 +769,43 @@ app.get('/api/inventario', async (req, res) => {
   }
 });
 
+app.get('/api/reservas_activas/:codigo', async (req, res) => {
+  const { codigo } = req.params;
+  try {
+    const tablas = [
+      'ot_pautas_perfiles',
+      'ot_pautas_refuerzos',
+      'ot_pautas_tornillos',
+      'ot_pautas_herraje',
+      'ot_pautas_accesorios',
+      'ot_pautas_gomascepillos',
+      'ot_pautas_vidrio',
+      'ot_pautas_instalacion'
+    ];
+
+    const reservas = [];
+
+    for (const tabla of tablas) {
+      const result = await pool.query(`
+        SELECT p.cliente_id, p.presupuesto_id, p.numero_presupuesto, p.codigo, p.producto, p.cantidad,
+               s.nombre_obra, s.cliente_nombre
+        FROM ${tabla} p
+        INNER JOIN seguimiento_obras s
+        ON p.numero_presupuesto = s.presupuesto_numero
+        WHERE p.codigo = $1 AND s.recepcion_final = false
+      `, [codigo]);
+
+      reservas.push(...result.rows);
+    }
+
+    res.json(reservas);
+  } catch (error) {
+    console.error('❌ Error al obtener reservas activas por código:', error);
+    res.status(500).json({ error: 'Error al obtener reservas activas' });
+  }
+});
+
+
 
 /////////////////
 

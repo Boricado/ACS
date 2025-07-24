@@ -5,6 +5,8 @@ import axios from 'axios';
 
 const InventarioPage = () => {
   const [inventario, setInventario] = useState([]);
+  const [reservasDetalle, setReservasDetalle] = useState({});
+  const [loadingReservas, setLoadingReservas] = useState({});
   const [filtro, setFiltro] = useState('');
   const [mostrarStockCero, setMostrarStockCero] = useState(false);
   const [detalleVisible, setDetalleVisible] = useState(null);
@@ -17,8 +19,24 @@ const InventarioPage = () => {
       .catch(err => console.error("❌ Error al cargar inventario:", err));
   }, []);
 
-  const toggleDetalles = (codigo) => {
-    setDetalleVisible(detalleVisible === codigo ? null : codigo);
+  const toggleDetalles = async (codigo) => {
+    if (detalleVisible === codigo) {
+      setDetalleVisible(null);
+    } else {
+      setDetalleVisible(codigo);
+      if (!reservasDetalle[codigo]) {
+        setLoadingReservas(prev => ({ ...prev, [codigo]: true }));
+        try {
+          const res = await axios.get(`${API}api/reservas_activas/${codigo}`);
+          setReservasDetalle(prev => ({ ...prev, [codigo]: res.data }));
+        } catch (err) {
+          console.error('❌ Error al cargar reservas activas:', err);
+          setReservasDetalle(prev => ({ ...prev, [codigo]: [] }));
+        } finally {
+          setLoadingReservas(prev => ({ ...prev, [codigo]: false }));
+        }
+      }
+    }
   };
 
   const inventarioFiltrado = inventario
@@ -65,7 +83,7 @@ const InventarioPage = () => {
             <th>Stock Reservado</th>
             <th>Stock Disponible</th>
             <th>Unidad</th>
-            <th style={{ borderRight: 'double' }}>Ultimo Precio</th>
+            <th style={{ borderRight: 'double' }}>Último Precio</th>
             <th style={{ borderLeft: 'double' }}>Stock Mínimo</th>
             <th>Estado</th>
           </tr>
@@ -101,7 +119,19 @@ const InventarioPage = () => {
                     <tr>
                       <td colSpan="9">
                         <strong>Reservas:</strong>
-                        <p>Consulta el backend para ver detalle de reservas activas.</p>
+                        {loadingReservas[item.codigo] ? (
+                          <p className="text-muted">Cargando reservas...</p>
+                        ) : reservasDetalle[item.codigo]?.length > 0 ? (
+                          <ul className="mb-0">
+                            {reservasDetalle[item.codigo].map((r, i) => (
+                              <li key={i}>
+                                Cliente: {r.cliente_nombre} – Presupuesto: {r.numero_presupuesto} – Obra: {r.nombre_obra} – Cantidad: {r.cantidad}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted">No hay reservas activas para este producto.</p>
+                        )}
                       </td>
                     </tr>
                   )}
