@@ -845,6 +845,9 @@ app.post('/api/salidas_stock', async (req, res) => {
 });
 ///////////////////////
 
+// -----------------------------
+// REGISTRAR SALIDA DE MATERIAL
+// -----------------------------
 app.post('/api/registro_salida', async (req, res) => {
   const {
     codigo,
@@ -868,7 +871,7 @@ app.post('/api/registro_salida', async (req, res) => {
     const clienteId = parseInt(cliente_id);
     const presupuestoId = parseInt(presupuesto_id);
 
-    // Verificar si ya existe un registro previo para ese cliente, presupuesto y código
+    // Verificar si ya existe un registro previo en registro_obras
     const check = await client.query(`
       SELECT id FROM registro_obras
       WHERE cliente_id = $1 AND presupuesto_id = $2 AND codigo = $3
@@ -891,7 +894,7 @@ app.post('/api/registro_salida', async (req, res) => {
 
       const cantidad_presupuestada = parseInt(result.rows[0]?.cantidad || 0);
 
-      // Insertar nuevo registro completo
+      // Insertar nuevo registro completo en registro_obras
       await client.query(`
         INSERT INTO registro_obras (
           cliente_id, presupuesto_id, cliente_nombre, presupuesto_numero,
@@ -911,30 +914,32 @@ app.post('/api/registro_salida', async (req, res) => {
         precio,
         observacion || ''
       ]);
-      await client.query(`
-        INSERT INTO salidas_inventario2 (
-          cliente_nombre,
-          presupuesto_numero,
-          nombre_obra,
-          codigo,
-          producto,
-          cantidad,
-          precio_neto,
-          fecha
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)
-      `, [
-        cliente_nombre,
-        presupuesto_numero,
-        nombre_obra,
-        codigo,
-        producto,
-        salida,
-        salida * precio
-      ]);
-
     }
 
-    // Actualizar salidas_stock en detalle_oc
+    // 🟢 Registrar salida en historial
+    await client.query(`
+      INSERT INTO salidas_inventario2 (
+        cliente_nombre, presupuesto_numero, nombre_obra,
+        codigo, producto, cantidad, precio_neto, fecha
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)
+    `, [
+      cliente_nombre,
+      presupuesto_numero,
+      nombre_obra,
+      codigo,
+      producto,
+      salida,
+      salida * precio
+    ]);
+
+    // 🟢 Descontar del stock_actual en inventario
+    await client.query(`
+      UPDATE inventario
+      SET stock_actual = stock_actual - $1
+      WHERE codigo = $2
+    `, [salida, codigo]);
+
+    // 🟢 Actualizar salidas_stock en detalle_oc
     await client.query(`
       UPDATE detalle_oc
       SET salidas_stock = COALESCE(salidas_stock, 0) + $1
@@ -952,6 +957,7 @@ app.post('/api/registro_salida', async (req, res) => {
     client.release();
   }
 });
+
 
 
 //////////////////////////////
