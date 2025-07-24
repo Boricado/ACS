@@ -11,6 +11,8 @@ const OTPautasPage = () => {
   const [materiales, setMateriales] = useState([]);
   const [items, setItems] = useState([]);
   const [pautasCargadas, setPautasCargadas] = useState([]);
+  const [mensajeActualizacion, setMensajeActualizacion] = useState('');
+
   const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -123,9 +125,13 @@ const OTPautasPage = () => {
       await axios.put(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`, {
         cantidad: parseInt(nuevaCantidad)
       });
+      setMensajeActualizacion('Cantidad actualizada con éxito.');
       cargarPautas();
+      setTimeout(() => setMensajeActualizacion(''), 3000); // desaparece a los 3 segundos
     } catch (err) {
       console.error('Error al actualizar pauta:', err);
+      setMensajeActualizacion('❌ Error al actualizar cantidad.');
+      setTimeout(() => setMensajeActualizacion(''), 3000);
     }
   };
 
@@ -275,6 +281,11 @@ const OTPautasPage = () => {
             </tbody>
 
           </table>
+          {mensajeActualizacion && (
+            <div className="alert alert-success py-2">
+              {mensajeActualizacion}
+            </div>
+          )}
         </div>
       )}
     </div>
