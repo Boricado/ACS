@@ -30,6 +30,7 @@ import AjusteStock from './assets/views/AjusteStock';
 import ProveedorPage from './assets/views/ProveedorPage';
 import FacturasGuiasPage from './assets/views/FacturasGuiasPage';
 import FacturasEstadoPage from './assets/views/FacturasEstadoPage';
+import PagosClientesPage from './assets/views/PagosClientesPage';
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -75,6 +76,7 @@ function App() {
         {/* Operaciones */}
         <Route path='ResumenObrasMatPage' element={<ResumenObrasMatPage />} />
         <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
+        <Route path='PagosClientesPage' element={<PagosClientesPage />} />
         <Route path='FacturasEstadoPage' element={<FacturasEstadoPage />} />
 
         {/* Perfil */}
