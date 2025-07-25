@@ -97,19 +97,27 @@ const PresupuestoPage = () => {
 
       <div className="row">
         <div className="col-md-6 mb-3">
-          <select
-            name="cliente_id"
-            className="form-select"
-            value={presupuesto.cliente_id}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione un cliente</option>
-            {clientes.map(cliente => (
-              <option key={cliente.id} value={cliente.id}>
-                {cliente.nombre} - {cliente.rut}
-              </option>
-            ))}
-          </select>
+            <label>Buscar cliente</label>
+            <input
+              className="form-control"
+              list="lista_clientes"
+              value={
+                clientes.find(c => c.id.toString() === presupuesto.cliente_id)?.nombre || ''
+              }
+              onChange={(e) => {
+                const cliente = clientes.find(c => c.nombre === e.target.value);
+                setPresupuesto(prev => ({
+                  ...prev,
+                  cliente_id: cliente?.id?.toString() || ''
+                }));
+              }}
+              placeholder="Escriba nombre del cliente"
+            />
+            <datalist id="lista_clientes">
+              {clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.nombre} />
+              ))}
+            </datalist>
         </div>
 
         <div className="col-md-6 mb-3">

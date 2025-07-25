@@ -18,6 +18,8 @@ const SalidasPage = () => {
   const [presupuestoNumero, setPresupuestoNumero] = useState('');
   const [nombreObra, setNombreObra] = useState('');
   const [observacion, setObservacion] = useState('');
+  const [salidasHistorico, setSalidasHistorico] = useState([]);
+
   const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -28,6 +30,10 @@ const SalidasPage = () => {
     axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
+
+    axios.get(`${API}api/salidas_inventario2`)
+      .then(res => setSalidasHistorico(res.data))
+      .catch(err => console.error('Error al cargar salidas:', err));
   }, []);
 
   useEffect(() => {
@@ -50,6 +56,32 @@ const SalidasPage = () => {
     setObservacion(presupuesto?.observacion || '');
   }, [presupuestoSeleccionado]);
 
+  useEffect(() => {
+    if (!codigo) return;
+    const m = materiales.find(m => m.codigo.toString() === codigo);
+    if (m) {
+      setProducto(m.producto);
+      setPrecioUnitario(m.precio_unitario || '');
+    } else {
+      obtenerPrecioUltimo(codigo).then(precio => {
+        setProducto('');
+        setPrecioUnitario(precio || '');
+      });
+    }
+  }, [codigo]);
+
+  useEffect(() => {
+    if (!producto) return;
+    const m = materiales.find(m => m.producto === producto);
+    if (m) {
+      setCodigo(m.codigo);
+      setPrecioUnitario(m.precio_unitario || '');
+    } else {
+      setCodigo('');
+      setPrecioUnitario('');
+    }
+  }, [producto]);
+
   const obtenerPrecioUltimo = async (codigo) => {
     try {
       const res = await axios.get(`${API}api/precio-material?codigo=${codigo}`);
@@ -58,22 +90,6 @@ const SalidasPage = () => {
       console.error('Error al obtener precio desde backend:', error);
       return '';
     }
-  };
-
-  const handleCodigoChange = async (valor) => {
-    const m = materiales.find(m => m.codigo.toString() === valor);
-    const precio = m?.precio_unitario || await obtenerPrecioUltimo(valor);
-    setCodigo(valor);
-    setProducto(m?.producto || '');
-    setPrecioUnitario(precio);
-  };
-
-  const handleProductoChange = async (valor) => {
-    const m = materiales.find(m => m.producto === valor);
-    const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
-    setProducto(valor);
-    setCodigo(m?.codigo || '');
-    setPrecioUnitario(precio);
   };
 
   const handleSubmit = async () => {
@@ -111,14 +127,6 @@ const SalidasPage = () => {
     }
   };
 
-    const [salidasHistorico, setSalidasHistorico] = useState([]);
-
-  useEffect(() => {
-    axios.get(`${API}api/salidas_inventario2`)
-      .then(res => setSalidasHistorico(res.data))
-      .catch(err => console.error('Error al cargar salidas:', err));
-  }, []);
-
   return (
     <div className="container py-4">
       <h2 className="mb-4 text-center">Registrar Salida de Material</h2>
@@ -130,7 +138,7 @@ const SalidasPage = () => {
             className="form-control"
             list="lista_codigos"
             value={codigo}
-            onInput={(e) => handleCodigoChange(e.target.value)}
+            onChange={(e) => setCodigo(e.target.value)}
           />
           <datalist id="lista_codigos">
             {materiales.map(m => (
@@ -145,7 +153,7 @@ const SalidasPage = () => {
             className="form-control"
             list="lista_productos"
             value={producto}
-            onInput={(e) => handleProductoChange(e.target.value)}
+            onChange={(e) => setProducto(e.target.value)}
           />
           <datalist id="lista_productos">
             {materiales.map(m => (
@@ -220,7 +228,8 @@ const SalidasPage = () => {
           Cargar salida
         </button>
       </div>
-     <div className="mt-5">
+
+      <div className="mt-5">
         <h4>Historial de Salidas</h4>
         <div className="table-responsive">
           <table className="table table-bordered table-sm">
@@ -252,8 +261,7 @@ const SalidasPage = () => {
             </tbody>
           </table>
         </div>
-      </div>    
-
+      </div>
     </div>
   );
 };

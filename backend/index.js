@@ -722,7 +722,7 @@ app.get('/api/inventario', async (req, res) => {
 
     const inventarioBase = resultado.rows;
 
-    // Obtener stock reservado por código, sumando todas las pautas activas
+    // Obtener stock reservado por código
     const reservadoQuery = await pool.query(`
       SELECT codigo, SUM(cantidad) AS total_reservado
       FROM (
@@ -753,14 +753,28 @@ app.get('/api/inventario', async (req, res) => {
       stockReservadoMap[row.codigo] = parseInt(row.total_reservado);
     });
 
-    // Combinar stock reservado en el inventario final
+    // Obtener salidas de inventario por código
+    const salidasQuery = await pool.query(`
+      SELECT codigo, SUM(cantidad_salida) AS total_salidas
+      FROM salidas_inventario2
+      GROUP BY codigo
+    `);
+
+    const stockSalidasMap = {};
+    salidasQuery.rows.forEach(row => {
+      stockSalidasMap[row.codigo] = parseInt(row.total_salidas);
+    });
+
+    // Calcular inventario final con stock reservado y salidas descontadas
     const inventarioFinal = inventarioBase.map(item => {
       const reservado = stockReservadoMap[item.codigo] || 0;
-      const disponible = item.stock_actual - reservado;
+      const salidas = stockSalidasMap[item.codigo] || 0;
+      const disponible = item.stock_actual - reservado - salidas;
 
       return {
         ...item,
         stock_reservado: reservado,
+        stock_salidas: salidas,
         stock_disponible: disponible
       };
     });
@@ -772,6 +786,7 @@ app.get('/api/inventario', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener inventario' });
   }
 });
+
 
 app.get('/api/reservas_activas/:codigo', async (req, res) => {
   const { codigo } = req.params;
