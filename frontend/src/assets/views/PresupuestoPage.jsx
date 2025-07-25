@@ -97,7 +97,6 @@ const PresupuestoPage = () => {
 
       <div className="row">
         <div className="col-md-6 mb-3">
-            <label>Buscar cliente</label>
             <input
               className="form-control"
               list="lista_clientes"

@@ -184,18 +184,25 @@ const SalidasPage = () => {
       </div>
 
       <div className="row mb-3">
-        <div className="col-md-6">
-          <label>Cliente</label>
-          <select
+        <div className="col-md-6 mb-3">
+          <label>Buscar cliente</label>
+          <input
             className="form-control"
-            value={clienteSeleccionado}
-            onChange={(e) => setClienteSeleccionado(e.target.value)}
-          >
-            <option value="">Seleccionar cliente</option>
-            {clientes.map(c => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
+            list="lista_clientes"
+            value={
+              clientes.find(c => c.id.toString() === clienteSeleccionado)?.nombre || ''
+            }
+            onChange={(e) => {
+              const cliente = clientes.find(c => c.nombre === e.target.value);
+              setClienteSeleccionado(cliente?.id?.toString() || '');
+            }}
+            placeholder="Escriba nombre del cliente"
+          />
+          <datalist id="lista_clientes">
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.nombre} />
             ))}
-          </select>
+          </datalist>
         </div>
 
         <div className="col-md-6">
