@@ -28,6 +28,8 @@ import CrearSolicitudBodegaPage from './assets/views/CrearSolicitudBodegaPage';
 import ResumenObrasMatPage from './assets/views/ResumenObrasMatPage';
 import AjusteStock from './assets/views/AjusteStock';
 import ProveedorPage from './assets/views/ProveedorPage';
+import FacturasGuiasPage from './assets/views/FacturasGuiasPage';
+import FacturasEstadoPage from './assets/views/FacturasEstadoPage';
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -54,6 +56,7 @@ function App() {
 
         {/* Rutas Bodega */}
         <Route path='IngresosPage' element={<IngresosPage />} />
+        <Route path='FacturasGuiasPage' element={<FacturasGuiasPage />} />
         <Route path='SalidasPage' element={<SalidasPage />} />
         <Route path='StockReservado' element={<StockReservado />} />
         <Route path='CrearSolicitudBodegaPage' element={<CrearSolicitudBodegaPage />} />
@@ -72,6 +75,7 @@ function App() {
         {/* Operaciones */}
         <Route path='ResumenObrasMatPage' element={<ResumenObrasMatPage />} />
         <Route path='SeguimientoObrasPage' element={<SeguimientoObrasPage />} />
+        <Route path='FacturasEstadoPage' element={<FacturasEstadoPage />} />
 
         {/* Perfil */}
         <Route path='ProfilePage' element={<ProfilePage />} />

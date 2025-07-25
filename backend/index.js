@@ -12,6 +12,8 @@ import otPautasRoutes from './routes/ot_pautas.js';
 import seguimientoRoutes from './routes/seguimiento.js';
 import ajusteStockRoutes from './routes/ajuste_stock.js';
 import proveedoresRoutes from './routes/proveedores.js';
+import facturasGuiasRouter from './routes/facturasGuias.js';
+import proveedoresCreditoRoutes from './routes/proveedores_credito.js';
 
 dotenv.config();
 
@@ -35,6 +37,8 @@ app.use('/api/ot_pautas', otPautasRoutes);
 app.use('/api/seguimiento_obras', seguimientoRoutes);
 app.use('/api/ajuste_stock', ajusteStockRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
+app.use('/api/facturas_guias', facturasGuiasRouter);
+app.use('/api/proveedores_credito', proveedoresCreditoRoutes);
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({

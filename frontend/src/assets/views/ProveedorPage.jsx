@@ -11,7 +11,8 @@ const ProveedorPage = () => {
     contacto: '',
     banco: '',
     tipo_de_cuenta: '',
-    numero_cuenta: ''
+    numero_cuenta: '',
+    dias_credito: ''
   });
   const [editandoId, setEditandoId] = useState(null);
 
@@ -53,7 +54,8 @@ const ProveedorPage = () => {
         contacto: '',
         banco: '',
         tipo_de_cuenta: '',
-        numero_cuenta: ''
+        numero_cuenta: '',
+        dias_credito: ''
       });
       setEditandoId(null);
       obtenerProveedores();
@@ -93,6 +95,9 @@ const ProveedorPage = () => {
           <div className="col-md-4">
             <input type="text" name="numero_cuenta" value={form.numero_cuenta} onChange={handleChange} className="form-control" placeholder="Número de cuenta" />
           </div>
+          <div className="col-md-4">
+            <input type="number" name="dias_credito" value={form.dias_credito} onChange={handleChange} className="form-control" placeholder="Días de crédito" />
+          </div>
         </div>
         <button type="submit" className="btn btn-success mt-3">
           {editandoId ? 'Guardar Cambios' : 'Agregar Proveedor'}
@@ -108,8 +113,9 @@ const ProveedorPage = () => {
             <th>Vendedor</th>
             <th>Contacto</th>
             <th>Banco</th>
-            <th>Tipo de cuenta</th>
+            <th>Tipo cuenta</th>
             <th>N° Cuenta</th>
+            <th>Días crédito</th>
             <th>Acción</th>
           </tr>
         </thead>
@@ -123,6 +129,7 @@ const ProveedorPage = () => {
               <td>{p.banco || ''}</td>
               <td>{p.tipo_de_cuenta || ''}</td>
               <td>{p.numero_cuenta || ''}</td>
+              <td>{p.dias_credito || 0}</td>
               <td>
                 <button className="btn btn-primary btn-sm" onClick={() => editarProveedor(p)}>
                   Editar

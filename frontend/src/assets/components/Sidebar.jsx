@@ -44,6 +44,7 @@ const Sidebar = ({ total }) => {
               <ul className="collapse list-unstyled" id="bodegaSubmenu">
                 <li><NavLink to="/StockActual" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock Actual</NavLink></li>
                 <li><NavLink to="/IngresosPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso de Facturas/Guias</NavLink></li>
+                <li><NavLink to="/FacturasGuiasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Registro de Facturas/Guias</NavLink></li>
                 <li><NavLink to="/SalidasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Salidas de Material</NavLink></li>
                 <li><NavLink to="/StockReservado" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock reservado por OT</NavLink></li>
                 <li><NavLink to="/CrearSolicitudBodegaPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Solicitud de materiales a OT</NavLink></li>
@@ -94,18 +95,11 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/ResumenObrasMatPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Resumen de Obras y Materiales</NavLink></li>
                 <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
                 <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Programación</NavLink></li>
-                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Fabricación</NavLink></li>
-                <li>
-                  <a href="#despachoSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Despacho</a>
-                  <ul className="collapse list-unstyled" id="despachoSubmenu">
-                    <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Guías de despacho</NavLink></li>
-                  </ul>
-                </li>
                 <li>
                   <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">...Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
                     <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Clientes</NavLink></li>
-                    <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Proveedores</NavLink></li>
+                    <li><NavLink to="/FacturasEstadoPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Proveedores</NavLink></li>
                   </ul>
                 </li>
               </ul>
