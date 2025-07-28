@@ -30,8 +30,8 @@ const Sidebar = ({ total }) => {
                 <ul className="collapse list-unstyled" id="ventasSubmenu">
                   <li><NavLink to="/IngresoCliente" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso clientes</NavLink></li>
                   <li><NavLink to="/IngresoPresupuesto" className={({ isActive }) => isActive ? 'active-link' : ''}>Ingreso presupuesto</NavLink></li>
-                  <li><NavLink to="/IngresoItems" className={({ isActive }) => isActive ? 'active-link' : ''}>... Ingreso ítems</NavLink></li>
-                  <li><NavLink to="/EditarPresupuestos" className={({ isActive }) => isActive ? 'active-link' : ''}>... Editar Presupuestos</NavLink></li>
+                  {/*<li><NavLink to="/IngresoItems" className={({ isActive }) => isActive ? 'active-link' : ''}>... Ingreso ítems</NavLink></li>
+                  <li><NavLink to="/EditarPresupuestos" className={({ isActive }) => isActive ? 'active-link' : ''}>... Editar Presupuestos</NavLink></li>*/}
                 </ul>
               </li>
             </>
@@ -61,7 +61,7 @@ const Sidebar = ({ total }) => {
               <ul className="collapse list-unstyled" id="oficinaSubmenu">
                 <li><NavLink to="/StockActual" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock Actual</NavLink></li>
                 <li><NavLink to="/OTPautasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Pautas de Materiales</NavLink></li>
-                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Planillas de Corte</NavLink></li>
+                {/*<li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Planillas de Corte</NavLink></li>*/}
               </ul>
             </li>
           )}
@@ -81,7 +81,6 @@ const Sidebar = ({ total }) => {
                     <li><NavLink to="/ProveedorPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Crear/ Editar Proveedores</NavLink></li>
                   </ul>
                 </li>
-                <li><NavLink to="#">... Ingreso Proveedores</NavLink></li>
                 <li><NavLink to="/BodegaSolicitudesPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Ver solicitudes de Bodega</NavLink></li>
               </ul>
             </li>
@@ -94,7 +93,7 @@ const Sidebar = ({ total }) => {
               <ul className="collapse list-unstyled" id="operacionesSubmenu">
                 <li><NavLink to="/ResumenObrasMatPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Resumen de Obras y Materiales</NavLink></li>
                 <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
-                <li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Programación</NavLink></li>
+                {/*<li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Programación</NavLink></li>*/}
                 <li>
                   <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
