@@ -755,7 +755,7 @@ app.get('/api/inventario', async (req, res) => {
 
     // Obtener salidas de inventario por código
     const salidasQuery = await pool.query(`
-      SELECT codigo, SUM(cantidad_salida) AS total_salidas
+      SELECT codigo, SUM(cantidad) AS total_salidas
       FROM salidas_inventario2
       GROUP BY codigo
     `);
