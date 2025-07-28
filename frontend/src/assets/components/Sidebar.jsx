@@ -94,13 +94,13 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/ResumenObrasMatPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Resumen de Obras y Materiales</NavLink></li>
                 <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
                 {/*<li><NavLink to="#" className={({ isActive }) => isActive ? 'active-link' : ''}>... Programación</NavLink></li>*/}
-                <li>
+                {/*<li>
                   <a href="#pagosSubmenu" data-bs-toggle="collapse" className="dropdown-toggle">Pagos</a>
                   <ul className="collapse list-unstyled" id="pagosSubmenu">
                     <li><NavLink to="/PagosClientesPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Clientes</NavLink></li>
                     <li><NavLink to="/FacturasEstadoPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Proveedores</NavLink></li>
                   </ul>
-                </li>
+                </li>*/}
               </ul>
             </li>
           )}
