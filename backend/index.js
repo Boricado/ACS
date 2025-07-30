@@ -19,7 +19,7 @@ dotenv.config();
 
 const app = express(); // <- esto debe ir antes de usar app
 
-
+//
 // Configura CORS para permitir tu frontend
 const corsOptions = {
   origin: 'https://acs-indol-three.vercel.app',
