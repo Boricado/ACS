@@ -6,6 +6,7 @@ const FacturasGuiasPage = () => {
 
   const [form, setForm] = useState({
     proveedor: '',
+    rut_proveedor: '',
     numero_guia: '',
     numero_factura: '',
     fecha: '',
@@ -15,12 +16,25 @@ const FacturasGuiasPage = () => {
     observacion: ''
   });
 
+  const [proveedores, setProveedores] = useState([]);
   const [historial, setHistorial] = useState([]);
   const [filtroProveedor, setFiltroProveedor] = useState('');
-  const [proveedores, setProveedores] = useState([]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'proveedor') {
+      const prov = proveedores.find(
+        (p) => p.proveedor?.trim().toLowerCase() === value.trim().toLowerCase()
+      );
+      setForm((prev) => ({
+        ...prev,
+        proveedor: value,
+        rut_proveedor: prov?.rut || ''
+      }));
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async () => {
@@ -29,6 +43,7 @@ const FacturasGuiasPage = () => {
       alert('Factura/Guía registrada');
       setForm({
         proveedor: '',
+        rut_proveedor: '',
         numero_guia: '',
         numero_factura: '',
         fecha: '',
@@ -68,7 +83,6 @@ const FacturasGuiasPage = () => {
         console.error('Error al cargar proveedores:', err);
       }
     };
-
     fetchProveedores();
   }, []);
 
@@ -82,20 +96,21 @@ const FacturasGuiasPage = () => {
           <input
             type="text"
             name="proveedor"
-            list="lista-proveedores"
+            list="lista_proveedores"
             className="form-control"
             value={form.proveedor}
             onChange={handleChange}
             placeholder="Selecciona proveedor"
           />
-          <datalist id="lista-proveedores">
+          <datalist id="lista_proveedores">
             {proveedores.map((p) => (
-              <option key={p.id} value={p.nombre} />
+              <option key={p.id} value={p.proveedor} />
             ))}
           </datalist>
+          <small className="text-muted">RUT: {form.rut_proveedor}</small>
         </div>
 
-        {/* Resto de los campos */}
+        {/* Resto de campos */}
         {[
           { label: 'Guía', name: 'numero_guia' },
           { label: 'Factura', name: 'numero_factura' },
@@ -136,7 +151,7 @@ const FacturasGuiasPage = () => {
       <div className="mb-3">
         <input
           type="text"
-          list="lista-proveedores"
+          list="lista_proveedores"
           placeholder="Filtrar por proveedor"
           className="form-control"
           value={filtroProveedor}
