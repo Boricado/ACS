@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const FacturasGuiasPage = () => {
   const API = import.meta.env.VITE_API_URL;
+
   const [form, setForm] = useState({
     proveedor: '',
     numero_guia: '',
@@ -13,8 +14,10 @@ const FacturasGuiasPage = () => {
     monto_total: '',
     observacion: ''
   });
+
   const [historial, setHistorial] = useState([]);
   const [filtroProveedor, setFiltroProveedor] = useState('');
+  const [proveedores, setProveedores] = useState([]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -56,12 +59,44 @@ const FacturasGuiasPage = () => {
     fetchHistorial();
   }, [filtroProveedor]);
 
+  useEffect(() => {
+    const fetchProveedores = async () => {
+      try {
+        const res = await axios.get(`${API}api/proveedores`);
+        setProveedores(res.data);
+      } catch (err) {
+        console.error('Error al cargar proveedores:', err);
+      }
+    };
+
+    fetchProveedores();
+  }, []);
+
   return (
     <div className="container py-4">
       <h3 className="mb-3">Ingreso de Factura o Guía</h3>
       <div className="row g-2 mb-3">
+        {/* Proveedor con datalist */}
+        <div className="col-md-3">
+          <label>Proveedor</label>
+          <input
+            type="text"
+            name="proveedor"
+            list="lista-proveedores"
+            className="form-control"
+            value={form.proveedor}
+            onChange={handleChange}
+            placeholder="Selecciona proveedor"
+          />
+          <datalist id="lista-proveedores">
+            {proveedores.map((p) => (
+              <option key={p.id} value={p.nombre} />
+            ))}
+          </datalist>
+        </div>
+
+        {/* Resto de los campos */}
         {[
-          { label: 'Proveedor', name: 'proveedor' },
           { label: 'Guía', name: 'numero_guia' },
           { label: 'Factura', name: 'numero_factura' },
           { label: 'Fecha', name: 'fecha', type: 'date' },
@@ -80,6 +115,7 @@ const FacturasGuiasPage = () => {
             />
           </div>
         ))}
+
         <div className="col-md-6">
           <label>Observación</label>
           <input
@@ -91,6 +127,7 @@ const FacturasGuiasPage = () => {
           />
         </div>
       </div>
+
       <button className="btn btn-primary mb-4" onClick={handleSubmit}>
         Guardar
       </button>
@@ -99,6 +136,7 @@ const FacturasGuiasPage = () => {
       <div className="mb-3">
         <input
           type="text"
+          list="lista-proveedores"
           placeholder="Filtrar por proveedor"
           className="form-control"
           value={filtroProveedor}
