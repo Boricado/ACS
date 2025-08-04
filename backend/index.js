@@ -850,7 +850,7 @@ app.post('/api/ingresar_factura', async (req, res) => {
         } = detalle;
 
         const costo_neto = (cantidad_llegada || 0) * (precio_unitario || 0);
-
+//
         await client.query(
           `UPDATE detalle_oc
            SET cantidad_llegada = $1,

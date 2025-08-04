@@ -27,7 +27,7 @@ const AjusteStock = () => {
   const handleChange = (codigo, nuevoValor) => {
     setAjustes(prev => ({ ...prev, [codigo]: nuevoValor }));
   };
-
+//
   const ajustarStock = async (codigo, producto, stockComprado) => {
     const salidasHechas = getSalidas(codigo);
     const stockActual = stockComprado - salidasHechas;
