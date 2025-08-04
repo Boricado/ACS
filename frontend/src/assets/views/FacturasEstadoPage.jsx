@@ -142,15 +142,16 @@ const FacturasEstadoPage = () => {
                   </button>
                 </td>
 
-                <td className={
-                  f.fecha_pago
-                    ? new Date(f.fecha_pago).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
-                      ? 'table-success'
-                      : new Date(f.fecha_pago) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                        ? 'text-muted'
-                        : ''
-                    : 'text-secondary'
-                }>
+                <td className={`align-middle text-nowrap ${
+                    f.fecha_pago
+                      ? new Date(f.fecha_pago).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
+                        ? 'table-success'
+                        : new Date(f.fecha_pago) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                          ? 'text-muted'
+                          : ''
+                      : 'text-secondary'
+                  }`}>
+
                   {f.fecha_pago ? formatearFecha(f.fecha_pago) : '-'}
                 </td>
                 <td>
