@@ -70,6 +70,15 @@ const FacturasGuiasPage = () => {
     }
   };
 
+  const formatearFecha = (fechaISO) => {
+  if (!fechaISO) return '';
+  const date = new Date(fechaISO);
+  const dia = String(date.getDate()).padStart(2, '0');
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const anio = date.getFullYear();
+  return `${dia}-${mes}-${anio}`;
+  };
+
   // ⏱ Cálculo automático de IVA y Total al cambiar monto neto
   useEffect(() => {
     const neto = parseFloat(form.monto_neto.replace(',', '.')) || 0;
@@ -191,7 +200,7 @@ const FacturasGuiasPage = () => {
           ) : (
             historial.map((f, idx) => (
               <tr key={idx}>
-                <td>{f.fecha}</td>
+                <td>{formatearFecha(f.fecha)}</td>
                 <td>{f.proveedor}</td>
                 <td>{f.numero_guia}</td>
                 <td>{f.numero_factura}</td>

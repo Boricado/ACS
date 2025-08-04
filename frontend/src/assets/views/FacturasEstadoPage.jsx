@@ -8,6 +8,15 @@ const FacturasEstadoPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
+  const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return '';
+    const date = new Date(fechaISO);
+    const dia = String(date.getDate()).padStart(2, '0');
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const anio = date.getFullYear();
+    return `${dia}-${mes}-${anio}`;
+  };
+
   useEffect(() => {
     cargarFacturas();
     cargarProveedores();
@@ -91,18 +100,19 @@ const FacturasEstadoPage = () => {
 
       <table className="table table-bordered table-hover table-sm text-center">
         <thead className="table-dark">
-          <tr>
-            <th>Fecha</th>
-            <th>Proveedor</th>
-            <th>Guía</th>
-            <th>Factura</th>
-            <th>Monto Neto</th>
-            <th>IVA</th>
-            <th>Total</th>
-            <th>Vencimiento</th>
-            <th>Estado Pago</th>
-            <th>Observaciones Internas</th>
-          </tr>
+        <tr>
+          <th>Fecha</th>
+          <th>Proveedor</th>
+          <th>Guía</th>
+          <th>Factura</th>
+          <th>Monto Neto</th>
+          <th>IVA</th>
+          <th>Total</th>
+          <th>Vencimiento</th>
+          <th>Estado Pago</th>
+          <th>Fecha de Pago</th>
+          <th>Observaciones Internas</th>
+        </tr>
         </thead>
         <tbody>
           {facturas.map((f, i) => {
@@ -112,19 +122,36 @@ const FacturasEstadoPage = () => {
 
             return (
               <tr key={i} className={vencido ? 'table-danger' : ''}>
-                <td>{f.fecha}</td>
+                <td>{formatearFecha(f.fecha)}</td>
                 <td>{f.proveedor}</td>
                 <td>{f.numero_guia}</td>
                 <td>{f.numero_factura}</td>
                 <td>${f.monto_neto?.toLocaleString()}</td>
                 <td>${f.iva?.toLocaleString()}</td>
                 <td>${f.monto_total?.toLocaleString()}</td>
-                <td>{vencimiento}</td>
+                <td>{formatearFecha(vencimiento)}</td>
                 <td>
-                  <button className={`btn btn-sm ${f.estado_pago === 'Pagado' ? 'btn-success' : 'btn-warning'}`}
-                    onClick={() => handleTogglePago(f.id, f.estado_pago)}>
-                    {f.estado_pago}
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => handleTogglePago(f.id, f.estado_pago)}
+                    title={`Estado: ${f.estado_pago}`}
+                  >
+                    {f.estado_pago === 'Pagado' && <span className="text-success fw-bold">🟢 Pagado</span>}
+                    {f.estado_pago === 'Vigente' && <span className="text-warning fw-bold">🟡 Vigente</span>}
+                    {f.estado_pago === 'Pendiente' && <span className="text-danger fw-bold">🔴 Pendiente</span>}
                   </button>
+                </td>
+
+                <td className={
+                  f.fecha_pago
+                    ? new Date(f.fecha_pago).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]
+                      ? 'table-success'
+                      : new Date(f.fecha_pago) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                        ? 'text-muted'
+                        : ''
+                    : 'text-secondary'
+                }>
+                  {f.fecha_pago ? formatearFecha(f.fecha_pago) : '-'}
                 </td>
                 <td>
                   <input
