@@ -44,8 +44,11 @@ router.post('/', async (req, res) => {
     estado_pago = 'Pendiente',
     dias_credito: diasCreditoManual,
     fecha_vencimiento,
-    observacion
+    fecha_pago,
+    observacion,
+    observaciones_internas
   } = req.body;
+
 
   try {
     // Obtener días de crédito desde proveedores si no vienen como parámetro
