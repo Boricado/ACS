@@ -1,146 +1,161 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import CargaCSV from '../components/CargaCSV';
 
 const OTPautasPage = () => {
   const [clientes, setClientes] = useState([]);
   const [presupuestos, setPresupuestos] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState(null);
+  const [categoria, setCategoria] = useState('Perfiles');
+  const [material, setMaterial] = useState({ codigo: '', producto: '', cantidad: '' });
+  const [materiales, setMateriales] = useState([]);
   const [dataPorCategoria, setDataPorCategoria] = useState({});
-  const [archivoNombre, setArchivoNombre] = useState('');
+  const [mensajeActualizacion, setMensajeActualizacion] = useState('');
+  const [pautasCargadas, setPautasCargadas] = useState([]);
 
   const API = import.meta.env.VITE_API_URL;
 
-  const mapaCategorias = {
-    Perfiles: 'perfiles',
-    Refuerzos: 'refuerzos',
-    Vidrio: 'vidrio',
-    Herraje: 'herraje',
-    Accesorios: 'accesorios',
-    GomasCepillos: 'gomascepillos',
-    Tornillos: 'tornillos',
-    Instalacion: 'instalacion'
-  };
-
   useEffect(() => {
-    axios.get(`${API}api/clientes`).then(res => setClientes(res.data));
-    axios.get(`${API}api/materiales`).then(res => setMateriales(res.data));
+    axios.get(`${API}api/clientes`)
+      .then(res => setClientes(res.data))
+      .catch(err => console.error('Error al cargar clientes:', err));
+
+    axios.get(`${API}api/materiales`)
+      .then(res => setMateriales(res.data))
+      .catch(err => console.error('Error al cargar materiales:', err));
   }, []);
 
   useEffect(() => {
     if (clienteSeleccionado?.id) {
-      axios
-        .get(`${API}api/presupuestos/cliente/${clienteSeleccionado.id}`)
-        .then(res => setPresupuestos(res.data));
+      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado.id}`)
+        .then(res => setPresupuestos(res.data))
+        .catch(err => console.error('Error al cargar presupuestos:', err));
     }
   }, [clienteSeleccionado]);
 
-  const [materiales, setMateriales] = useState([]);
-
-  const handleCodigoChange = (categoria, codigo, idx) => {
-    const mat = materiales.find(m => m.codigo === codigo);
-    const nuevos = { ...dataPorCategoria };
-    nuevos[categoria][idx].codigo = codigo;
-    nuevos[categoria][idx].producto = mat ? mat.producto : '';
-    setDataPorCategoria(nuevos);
+  const handleCodigoChange = (codigo) => {
+    const m = materiales.find(m => m.codigo === codigo);
+    setMaterial({ ...material, codigo, producto: m ? m.producto : '' });
   };
 
-  const handleProductoChange = (categoria, producto, idx) => {
-    const mat = materiales.find(m => m.producto === producto);
-    const nuevos = { ...dataPorCategoria };
-    nuevos[categoria][idx].producto = producto;
-    nuevos[categoria][idx].codigo = mat ? mat.codigo : '';
-    setDataPorCategoria(nuevos);
+  const handleProductoChange = (producto) => {
+    const m = materiales.find(m => m.producto === producto);
+    setMaterial({ ...material, producto, codigo: m ? m.codigo : '' });
   };
 
-  const limpiarYProcesarCSV = (contenido) => {
-    const lineas = contenido.split('\n');
-    let categoriaActual = null;
-    const resultados = {};
+  const agregarItem = () => {
+    if (!material.codigo || !material.producto || !material.cantidad) return;
 
-    for (let i = 0; i < lineas.length; i++) {
-      const linea = lineas[i].trim();
-      const partes = linea.split(';').map(x => x.trim());
-      const clave = partes.join('').toLowerCase().replace(/\s+/g, '');
-
-      if (Object.values(mapaCategorias).includes(clave)) {
-        categoriaActual = clave;
-        if (!resultados[categoriaActual]) resultados[categoriaActual] = [];
-        continue;
-      }
-
-      if (/codigo/i.test(linea) && /nombre/i.test(linea)) continue;
-
-      if (partes.length >= 11 && /^\d{5,}/.test(partes[4])) {
-        const codigo = partes[4];
-        const producto = partes[5];
-        const cantidadRaw = partes[10];
-        const original = parseFloat((cantidadRaw || '').replace(',', '.'));
-        if (codigo && producto && !isNaN(original)) {
-          let cantidad = original;
-          if (categoriaActual === 'perfiles' || categoriaActual === 'refuerzos') {
-            cantidad = Math.ceil(original / 5.8);
-          } else {
-            cantidad = Math.ceil(original);
-          }
-          resultados[categoriaActual].push({ codigo, producto, cantidad, cantidadOriginal: original });
-        }
-      }
-    }
-
-    return resultados;
-  };
-
-  const handleFileChange = (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    setArchivoNombre(archivo.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const contenido = event.target.result;
-      const procesado = limpiarYProcesarCSV(contenido);
-      setDataPorCategoria(procesado);
+    const nuevoItem = {
+      codigo: material.codigo,
+      producto: material.producto,
+      cantidad: parseInt(material.cantidad),
+      cantidad_original: parseFloat(material.cantidad)
     };
-    reader.readAsText(archivo, 'ISO-8859-1');
+
+    setDataPorCategoria(prev => {
+      const copia = { ...prev };
+      const catKey = categoria.toLowerCase();
+      if (!copia[catKey]) copia[catKey] = [];
+      copia[catKey].push(nuevoItem);
+      return copia;
+    });
+
+    setMaterial({ codigo: '', producto: '', cantidad: '' });
   };
 
-  const agregarItemManual = (categoria) => {
+  const actualizarCantidadManual = (categoria, idx, valor) => {
     const nuevo = { ...dataPorCategoria };
-    if (!nuevo[categoria]) nuevo[categoria] = [];
-    nuevo[categoria].push({ codigo: '', producto: '', cantidad: 1, cantidadOriginal: 1 });
+    nuevo[categoria][idx].cantidad = parseInt(valor) || 0;
     setDataPorCategoria(nuevo);
   };
 
-  const guardarTodo = async () => {
-    const cliente_id = clienteSeleccionado?.id;
-    const presupuesto_id = presupuestoSeleccionado?.id;
-    const numero_presupuesto = presupuestoSeleccionado?.numero;
+  const eliminarItemManual = (categoria, idx) => {
+    const nuevo = { ...dataPorCategoria };
+    nuevo[categoria].splice(idx, 1);
+    setDataPorCategoria(nuevo);
+  };
 
-    if (!cliente_id || !presupuesto_id || !numero_presupuesto) {
-      alert('Debe seleccionar cliente y presupuesto.');
+  const validarClienteYPresupuesto = async (clienteId, presupuestoId) => {
+    try {
+      const clienteRes = await axios.get(`${API}api/clientes/${clienteId}`);
+      const presupuestoRes = await axios.get(`${API}api/presupuestos/id/${presupuestoId}`);
+      return clienteRes.status === 200 && presupuestoRes.status === 200;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const guardarPauta = async () => {
+    if (!clienteSeleccionado?.id || !presupuestoSeleccionado?.id || Object.keys(dataPorCategoria).length === 0) {
+      alert('Seleccione cliente, presupuesto y agregue ítems.');
+      return;
+    }
+
+    const esValido = await validarClienteYPresupuesto(clienteSeleccionado.id, presupuestoSeleccionado.id);
+    if (!esValido) {
+      alert('Cliente o presupuesto no válido en la base de datos.');
       return;
     }
 
     try {
-      for (const categoria in dataPorCategoria) {
+      for (const cat in dataPorCategoria) {
         const payload = {
-          cliente_id,
-          presupuesto_id,
-          numero_presupuesto,
-          items: dataPorCategoria[categoria]
+          cliente_id: clienteSeleccionado.id,
+          presupuesto_id: presupuestoSeleccionado.id,
+          numero_presupuesto: presupuestoSeleccionado.numero,
+          items: dataPorCategoria[cat],
         };
-        await axios.post(`${API}api/ot_pautas/${categoria}/lote`, payload);
+        await axios.post(`${API}api/ot_pautas/${cat}/lote`, payload);
       }
-      alert('Carga completada');
+
+      alert('Pauta guardada con éxito.');
       setDataPorCategoria({});
+      cargarPautas();
     } catch (err) {
-      alert('Error en carga por lote');
+      console.error('Error al guardar pauta:', err);
+      alert('Error al guardar pauta');
+    }
+  };
+
+  const cargarPautas = async () => {
+    if (!clienteSeleccionado?.id || !presupuestoSeleccionado?.id || !categoria) return;
+    try {
+      const res = await axios.get(`${API}api/ot_pautas/${categoria.toLowerCase()}?cliente_id=${clienteSeleccionado.id}&presupuesto_id=${presupuestoSeleccionado.id}`);
+      setPautasCargadas(res.data);
+    } catch (err) {
+      console.error('Error al cargar pautas:', err);
+    }
+  };
+
+  const actualizarPauta = async (id, nuevaCantidad) => {
+    try {
+      await axios.put(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`, {
+        cantidad: parseInt(nuevaCantidad)
+      });
+      setMensajeActualizacion('Cantidad actualizada con éxito.');
+      cargarPautas();
+      setTimeout(() => setMensajeActualizacion(''), 3000);
+    } catch (err) {
+      console.error('Error al actualizar pauta:', err);
+      setMensajeActualizacion('❌ Error al actualizar cantidad.');
+      setTimeout(() => setMensajeActualizacion(''), 3000);
+    }
+  };
+
+  const eliminarPautaCargada = async (id) => {
+    try {
+      await axios.delete(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`);
+      cargarPautas();
+    } catch (err) {
+      console.error('Error al eliminar pauta:', err);
     }
   };
 
   return (
     <div className="container mt-4">
-      <h4>Pautas de Oficina Técnica</h4>
+      <h3>Pautas de Oficina Técnica</h3>
 
       <div className="row mb-3">
         <div className="col-md-4">
@@ -149,7 +164,7 @@ const OTPautasPage = () => {
             const cliente = clientes.find(c => c.id === parseInt(e.target.value));
             setClienteSeleccionado(cliente || null);
           }}>
-            <option value=''>Seleccionar cliente</option>
+            <option value="">Seleccionar cliente</option>
             {clientes.map(c => (
               <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
@@ -162,7 +177,7 @@ const OTPautasPage = () => {
             const presupuesto = presupuestos.find(p => p.id === parseInt(e.target.value));
             setPresupuestoSeleccionado(presupuesto || null);
           }}>
-            <option value=''>Seleccionar presupuesto</option>
+            <option value="">Seleccionar presupuesto</option>
             {presupuestos.map(p => (
               <option key={p.id} value={p.id}>{p.numero}</option>
             ))}
@@ -170,100 +185,133 @@ const OTPautasPage = () => {
         </div>
 
         <div className="col-md-4">
-          <label>Cargar desde CSV</label>
-          <input type="file" accept=".csv" className="form-control" onChange={handleFileChange} />
-          {archivoNombre && <p className="small mt-1">Archivo: <strong>{archivoNombre}</strong></p>}
+          <label>Categoría</label>
+          <select className="form-select" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+            {['Perfiles', 'Refuerzos', 'Herraje', 'Accesorios', 'GomasCepillos', 'Tornillos', 'Vidrio', 'Instalacion'].map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {Object.keys(dataPorCategoria).map(categoria => (
-        <div key={categoria} className="mb-4">
-          <h5>{categoria.toUpperCase()}</h5>
-          <table className="table table-sm table-bordered">
+      <div className="row mb-3">
+        <div className="col-md-3">
+          <label>Código</label>
+          <input list="codigos" className="form-control" value={material.codigo} onChange={(e) => handleCodigoChange(e.target.value)} />
+          <datalist id="codigos">
+            {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
+          </datalist>
+        </div>
+        <div className="col-md-5">
+          <label>Producto</label>
+          <input list="productos" className="form-control" value={material.producto} onChange={(e) => handleProductoChange(e.target.value)} />
+          <datalist id="productos">
+            {materiales.map(m => <option key={m.producto} value={m.producto} />)}
+          </datalist>
+        </div>
+        <div className="col-md-2">
+          <label>Cantidad</label>
+          <input type="number" className="form-control" value={material.cantidad} onChange={(e) => setMaterial({ ...material, cantidad: e.target.value })} />
+        </div>
+        <div className="col-md-2 d-flex align-items-end">
+          <button className="btn btn-primary w-100" onClick={agregarItem}>Añadir</button>
+        </div>
+      </div>
+
+      <CargaCSV setDataPorCategoria={setDataPorCategoria} />
+
+      {Object.keys(dataPorCategoria).length > 0 && (
+        <div className="mt-4">
+          <h5>Materiales por Categoría</h5>
+          {Object.entries(dataPorCategoria).map(([cat, lista]) => (
+            <div key={cat} className="mb-4">
+              <h6 className="text-uppercase">{cat}</h6>
+              <table className="table table-bordered table-sm">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Eliminar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lista.map((item, idx) => (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td>
+                      <td>{item.codigo}</td>
+                      <td>{item.producto}</td>
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={item.cantidad}
+                          onChange={(e) => actualizarCantidadManual(cat, idx, e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <button className="btn btn-sm btn-danger" onClick={() => eliminarItemManual(cat, idx)}>X</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button className="btn btn-success mt-3 me-2" onClick={guardarPauta}>Guardar TODO</button>
+      <button className="btn btn-secondary mt-3" onClick={cargarPautas}>Ver Pautas Cargadas</button>
+
+      {pautasCargadas.length > 0 && (
+        <div className="mt-4">
+          <h5>Pautas Cargadas</h5>
+          <table className="table table-sm table-striped">
             <thead>
               <tr>
-                <th>#</th>
+                <th>ID</th>
                 <th>Código</th>
                 <th>Producto</th>
-                <th>Cantidad Cargada</th>
-                <th>Cantidad Solicitada</th>
-                <th>Acción</th>
+                <th>Cantidad</th>
+                <th>Eliminar</th>
               </tr>
             </thead>
             <tbody>
-              {dataPorCategoria[categoria].map((item, idx) => (
+              {pautasCargadas.map((p, idx) => (
                 <tr key={idx}>
                   <td>{idx + 1}</td>
-                  <td>
-                    <input
-                      list="codigos"
-                      className="form-control form-control-sm"
-                      value={item.codigo}
-                      onChange={e => handleCodigoChange(categoria, e.target.value, idx)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      list="productos"
-                      className="form-control form-control-sm"
-                      value={item.producto}
-                      onChange={e => handleProductoChange(categoria, e.target.value, idx)}
-                    />
-                  </td>
-                  <td>{item.cantidadOriginal}</td>
+                  <td>{p.codigo}</td>
+                  <td>{p.producto}</td>
                   <td>
                     <input
                       type="number"
                       className="form-control form-control-sm"
-                      min="0"
-                      step="1"
-                      value={item.cantidad}
+                      value={p.cantidad}
                       onChange={(e) => {
-                        const nueva = { ...dataPorCategoria };
-                        nueva[categoria][idx].cantidad = parseInt(e.target.value) || 0;
-                        setDataPorCategoria(nueva);
+                        const nuevaCantidad = e.target.value;
+                        setPautasCargadas(prev => {
+                          const actualizadas = [...prev];
+                          actualizadas[idx] = { ...actualizadas[idx], cantidad: nuevaCantidad };
+                          return actualizadas;
+                        });
                       }}
                     />
                   </td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => {
-                        const nueva = { ...dataPorCategoria };
-                        nueva[categoria] = nueva[categoria].filter((_, i) => i !== idx);
-                        setDataPorCategoria(nueva);
-                      }}
-                    >
-                      Eliminar
-                    </button>
+                  <td className="d-flex gap-1">
+                    <button className="btn btn-sm btn-success" onClick={() => actualizarPauta(p.id, p.cantidad)}>✓</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id)}>X</button>
                   </td>
                 </tr>
               ))}
-              <tr>
-                <td colSpan="6" className="text-end">
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => agregarItemManual(categoria)}
-                  >
-                    + Añadir Manualmente
-                  </button>
-                </td>
-              </tr>
             </tbody>
           </table>
+          {mensajeActualizacion && (
+            <div className="alert alert-success py-2">{mensajeActualizacion}</div>
+          )}
         </div>
-      ))}
-
-      {Object.keys(dataPorCategoria).length > 0 && (
-        <button className="btn btn-success" onClick={guardarTodo}>Guardar TODO (por lote)</button>
       )}
-
-      <datalist id="codigos">
-        {materiales.map(m => <option key={m.codigo} value={m.codigo} />)}
-      </datalist>
-      <datalist id="productos">
-        {materiales.map(m => <option key={m.producto} value={m.producto} />)}
-      </datalist>
     </div>
   );
 };
