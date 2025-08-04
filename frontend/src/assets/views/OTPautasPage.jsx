@@ -286,66 +286,64 @@ const OTPautasPage = () => {
       <button className="btn btn-success mt-3 me-2" onClick={guardarPauta}>Guardar TODO</button>
       <button className="btn btn-secondary mt-3" onClick={cargarPautas}>Ver Pautas Cargadas</button>
 
-      {pautasCargadas.length > 0 && (
-        <div className="mt-4">
-          <h5>Pautas Cargadas</h5>
-          <table className="table table-sm table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Categoría</th>
-              <th>Código</th>
-              <th>Producto</th>
-              <th>Cantidad</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-            <tbody>
-              {pautasCargadas.map((p, idx) => (
-                <tr key={idx}>
-                  <td>{idx + 1}</td>
-                  <td className="text-uppercase">{p._categoria}</td>
-                  <td>{p.codigo}</td>
-                  <td>{p.producto}</td>
-                  <td>
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      value={p.cantidad}
-                      onChange={(e) => {
-                        const nuevaCantidad = e.target.value;
-                        setPautasCargadas(prev => {
-                          const actualizadas = [...prev];
-                          actualizadas[idx] = { ...actualizadas[idx], cantidad: nuevaCantidad };
-                          return actualizadas;
-                        });
-                      }}
-                    />
-                  </td>
-                  <td className="d-flex gap-1">
-                    <button
-                      className="btn btn-sm btn-success"
-                      onClick={() => actualizarPauta(p.id, p.cantidad)}
-                    >
-                      ✓
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => eliminarPautaCargada(p.id)}
-                    >
-                      X
-                    </button>
-                  </td>
-                </tr>
+    {pautasCargadas.length > 0 && (
+      <div className="mt-4">
+        <h5>Pautas Cargadas por Categoría</h5>
+        {categoriasDisponibles.map((cat) => {
+          const itemsCat = pautasCargadas.filter(p => p._categoria === cat);
+          if (itemsCat.length === 0) return null;
 
-              ))}
-            </tbody>
-          </table>
-          {mensajeActualizacion && (
-            <div className="alert alert-success py-2">{mensajeActualizacion}</div>
-          )}
-        </div>
-      )}
+          return (
+            <div key={cat} className="mb-4">
+              <h6 className="text-uppercase">{cat}</h6>
+              <table className="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemsCat.map((p, idx) => (
+                    <tr key={p.id}>
+                      <td>{idx + 1}</td>
+                      <td>{p.codigo}</td>
+                      <td>{p.producto}</td>
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={p.cantidad}
+                          onChange={(e) => {
+                            const nuevaCantidad = e.target.value;
+                            setPautasCargadas(prev => {
+                              return prev.map(item =>
+                                item.id === p.id ? { ...item, cantidad: nuevaCantidad } : item
+                              );
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="d-flex gap-1">
+                        <button className="btn btn-sm btn-success" onClick={() => actualizarPauta(p.id, p.cantidad)}>✓</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id)}>X</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
+        {mensajeActualizacion && (
+          <div className="alert alert-success py-2">{mensajeActualizacion}</div>
+        )}
+      </div>
+    )}
+
     </div>
   );
 };
