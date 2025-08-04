@@ -33,6 +33,7 @@ router.post('/registro_salida', async (req, res) => {
   } = req.body;
 
   try {
+    // Registrar la salida
     const query = `
       INSERT INTO salidas_inventario2
       (codigo, producto, cantidad, cliente_nombre, presupuesto_numero, nombre_obra, precio_neto, fecha)
@@ -49,11 +50,19 @@ router.post('/registro_salida', async (req, res) => {
       parseInt(precio_unitario)
     ]);
 
+    // Descontar del inventario
+    await pool.query(`
+      UPDATE inventario
+      SET stock_actual = stock_actual - $1
+      WHERE codigo = $2
+    `, [cantidad_salida, codigo]);
+
     res.json({ message: 'Salida registrada exitosamente' });
   } catch (error) {
     console.error('Error al registrar salida:', error);
     res.status(500).json({ error: 'Error al registrar salida' });
   }
 });
+
 
 export default router;

@@ -753,31 +753,18 @@ app.get('/api/inventario', async (req, res) => {
       stockReservadoMap[row.codigo] = parseInt(row.total_reservado);
     });
 
-    // Obtener salidas de inventario por código
-    const salidasQuery = await pool.query(`
-      SELECT codigo, SUM(cantidad) AS total_salidas
-      FROM salidas_inventario2
-      GROUP BY codigo
-    `);
+// Calcular inventario final SIN descontar salidas (porque ya se reflejan en stock_actual)
+const inventarioFinal = inventarioBase.map(item => {
+  const reservado = stockReservadoMap[item.codigo] || 0;
+  const disponible = item.stock_actual - reservado;
 
-    const stockSalidasMap = {};
-    salidasQuery.rows.forEach(row => {
-      stockSalidasMap[row.codigo] = parseInt(row.total_salidas);
-    });
+  return {
+    ...item,
+    stock_reservado: reservado,
+    stock_disponible: disponible
+  };
+});
 
-    // Calcular inventario final con stock reservado y salidas descontadas
-    const inventarioFinal = inventarioBase.map(item => {
-      const reservado = stockReservadoMap[item.codigo] || 0;
-      const salidas = stockSalidasMap[item.codigo] || 0;
-      const disponible = item.stock_actual - reservado - salidas;
-
-      return {
-        ...item,
-        stock_reservado: reservado,
-        stock_salidas: salidas,
-        stock_disponible: disponible
-      };
-    });
 
     res.json(inventarioFinal);
 
