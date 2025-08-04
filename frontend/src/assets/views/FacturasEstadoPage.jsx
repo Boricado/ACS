@@ -122,14 +122,14 @@ const FacturasEstadoPage = () => {
 
             return (
               <tr key={i} className={vencido ? 'table-danger' : ''}>
-                <td className="align-middle white-space-nowrap">{formatearFecha(f.fecha)}</td>
+                <td className="align-middle text-nowrap">{formatearFecha(f.fecha)}</td>
                 <td className="align-middle">{f.proveedor}</td>
                 <td className="align-middle">{f.numero_guia}</td>
                 <td className="align-middle">{f.numero_factura}</td>
                 <td className="align-middle">${f.monto_neto?.toLocaleString()}</td>
                 <td className="align-middle">${f.iva?.toLocaleString()}</td>
                 <td className="align-middle">${f.monto_total?.toLocaleString()}</td>
-                <td className="align-middle white-space-nowrap">{formatearFecha(vencimiento)}</td>
+                <td className="align-middle text-nowrap">{formatearFecha(vencimiento)}</td>
                 <td>
                   <button
                     className="btn btn-outline-secondary btn-sm"
