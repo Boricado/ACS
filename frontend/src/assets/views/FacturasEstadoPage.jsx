@@ -17,6 +17,12 @@ const FacturasEstadoPage = () => {
     return `${dia}-${mes}-${anio}`;
   };
 
+  const formatoCLP = (valor) => new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0
+  }).format(valor || 0);
+
   useEffect(() => {
     cargarFacturas();
     cargarProveedores();
@@ -126,9 +132,9 @@ const FacturasEstadoPage = () => {
                 <td className="align-middle">{f.proveedor}</td>
                 <td className="align-middle">{f.numero_guia}</td>
                 <td className="align-middle">{f.numero_factura}</td>
-                <td className="align-middle">${f.monto_neto?.toLocaleString()}</td>
-                <td className="align-middle">${f.iva?.toLocaleString()}</td>
-                <td className="align-middle">${f.monto_total?.toLocaleString()}</td>
+                <td className="align-middle">{formatoCLP(f.monto_neto)}</td>
+                <td className="align-middle">{formatoCLP(f.iva)}</td>
+                <td className="align-middle">{formatoCLP(f.monto_total)}</td>
                 <td className="align-middle text-nowrap">{formatearFecha(vencimiento)}</td>
                 <td>
                   <button
