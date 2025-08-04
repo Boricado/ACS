@@ -16,6 +16,18 @@ const OTPautasPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
+  const categoriasDisponibles = [
+  'perfiles',
+  'refuerzos',
+  'herraje',
+  'accesorios',
+  'gomascepillos',
+  'tornillos',
+  'vidrio',
+  'instalacion'
+];
+
+
   useEffect(() => {
     axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
@@ -120,14 +132,23 @@ const OTPautasPage = () => {
   };
 
   const cargarPautas = async () => {
-    if (!clienteSeleccionado?.id || !presupuestoSeleccionado?.id || !categoria) return;
+    if (!clienteSeleccionado?.id || !presupuestoSeleccionado?.id) return;
+
     try {
-      const res = await axios.get(`${API}api/ot_pautas/${categoria.toLowerCase()}?cliente_id=${clienteSeleccionado.id}&presupuesto_id=${presupuestoSeleccionado.id}`);
-      setPautasCargadas(res.data);
+      let todas = [];
+
+      for (const cat of categoriasDisponibles) {
+        const res = await axios.get(`${API}api/ot_pautas/${cat}?cliente_id=${clienteSeleccionado.id}&presupuesto_id=${presupuestoSeleccionado.id}`);
+        const pautasConCategoria = res.data.map(p => ({ ...p, _categoria: cat }));
+        todas = [...todas, ...pautasConCategoria];
+      }
+
+      setPautasCargadas(todas);
     } catch (err) {
-      console.error('Error al cargar pautas:', err);
+      console.error('Error al cargar todas las pautas:', err);
     }
   };
+
 
   const actualizarPauta = async (id, nuevaCantidad) => {
     try {
@@ -269,19 +290,21 @@ const OTPautasPage = () => {
         <div className="mt-4">
           <h5>Pautas Cargadas</h5>
           <table className="table table-sm table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Código</th>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Categoría</th>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
             <tbody>
               {pautasCargadas.map((p, idx) => (
                 <tr key={idx}>
                   <td>{idx + 1}</td>
+                  <td className="text-uppercase">{p._categoria}</td>
                   <td>{p.codigo}</td>
                   <td>{p.producto}</td>
                   <td>
@@ -300,10 +323,21 @@ const OTPautasPage = () => {
                     />
                   </td>
                   <td className="d-flex gap-1">
-                    <button className="btn btn-sm btn-success" onClick={() => actualizarPauta(p.id, p.cantidad)}>✓</button>
-                    <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id)}>X</button>
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => actualizarPauta(p.id, p.cantidad)}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => eliminarPautaCargada(p.id)}
+                    >
+                      X
+                    </button>
                   </td>
                 </tr>
+
               ))}
             </tbody>
           </table>
