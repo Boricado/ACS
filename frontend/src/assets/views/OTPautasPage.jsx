@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import CargaCSV from '../components/CargaCSV';
 
 const OTPautasPage = () => {
   const [clientes, setClientes] = useState([]);
@@ -199,6 +200,8 @@ const OTPautasPage = () => {
           <button className="btn btn-primary w-100" onClick={agregarItem}>Añadir</button>
         </div>
       </div>
+
+      <CargaCSV />
 
       {items.length > 0 && (
         <table className="table table-bordered table-hover mt-3">

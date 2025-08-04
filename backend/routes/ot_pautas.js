@@ -107,4 +107,61 @@ router.get('/gomascepillos', (req, res) => obtenerReservasActivas(req, res, 'ot_
 router.get('/vidrio', (req, res) => obtenerReservasActivas(req, res, 'ot_pautas_vidrio'));
 router.get('/instalacion', (req, res) => obtenerReservasActivas(req, res, 'ot_pautas_instalacion'));
 
+const categorias = [
+  { ruta: 'perfiles', tabla: 'ot_pautas_perfiles', campo: 'perfiles' },
+  { ruta: 'refuerzos', tabla: 'ot_pautas_refuerzos', campo: 'refuerzos' },
+  { ruta: 'tornillos', tabla: 'ot_pautas_tornillos', campo: 'tornillos' },
+  { ruta: 'herraje', tabla: 'ot_pautas_herraje', campo: 'herraje' },
+  { ruta: 'accesorios', tabla: 'ot_pautas_accesorios', campo: 'accesorios' },
+  { ruta: 'gomascepillos', tabla: 'ot_pautas_gomascepillos', campo: 'gomas_cepillos' },
+  { ruta: 'vidrio', tabla: 'ot_pautas_vidrio', campo: 'vidrio' },
+  { ruta: 'instalacion', tabla: 'ot_pautas_instalacion', campo: 'instalacion' },
+];
+
+for (const { ruta, tabla, campo } of categorias) {
+  router.post(`/${ruta}/lote`, async (req, res) => {
+    const { cliente_id, presupuesto_id, numero_presupuesto, items } = req.body;
+
+    if (!cliente_id || !presupuesto_id || !numero_presupuesto || !Array.isArray(items)) {
+      return res.status(400).json({ error: 'Faltan datos o items[] inválido' });
+    }
+
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        for (const item of items) {
+          const { codigo, producto, cantidad } = item;
+          if (!codigo || !producto || !cantidad) continue;
+
+          await client.query(
+            `INSERT INTO ${tabla} (cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad]
+          );
+        }
+
+        await client.query(
+          `UPDATE seguimiento_obras SET ${campo} = TRUE WHERE presupuesto_numero = $1`,
+          [numero_presupuesto]
+        );
+
+        await client.query('COMMIT');
+        res.status(201).json({ mensaje: `Carga por lote exitosa en ${tabla}` });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(`Error en lote (${tabla}):`, error);
+        res.status(500).json({ error: `Error en lote: ${tabla}` });
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error conexión pool:', error);
+      res.status(500).json({ error: 'Error de conexión' });
+    }
+  });
+}
+
+
 export default router;
