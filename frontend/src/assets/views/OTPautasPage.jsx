@@ -180,17 +180,25 @@ const OTPautasPage = () => {
 
       <div className="row mb-3">
         <div className="col-md-4">
+         <div className="col-md-4">
           <label>Cliente</label>
-          <select className="form-select" value={clienteSeleccionado?.id || ''} onChange={(e) => {
-            const cliente = clientes.find(c => c.id === parseInt(e.target.value));
-            setClienteSeleccionado(cliente || null);
-          }}>
-            <option value="">Seleccionar cliente</option>
+          <input
+            list="lista-clientes"
+            className="form-control"
+            value={clienteSeleccionado?.nombre || ''}
+            onChange={(e) => {
+              const cliente = clientes.find(c => c.nombre === e.target.value);
+              setClienteSeleccionado(cliente || null);
+            }}
+            placeholder="Buscar cliente por nombre"
+          />
+          <datalist id="lista-clientes">
             {clientes.map(c => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
+              <option key={c.id} value={c.nombre} />
             ))}
-          </select>
+          </datalist>
         </div>
+
 
         <div className="col-md-4">
           <label>Presupuesto</label>
@@ -241,47 +249,114 @@ const OTPautasPage = () => {
 
       <CargaCSV setDataPorCategoria={setDataPorCategoria} />
 
-      {Object.keys(dataPorCategoria).length > 0 && (
-        <div className="mt-4">
-          <h5>Materiales por Categoría</h5>
-          {Object.entries(dataPorCategoria).map(([cat, lista]) => (
-            <div key={cat} className="mb-4">
-              <h6 className="text-uppercase">{cat}</h6>
-              <table className="table table-bordered table-sm">
-                <thead className="table-light">
-                  <tr>
-                    <th>#</th>
-                    <th>Código</th>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Eliminar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lista.map((item, idx) => (
-                    <tr key={idx}>
-                      <td>{idx + 1}</td>
-                      <td>{item.codigo}</td>
-                      <td>{item.producto}</td>
-                      <td>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={item.cantidad}
-                          onChange={(e) => actualizarCantidadManual(cat, idx, e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <button className="btn btn-sm btn-danger" onClick={() => eliminarItemManual(cat, idx)}>X</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </div>
-      )}
+{Object.keys(dataPorCategoria).length > 0 && (
+  <div className="mt-4">
+    <h5>Materiales por Categoría</h5>
+
+    <datalist id="codigos-materiales-nuevos">
+      {materiales.map(m => (
+        <option key={m.codigo} value={m.codigo} />
+      ))}
+    </datalist>
+    <datalist id="productos-materiales-nuevos">
+      {materiales.map(m => (
+        <option key={m.producto} value={m.producto} />
+      ))}
+    </datalist>
+
+    {Object.entries(dataPorCategoria).map(([cat, lista]) => (
+      <div key={cat} className="mb-4">
+        <h6 className="text-uppercase">{cat}</h6>
+        <table className="table table-sm table-bordered">
+          <thead className="table-light">
+            <tr>
+              <th>#</th>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cant. Cargada</th>
+              <th>Cant. Editada</th>
+              <th>Eliminar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lista.map((item, idx) => (
+              <tr key={idx}>
+                <td>{idx + 1}</td>
+                <td>
+                  <input
+                    list="codigos-materiales-nuevos"
+                    className="form-control form-control-sm"
+                    value={item.codigo}
+                    onChange={(e) => {
+                      const codigo = e.target.value;
+                      const m = materiales.find(m => m.codigo === codigo);
+                      setDataPorCategoria(prev => {
+                        const nuevo = { ...prev };
+                        nuevo[cat][idx].codigo = codigo;
+                        nuevo[cat][idx].producto = m?.producto || '';
+                        return nuevo;
+                      });
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    list="productos-materiales-nuevos"
+                    className="form-control form-control-sm"
+                    value={item.producto}
+                    onChange={(e) => {
+                      const producto = e.target.value;
+                      const m = materiales.find(m => m.producto === producto);
+                      setDataPorCategoria(prev => {
+                        const nuevo = { ...prev };
+                        nuevo[cat][idx].producto = producto;
+                        nuevo[cat][idx].codigo = m?.codigo || '';
+                        return nuevo;
+                      });
+                    }}
+                  />
+                </td>
+                <td className="text-center">
+                  {item.cantidad_original || item.cantidad}
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    value={item.cantidad}
+                    onChange={(e) => {
+                      const nuevaCantidad = parseInt(e.target.value) || 0;
+                      setDataPorCategoria(prev => {
+                        const nuevo = { ...prev };
+                        nuevo[cat][idx].cantidad = nuevaCantidad;
+                        return nuevo;
+                      });
+                    }}
+                  />
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => {
+                      setDataPorCategoria(prev => {
+                        const nuevo = { ...prev };
+                        nuevo[cat] = nuevo[cat].filter((_, i) => i !== idx);
+                        return nuevo;
+                      });
+                    }}
+                  >
+                    X
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ))}
+  </div>
+)}
+
 
       <button className="btn btn-success mt-3 me-2" onClick={guardarPauta}>Guardar TODO</button>
       <button className="btn btn-secondary mt-3" onClick={cargarPautas}>Ver Pautas Cargadas</button>
