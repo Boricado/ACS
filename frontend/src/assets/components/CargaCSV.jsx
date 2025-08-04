@@ -40,9 +40,9 @@ const CargaCSV = () => {
 
       // Extraer ítem válido
       if (partes.length >= 5 && /^\d{5,}/.test(partes[3])) {
-        const codigo = partes[3];
-        const producto = partes[4];
-        const cantidadRaw = partes[6] || partes[5];
+        const codigo = partes[4];
+        const producto = partes[5];
+        const cantidadRaw = partes[9];
         const cantidad = parseFloat((cantidadRaw || '').replace(',', '.'));
 
         if (categoriaActual && codigo && producto && !isNaN(cantidad)) {
