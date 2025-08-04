@@ -63,36 +63,41 @@ router.post('/', async (req, res) => {
       fecha_venc = fechaObj.toISOString().split('T')[0];
     }
 
-    await pool.query(
-      `INSERT INTO facturas_guias (
-        proveedor,
-        rut_proveedor,
-        numero_guia,
-        numero_factura,
-        fecha,
-        monto_neto,
-        iva,
-        monto_total,
-        estado_pago,
-        dias_credito,
-        fecha_vencimiento,
-        observacion
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-      [
-        proveedor,
-        rut_proveedor,
-        numero_guia,
-        numero_factura,
-        fecha,
-        monto_neto,
-        iva,
-        monto_total,
-        estado_pago,
-        dias_credito,
-        fecha_venc,
-        observacion
-      ]
-    );
+await pool.query(
+  `INSERT INTO facturas_guias (
+    proveedor,
+    rut_proveedor,
+    numero_guia,
+    numero_factura,
+    fecha,
+    monto_neto,
+    iva,
+    monto_total,
+    estado_pago,
+    dias_credito,
+    fecha_vencimiento,
+    fecha_pago,
+    observacion,
+    observaciones_internas
+  ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+  [
+    proveedor,
+    rut_proveedor,
+    numero_guia,
+    numero_factura,
+    fecha,
+    monto_neto,
+    iva,
+    monto_total,
+    estado_pago,
+    dias_credito,
+    fecha_vencimiento,
+    fecha_pago,
+    observacion,
+    observaciones_internas
+  ]
+);
+
 
     res.status(201).json({ message: 'Factura/Guía registrada' });
   } catch (err) {
