@@ -158,29 +158,30 @@ useEffect(() => {
   };
 
 
-  const actualizarPauta = async (id, nuevaCantidad) => {
-    try {
-      await axios.put(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`, {
-        cantidad: parseInt(nuevaCantidad)
-      });
-      setMensajeActualizacion('Cantidad actualizada con éxito.');
-      cargarPautas();
-      setTimeout(() => setMensajeActualizacion(''), 3000);
-    } catch (err) {
-      console.error('Error al actualizar pauta:', err);
-      setMensajeActualizacion('❌ Error al actualizar cantidad.');
-      setTimeout(() => setMensajeActualizacion(''), 3000);
-    }
-  };
+const actualizarPauta = async (id, nuevaCantidad, categoriaForzada) => {
+  try {
+    await axios.put(`${API}api/ot_pautas/${categoriaForzada}/${id}`, {
+      cantidad: parseInt(nuevaCantidad)
+    });
+    setMensajeActualizacion('Cantidad actualizada con éxito.');
+    cargarPautas();
+    setTimeout(() => setMensajeActualizacion(''), 3000);
+  } catch (err) {
+    console.error('Error al actualizar pauta:', err);
+    setMensajeActualizacion('❌ Error al actualizar cantidad.');
+    setTimeout(() => setMensajeActualizacion(''), 3000);
+  }
+};
 
-  const eliminarPautaCargada = async (id) => {
-    try {
-      await axios.delete(`${API}api/ot_pautas/${categoria.toLowerCase()}/${id}`);
-      cargarPautas();
-    } catch (err) {
-      console.error('Error al eliminar pauta:', err);
-    }
-  };
+const eliminarPautaCargada = async (id, categoriaForzada) => {
+  try {
+    await axios.delete(`${API}api/ot_pautas/${categoriaForzada}/${id}`);
+    cargarPautas();
+  } catch (err) {
+    console.error('Error al eliminar pauta:', err);
+  }
+};
+
 
   return (
     <div className="container mt-4">
@@ -460,8 +461,8 @@ useEffect(() => {
                     />
                   </td>
                   <td className="d-flex gap-1">
-                    <button className="btn btn-sm btn-success" onClick={() => actualizarPauta(p.id, p.cantidad)}>✓</button>
-                    <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id)}>X</button>
+                    <button className="btn btn-sm btn-success" onClick={() => actualizarPauta(p.id, p.cantidad, cat)}>✓</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => eliminarPautaCargada(p.id, cat)}>X</button>
                   </td>
                 </tr>
               ))}
