@@ -13,6 +13,7 @@ const OTPautasPage = () => {
   const [dataPorCategoria, setDataPorCategoria] = useState({});
   const [mensajeActualizacion, setMensajeActualizacion] = useState('');
   const [pautasCargadas, setPautasCargadas] = useState([]);
+  const [clienteTexto, setClienteTexto] = useState('');
 
   const API = import.meta.env.VITE_API_URL;
 
@@ -39,12 +40,19 @@ const OTPautasPage = () => {
   }, []);
 
   useEffect(() => {
-    if (clienteSeleccionado?.id) {
-      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado.id}`)
-        .then(res => setPresupuestos(res.data))
-        .catch(err => console.error('Error al cargar presupuestos:', err));
-    }
-  }, [clienteSeleccionado]);
+  if (clienteSeleccionado?.id) {
+    axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado.id}`)
+      .then(res => setPresupuestos(res.data))
+      .catch(err => console.error('Error al cargar presupuestos:', err));
+  }
+}, [clienteSeleccionado]);
+
+// Sincroniza el input de texto con el nombre del cliente seleccionado
+useEffect(() => {
+  if (clienteSeleccionado) {
+    setClienteTexto(clienteSeleccionado.nombre);
+  }
+}, [clienteSeleccionado]);
 
   const handleCodigoChange = (codigo) => {
     const m = materiales.find(m => m.codigo === codigo);
@@ -184,9 +192,12 @@ const OTPautasPage = () => {
           <input
             list="lista-clientes"
             className="form-control"
-            value={clienteSeleccionado?.nombre || ''}
+            value={clienteTexto}
             onChange={(e) => {
-              const cliente = clientes.find(c => c.nombre === e.target.value);
+              const texto = e.target.value;
+              setClienteTexto(texto);
+
+              const cliente = clientes.find(c => c.nombre === texto);
               setClienteSeleccionado(cliente || null);
             }}
             placeholder="Buscar cliente por nombre"
