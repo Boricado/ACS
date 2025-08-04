@@ -38,19 +38,30 @@ const CargaCSV = ({ setDataPorCategoria }) => {
         let cantidad = parseFloat((cantidadRaw || '').replace(',', '.'));
 
         if (categoriaActual && codigo && producto && !isNaN(cantidad)) {
-          if (categoriaActual === 'perfiles' || categoriaActual === 'refuerzos') {
-            cantidad = Math.ceil(cantidad / 5.8);
-          } else {
-            cantidad = Math.ceil(cantidad);
-          }
+        const cantidadOriginal = parseFloat((cantidadRaw || '').replace(',', '.'));
 
-          resultados[categoriaActual].push({
+        if (categoriaActual === 'perfiles' || categoriaActual === 'refuerzos') {
+            cantidad = Math.ceil(cantidadOriginal / 5.8);
+        } else {
+            cantidad = Math.ceil(cantidadOriginal);
+        }
+
+        const existente = resultados[categoriaActual].find(item => item.codigo === codigo);
+
+        if (existente) {
+            existente.cantidad += cantidad;
+            existente.cantidad_original += cantidadOriginal;
+        } else {
+            resultados[categoriaActual].push({
             codigo,
             producto,
             cantidad,
-            cantidad_original: parseFloat((cantidadRaw || '').replace(',', '.'))
-          });
+            cantidad_original: cantidadOriginal,
+            _categoria: categoriaActual
+            });
         }
+        }
+
       }
     }
 
