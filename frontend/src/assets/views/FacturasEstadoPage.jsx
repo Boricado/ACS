@@ -8,12 +8,12 @@ const FacturasEstadoPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return '';
-    const date = new Date(fechaISO);
-    const dia = String(date.getDate()).padStart(2, '0');
-    const mes = String(date.getMonth() + 1).padStart(2, '0');
-    const anio = date.getFullYear();
+  const formatearFecha = (fecha) => {
+    if (!fecha) return '-';
+    const d = new Date(fecha);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const anio = d.getFullYear();
     return `${dia}-${mes}-${anio}`;
   };
 
@@ -122,14 +122,14 @@ const FacturasEstadoPage = () => {
 
             return (
               <tr key={i} className={vencido ? 'table-danger' : ''}>
-                <td>{formatearFecha(f.fecha)}</td>
-                <td>{f.proveedor}</td>
-                <td>{f.numero_guia}</td>
-                <td>{f.numero_factura}</td>
-                <td>${f.monto_neto?.toLocaleString()}</td>
-                <td>${f.iva?.toLocaleString()}</td>
-                <td>${f.monto_total?.toLocaleString()}</td>
-                <td>{formatearFecha(vencimiento)}</td>
+                <td className="align-middle white-space-nowrap">{formatearFecha(f.fecha)}</td>
+                <td className="align-middle">{f.proveedor}</td>
+                <td className="align-middle">{f.numero_guia}</td>
+                <td className="align-middle">{f.numero_factura}</td>
+                <td className="align-middle">${f.monto_neto?.toLocaleString()}</td>
+                <td className="align-middle">${f.iva?.toLocaleString()}</td>
+                <td className="align-middle">${f.monto_total?.toLocaleString()}</td>
+                <td className="align-middle white-space-nowrap">{formatearFecha(vencimiento)}</td>
                 <td>
                   <button
                     className="btn btn-outline-secondary btn-sm"
