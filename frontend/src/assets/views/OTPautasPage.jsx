@@ -180,7 +180,6 @@ const OTPautasPage = () => {
 
       <div className="row mb-3">
         <div className="col-md-4">
-         <div className="col-md-4">
           <label>Cliente</label>
           <input
             list="lista-clientes"
@@ -197,6 +196,7 @@ const OTPautasPage = () => {
               <option key={c.id} value={c.nombre} />
             ))}
           </datalist>
+
         </div>
 
 
