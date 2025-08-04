@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
     // Obtener días de crédito desde proveedores si no vienen como parámetro
     let dias_credito = diasCreditoManual;
     if (!dias_credito && proveedor) {
-      const result = await pool.query('SELECT dias_credito FROM proveedores WHERE nombre = $1', [proveedor]);
+      const result = await pool.query('SELECT dias_credito FROM proveedores WHERE proveedor = $1', [proveedor]);
       dias_credito = result.rows[0]?.dias_credito || 0;
     }
 
