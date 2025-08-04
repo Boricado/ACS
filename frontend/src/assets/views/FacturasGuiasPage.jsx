@@ -70,6 +70,19 @@ const FacturasGuiasPage = () => {
     }
   };
 
+  // ⏱ Cálculo automático de IVA y Total al cambiar monto neto
+  useEffect(() => {
+    const neto = parseFloat(form.monto_neto.replace(',', '.')) || 0;
+    const iva = Math.round(neto * 0.19);
+    const total = neto + iva;
+
+    setForm((prev) => ({
+      ...prev,
+      iva: prev.iva === '' || prev.iva === String(prev.iva) ? iva.toString() : prev.iva,
+      monto_total: prev.monto_total === '' || prev.monto_total === String(prev.monto_total) ? total.toString() : prev.monto_total
+    }));
+  }, [form.monto_neto]);
+
   useEffect(() => {
     fetchHistorial();
   }, [filtroProveedor]);

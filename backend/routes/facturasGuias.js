@@ -33,8 +33,14 @@ router.get('/', async (req, res) => {
 // POST: Registrar nueva factura/guía con cálculo de fecha de vencimiento si no se entrega
 router.post('/', async (req, res) => {
   const {
-    proveedor, numero_guia, numero_factura, fecha,
-    monto_neto, iva, monto_total,
+    proveedor,
+    rut_proveedor,
+    numero_guia,
+    numero_factura,
+    fecha,
+    monto_neto,
+    iva,
+    monto_total,
     estado_pago = 'Pendiente',
     dias_credito: diasCreditoManual,
     fecha_vencimiento,
@@ -59,15 +65,31 @@ router.post('/', async (req, res) => {
 
     await pool.query(
       `INSERT INTO facturas_guias (
-        proveedor, numero_guia, numero_factura, fecha,
-        monto_neto, iva, monto_total,
-        estado_pago, dias_credito, fecha_vencimiento,
+        proveedor,
+        rut_proveedor,
+        numero_guia,
+        numero_factura,
+        fecha,
+        monto_neto,
+        iva,
+        monto_total,
+        estado_pago,
+        dias_credito,
+        fecha_vencimiento,
         observacion
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
       [
-        proveedor, numero_guia, numero_factura, fecha,
-        monto_neto, iva, monto_total,
-        estado_pago, dias_credito, fecha_venc,
+        proveedor,
+        rut_proveedor,
+        numero_guia,
+        numero_factura,
+        fecha,
+        monto_neto,
+        iva,
+        monto_total,
+        estado_pago,
+        dias_credito,
+        fecha_venc,
         observacion
       ]
     );
@@ -78,7 +100,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Error al registrar factura/guía' });
   }
 });
-
 
 // PUT: Actualizar estado de pago y/o fecha_pago y/o observaciones internas
 router.put('/:id', async (req, res) => {
