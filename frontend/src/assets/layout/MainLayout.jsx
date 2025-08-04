@@ -11,9 +11,9 @@ const MainLayout = () => {
         className="flex-grow-1 d-flex flex-column"
         style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}
       >
-        {/* Contenedor principal con centrado vertical y horizontal */}
-        <main className="flex-grow-1 d-flex justify-content-center align-items-center">
-          <div className="w-100 p-3" style={{ maxWidth: '900px' }}>
+        {/* Contenedor principal ocupa todo el ancho */}
+        <main className="flex-grow-1 d-flex justify-content-start align-items-start">
+          <div className="container-fluid p-3">
             <Outlet />
           </div>
         </main>
