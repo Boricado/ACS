@@ -136,16 +136,16 @@ for (const { ruta, tabla, campo } of categorias) {
           if (!codigo || !producto || !cantidad) continue;
 
           await client.query(
-            `INSERT INTO ${tabla} (cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad]
+            `INSERT INTO ${tabla} (cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad, cantidad_original)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [cliente_id, presupuesto_id, numero_presupuesto, codigo, producto, cantidad, item.cantidad_original || cantidad]
+          );
+
+          await client.query(
+            `UPDATE seguimiento_obras SET ${campo} = TRUE WHERE presupuesto_numero = $1`,
+            [numero_presupuesto]
           );
         }
-
-        await client.query(
-          `UPDATE seguimiento_obras SET ${campo} = TRUE WHERE presupuesto_numero = $1`,
-          [numero_presupuesto]
-        );
 
         await client.query('COMMIT');
         res.status(201).json({ mensaje: `Carga por lote exitosa en ${tabla}` });
@@ -162,6 +162,57 @@ for (const { ruta, tabla, campo } of categorias) {
     }
   });
 }
+
+router.post('/:categoria/lote', async (req, res) => {
+  const { categoria } = req.params;
+  const { cliente_id, presupuesto_id, numero_presupuesto, items } = req.body;
+
+  const tabla = `ot_pautas_${categoria}`;
+  const camposValidos = [
+    'codigo', 'producto', 'cantidad', 'cantidad_original',
+    'cliente_id', 'presupuesto_id', 'numero_presupuesto'
+  ];
+
+  if (!cliente_id || !presupuesto_id || !numero_presupuesto || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Datos incompletos o inválidos' });
+  }
+
+  try {
+    const valores = items.map(item => [
+      item.codigo,
+      item.producto,
+      item.cantidad,
+      item.cantidad_original || item.cantidad, // fallback
+      cliente_id,
+      presupuesto_id,
+      numero_presupuesto
+    ]);
+
+    const placeholders = valores.map(
+      (_, i) => `($${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${i * 7 + 4}, $${i * 7 + 5}, $${i * 7 + 6}, $${i * 7 + 7})`
+    ).join(', ');
+
+    const flatValues = valores.flat();
+
+    const query = `
+      INSERT INTO ${tabla} (${camposValidos.join(', ')})
+      VALUES ${placeholders}
+    `;
+
+    await pool.query(query, flatValues);
+
+    // Actualizar estado en seguimiento_obras
+    await pool.query(
+      `UPDATE seguimiento_obras SET ${categoria} = true WHERE presupuesto_id = $1`,
+      [presupuesto_id]
+    );
+
+    res.json({ mensaje: 'Carga por lote exitosa' });
+  } catch (error) {
+    console.error(`Error al guardar en ${tabla}:`, error);
+    res.status(500).json({ error: 'Error interno al guardar los datos' });
+  }
+});
 
 
 export default router;

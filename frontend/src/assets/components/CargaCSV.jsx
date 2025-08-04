@@ -6,7 +6,6 @@ const CargaCSV = () => {
   const [archivoNombre, setArchivoNombre] = useState('');
   const API = import.meta.env.VITE_API_URL;
 
-  // Mapeo explícito CSV → backend
   const mapaCategorias = {
     'profiles': 'perfiles',
     'reinforcement': 'refuerzos',
@@ -26,7 +25,6 @@ const CargaCSV = () => {
     for (let i = 0; i < lineas.length; i++) {
       const linea = lineas[i].trim();
       const partes = linea.split(';').map(x => x.trim());
-
       const clave = partes.join('').toLowerCase().replace(/\s+/g, '');
 
       if (mapaCategorias[clave]) {
@@ -35,20 +33,29 @@ const CargaCSV = () => {
         continue;
       }
 
-      // Ignorar encabezado
       if (/codigo/i.test(linea) && /nombre/i.test(linea)) continue;
 
-      // Extraer ítem válido
       if (partes.length >= 11 && /^\d{5,}/.test(partes[4])) {
         const codigo = partes[4];
         const producto = partes[5];
-        const cantidadRaw = partes[10]; // columna 11
-        const cantidad = parseFloat((cantidadRaw || '').replace(',', '.'));
+        const cantidadRaw = partes[10];
+        let cantidad = parseFloat((cantidadRaw || '').replace(',', '.'));
 
         if (categoriaActual && codigo && producto && !isNaN(cantidad)) {
-            resultados[categoriaActual].push({ codigo, producto, cantidad });
+          if (categoriaActual === 'perfiles' || categoriaActual === 'refuerzos') {
+            cantidad = Math.ceil(cantidad / 5.8);
+          } else {
+            cantidad = Math.ceil(cantidad);
+          }
+
+          resultados[categoriaActual].push({
+            codigo,
+            producto,
+            cantidad,
+            cantidad_original: parseFloat((cantidadRaw || '').replace(',', '.'))
+        });
         }
-      } 
+      }
     }
 
     return resultados;
@@ -67,6 +74,18 @@ const CargaCSV = () => {
       setDataPorCategoria(procesado);
     };
     reader.readAsText(archivo, 'ISO-8859-1');
+  };
+
+  const handleCantidadChange = (categoria, idx, valor) => {
+    const nuevo = { ...dataPorCategoria };
+    nuevo[categoria][idx].cantidad = parseInt(valor) || 0;
+    setDataPorCategoria(nuevo);
+  };
+
+  const eliminarItem = (categoria, idx) => {
+    const nuevo = { ...dataPorCategoria };
+    nuevo[categoria].splice(idx, 1);
+    setDataPorCategoria(nuevo);
   };
 
   const guardarTodo = async () => {
@@ -112,29 +131,63 @@ const CargaCSV = () => {
           </button>
           {Object.entries(dataPorCategoria).map(([categoria, items]) => (
             <div key={categoria} className="mb-4">
-              <h5>{categoria.toUpperCase()}</h5>
-              <table className="table table-sm table-bordered">
+                <h5>{categoria.toUpperCase()}</h5>
+                <table className="table table-sm table-bordered">
                 <thead>
-                  <tr>
+                    <tr>
                     <th>#</th>
                     <th>Código</th>
                     <th>Producto</th>
-                    <th>Cantidad</th>
-                  </tr>
+                    <th>Cantidad Cargada</th>
+                    <th>Cantidad Solicitada</th>
+                    <th>Acción</th>
+                    </tr>
                 </thead>
                 <tbody>
-                  {items.map((item, idx) => (
+                    {items.map((item, idx) => (
                     <tr key={idx}>
-                      <td>{idx + 1}</td>
-                      <td>{item.codigo}</td>
-                      <td>{item.producto}</td>
-                      <td>{item.cantidad}</td>
+                        <td>{idx + 1}</td>
+                        <td>{item.codigo}</td>
+                        <td>{item.producto}</td>
+                        <td>{item.cantidad_original}</td>
+                        <td>
+                        <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            min="0"
+                            step="1"
+                            value={item.cantidad}
+                            onChange={(e) => {
+                            const nuevaCantidad = parseInt(e.target.value, 10) || 0;
+                            setDataPorCategoria(prev => {
+                                const nuevos = { ...prev };
+                                nuevos[categoria][idx].cantidad = nuevaCantidad;
+                                return nuevos;
+                            });
+                            }}
+                        />
+                        </td>
+                        <td>
+                        <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => {
+                            setDataPorCategoria(prev => {
+                                const nuevos = { ...prev };
+                                nuevos[categoria] = nuevos[categoria].filter((_, i) => i !== idx);
+                                return nuevos;
+                            });
+                            }}
+                        >
+                            Eliminar
+                        </button>
+                        </td>
                     </tr>
-                  ))}
+                    ))}
                 </tbody>
-              </table>
+                </table>
             </div>
-          ))}
+            ))}
+
         </>
       )}
     </div>
