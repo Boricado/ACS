@@ -138,7 +138,9 @@ const AjusteStock = () => {
                     </td>
                     <td className={color}>{diferencia}</td>
                     <td className="text-nowrap" title={fechasAjuste[codigo]?.comentario || ''}>
-                      {fechasAjuste[codigo]?.fecha || '-'}
+                      {fechasAjuste[codigo]?.fecha 
+                        ? fechasAjuste[codigo].fecha.split('-').reverse().join('-') 
+                        : '-'}
                     </td>
                     <td>
                       <button
