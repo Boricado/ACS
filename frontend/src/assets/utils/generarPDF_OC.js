@@ -111,7 +111,7 @@ export const generarPDF_OC = ({
       `RUT: ${rutProveedor}`,
       `Banco: ${bancoProveedor}`,
       `Cuenta corriente`,
-      `${cuentaProveedor}`
+      `Número: ${cuentaProveedor}`
     ];
 
     datos.forEach((linea, index) => {
