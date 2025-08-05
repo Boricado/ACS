@@ -425,11 +425,29 @@ return (
       <div className="row mb-3">
         <div className="col-md-6">
           <label>Cliente</label>
-          <select className="form-control" value={clienteSeleccionado} onChange={(e) => setClienteSeleccionado(e.target.value)}>
-            <option value="">Seleccionar cliente</option>
-            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
+          <input
+            type="text"
+            className="form-control"
+            list="clientes_datalist"
+            value={clienteNombre}
+            onChange={(e) => {
+              const nombre = e.target.value;
+              setClienteNombre(nombre);
+              const cliente = clientes.find(c => c.nombre === nombre);
+              setClienteSeleccionado(cliente?.id || '');
+              if (cliente) {
+                axios.get(`${API}api/presupuestos/cliente/${cliente.id}`).then(res => setPresupuestos(res.data));
+              }
+            }}
+            placeholder="Buscar cliente"
+          />
+          <datalist id="clientes_datalist">
+            {clientes.map(c => (
+              <option key={c.id} value={c.nombre} />
+            ))}
+          </datalist>
         </div>
+
         <div className="col-md-6">
           <label>Presupuesto</label>
           <select className="form-control" value={presupuestoSeleccionado} onChange={(e) => setPresupuestoSeleccionado(e.target.value)}>
