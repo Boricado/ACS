@@ -431,7 +431,7 @@ return (
             list="clientes_datalist"
             value={clienteNombre}
             onChange={(e) => {
-              const nombre = e.target.value;
+              const nombre = (e.target.value || '').trim();
               setClienteNombre(nombre);
               const cliente = clientes.find(c => c.nombre === nombre);
               setClienteSeleccionado(cliente?.id || '');
