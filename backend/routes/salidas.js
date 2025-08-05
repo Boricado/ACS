@@ -34,22 +34,22 @@ router.post('/registro_salida', async (req, res) => {
 
   try {
     // Registrar la salida
-    const query = `
-      INSERT INTO salidas_inventario2
-      (codigo, producto, cantidad, cliente_nombre, presupuesto_numero, nombre_obra, precio_neto, fecha)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)
-    `;
+const query = `
+  INSERT INTO salidas_inventario2
+  (codigo, producto, cantidad, cliente_nombre, presupuesto_numero, nombre_obra, precio_neto, fecha, comentario)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, $8)
+`;
 
-    await pool.query(query, [
-      codigo,
-      producto,
-      cantidad_salida,
-      cliente_nombre,
-      presupuesto_numero,
-      nombre_obra,
-      parseInt(precio_unitario)
-    ]);
-
+await pool.query(query, [
+  codigo,
+  producto,
+  cantidad_salida,
+  cliente_nombre,
+  presupuesto_numero,
+  nombre_obra,
+  parseInt(precio_unitario),
+  observacion?.trim() || ''
+]);
     // Descontar del inventario
     await pool.query(`
       UPDATE inventario

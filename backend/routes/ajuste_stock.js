@@ -3,6 +3,7 @@ import pool from '../db.js';
 
 const router = express.Router();
 
+// Ruta para registrar un ajuste manual de stock
 router.post('/', async (req, res) => {
   const { codigo, producto, diferencia } = req.body;
 
@@ -12,11 +13,17 @@ router.post('/', async (req, res) => {
 
   try {
     const cantidad = parseInt(diferencia);
-    const hoy = new Date();
-    const fecha = hoy.toISOString().split('T')[0];
-    const comentario = `Ajuste de stock ${fecha.split('-').reverse().join('-')}`;
+    if (isNaN(cantidad)) {
+      return res.status(400).json({ error: 'Diferencia no válida' });
+    }
 
-    // 1. Insertar en historial
+    const hoy = new Date();
+    const fecha = hoy.toISOString().split('T')[0]; // formato YYYY-MM-DD
+    const fechaAjusteTexto = fecha.split('-').reverse().join('-'); // formato DD-MM-YYYY
+    const diferenciaInvertida = -cantidad; // Para que respete la lógica de salidas
+    const comentarioAjuste = `Ajuste ${fechaAjusteTexto}`;
+
+    // 1. Insertar en historial de salidas
     await pool.query(`
       INSERT INTO salidas_inventario2 (
         cliente_nombre,
@@ -27,27 +34,31 @@ router.post('/', async (req, res) => {
         cantidad,
         precio_neto,
         fecha,
-        comentario
+        comentario_ajuste
       ) VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8)
     `, [
       'ALUMCE - Stock',
-      '1111',
-      'Obra 1',
+      'AJUSTE',
+      'Ajuste de Inventario',
       codigo,
       producto,
-      Math.abs(cantidad),
+      diferenciaInvertida,
       fecha,
-      comentario
+      comentarioAjuste
     ]);
 
     // 2. Obtener stock actual
-    const result = await pool.query('SELECT stock_actual FROM inventario WHERE codigo = $1', [codigo]);
+    const result = await pool.query(
+      'SELECT stock_actual FROM inventario WHERE codigo = $1',
+      [codigo]
+    );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
     const stockAnterior = parseInt(result.rows[0].stock_actual);
-    const nuevoStock = stockAnterior + cantidad; // suma si diferencia es positiva, resta si negativa
+    const nuevoStock = stockAnterior + cantidad;
 
     // 3. Actualizar inventario
     await pool.query(`

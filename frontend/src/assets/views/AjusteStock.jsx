@@ -6,8 +6,20 @@ const AjusteStock = () => {
   const [salidas, setSalidas] = useState([]);
   const [ajustes, setAjustes] = useState({});
   const [filtro, setFiltro] = useState('');
+  const [ordenCampo, setOrdenCampo] = useState('');
+  const [ordenAscendente, setOrdenAscendente] = useState(true);
+  const [fechasAjuste, setFechasAjuste] = useState({});
 
   const API = import.meta.env.VITE_API_URL;
+
+  const ordenarPor = (campo) => {
+  if (ordenCampo === campo) {
+    setOrdenAscendente(!ordenAscendente);
+  } else {
+    setOrdenCampo(campo);
+    setOrdenAscendente(true);
+  }
+};
 
   useEffect(() => {
     axios.get(`${API}api/inventario`)
@@ -17,6 +29,10 @@ const AjusteStock = () => {
     axios.get(`${API}api/salidas_inventario2`)
       .then(res => setSalidas(res.data))
       .catch(err => console.error("❌ Error al cargar salidas:", err));
+
+    axios.get(`${API}api/ajustes_stock`)
+    .then(res => setFechasAjuste(res.data))
+    .catch(err => console.error("❌ Error al cargar fechas de ajustes:", err));
   }, []);
 
   const getSalidas = (codigo) =>
@@ -59,7 +75,7 @@ const AjusteStock = () => {
     }
   };
 
-  return (
+ return (
     <div className="container mt-4">
       <h2 className="mb-4 text-center">Ajuste de Stock</h2>
 
@@ -76,15 +92,20 @@ const AjusteStock = () => {
 
       <table className="table table-bordered table-sm align-middle text-center">
         <thead className="table-light">
-          <tr>
-            <th>Código</th>
-            <th>Producto</th>
-            <th>Stock Actual</th>
-            <th>Stock Real</th>
-            <th>Diferencia</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
+        <tr>
+          <th>Código</th>
+          <th onClick={() => ordenarPor('producto')} style={{ cursor: 'pointer' }}>
+            Producto {ordenCampo === 'producto' ? (ordenAscendente ? '▲' : '▼') : ''}
+          </th>
+          <th onClick={() => ordenarPor('stock_actual')} style={{ cursor: 'pointer' }}>
+            Stock Actual {ordenCampo === 'stock_actual' ? (ordenAscendente ? '▲' : '▼') : ''}
+          </th>
+          <th>Stock Real</th>
+          <th>Diferencia</th>
+          <th>Último Ajuste</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
         <tbody>
           {inventario.length > 0 ? (
             inventario
@@ -92,18 +113,30 @@ const AjusteStock = () => {
                 (item.codigo || '').toLowerCase().includes(filtro.toLowerCase()) ||
                 (item.producto || '').toLowerCase().includes(filtro.toLowerCase())
               )
+              .sort((a, b) => {
+                if (ordenCampo === 'producto') {
+                  return ordenAscendente
+                    ? a.producto.localeCompare(b.producto)
+                    : b.producto.localeCompare(a.producto);
+                } else if (ordenCampo === 'stock_actual') {
+                  return ordenAscendente
+                    ? a.stock_actual - b.stock_actual
+                    : b.stock_actual - a.stock_actual;
+                } else {
+                  return 0;
+                }
+              })
               .map(({ codigo, producto, stock_actual }) => {
-                const salidasTotales = getSalidas(codigo);
-                const stockReal = parseInt(stock_actual) - salidasTotales;
+                const actual = parseInt(stock_actual);
                 const real = ajustes[codigo] || '';
-                const diferencia = real !== '' ? real - stockReal : '';
+                const diferencia = real !== '' ? real - actual : '';
                 const color = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : '';
 
                 return (
                   <tr key={codigo}>
                     <td>{codigo}</td>
                     <td>{producto}</td>
-                    <td>{stockReal}</td>
+                    <td>{actual}</td>
                     <td>
                       <input
                         type="number"
@@ -113,11 +146,16 @@ const AjusteStock = () => {
                       />
                     </td>
                     <td className={color}>{diferencia}</td>
+                    <td title={fechasAjuste[codigo] ? new Date(fechasAjuste[codigo]).toLocaleString() : ''}>
+                      {fechasAjuste[codigo]
+                        ? new Date(fechasAjuste[codigo]).toLocaleDateString()
+                        : '-'}
+                    </td>
                     <td>
                       <button
                         className="btn btn-sm btn-primary"
                         disabled={real === '' || diferencia === 0}
-                        onClick={() => ajustarStock(codigo, producto, parseInt(stock_actual))}
+                        onClick={() => ajustarStock(codigo, producto, actual)}
                       >
                         Ajustar
                       </button>
@@ -127,7 +165,7 @@ const AjusteStock = () => {
               })
           ) : (
             <tr>
-              <td colSpan="6">Cargando productos...</td>
+              <td colSpan="7">Cargando productos...</td>
             </tr>
           )}
         </tbody>
