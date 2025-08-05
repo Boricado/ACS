@@ -30,7 +30,7 @@ const AjusteStock = () => {
       .then(res => setSalidas(res.data))
       .catch(err => console.error("❌ Error al cargar salidas:", err));
 
-    axios.get(`${API}api/ajustes_stock`)
+    axios.get(`${API}api/ajuste_stock`)
       .then(res => setFechasAjuste(res.data))
       .catch(err => console.error("❌ Error al cargar fechas de ajustes:", err));
   }, []);
