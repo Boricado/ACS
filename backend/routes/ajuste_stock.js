@@ -74,4 +74,31 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Ruta para obtener último ajuste por código
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT codigo, 
+             MAX(fecha) AS fecha, 
+             MAX(comentario_ajuste) AS comentario_ajuste
+      FROM salidas_inventario2
+      WHERE comentario_ajuste IS NOT NULL
+      GROUP BY codigo
+    `);
+
+    const ajustes = {};
+    result.rows.forEach(row => {
+      ajustes[row.codigo] = {
+        fecha: row.fecha,
+        comentario: row.comentario_ajuste
+      };
+    });
+
+    res.json(ajustes);
+  } catch (error) {
+    console.error('❌ Error al obtener ajustes:', error.message);
+    res.status(500).json({ error: 'Error al obtener últimos ajustes' });
+  }
+});
+
 export default router;
