@@ -15,6 +15,13 @@ export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realiz
   doc.setFontSize(14);
   doc.text(`ORDEN DE COMPRA N° ${numeroOC}`, 200, 18, { align: 'right' });
 
+  // Fecha a la derecha
+  const fechaFormateada = fecha.split('-').reverse().join('-');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Fecha: ${fechaFormateada}`, 200, 25, { align: 'right' });
+
+
   // Información de empresa
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
