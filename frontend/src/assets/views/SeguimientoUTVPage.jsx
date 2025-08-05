@@ -30,26 +30,26 @@ const SeguimientoUTVPage = () => {
   };
 
   const registrarUTV = async () => {
-    await axios.post(`${API}api/seguimiento_utv`, utv);
+    await axios.post(`${API}api/utv`, utv);
     obtenerDatos();
   };
 
   const registrarTermopanel = async () => {
-    await axios.post(`${API}api/seguimiento_termopanel`, termopanel);
+    await axios.post(`${API}api/termopanel`, termopanel);
     obtenerDatos();
   };
 
   const registrarInstalacion = async () => {
-    await axios.post(`${API}api/seguimiento_instalaciones`, instalacion);
+    await axios.post(`${API}api/instalaciones`, instalacion);
     obtenerDatos();
   };
 
   const obtenerDatos = async () => {
     const params = { mes: mesFiltro, anio: anioFiltro };
     const [utvRes, termoRes, instRes] = await Promise.all([
-      axios.get(`${API}api/seguimiento_utv`, { params }),
-      axios.get(`${API}api/seguimiento_termopanel`, { params }),
-      axios.get(`${API}api/seguimiento_instalaciones`, { params })
+      axios.get(`${API}api/utv`, { params }),
+      axios.get(`${API}api/termopanel`, { params }),
+      axios.get(`${API}api/instalaciones`, { params })
     ]);
     setUtvData(utvRes.data);
     setTermopanelData(termoRes.data);
