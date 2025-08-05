@@ -137,10 +137,8 @@ const AjusteStock = () => {
                       />
                     </td>
                     <td className={color}>{diferencia}</td>
-                    <td title={fechasAjuste[codigo] ? new Date(fechasAjuste[codigo]).toLocaleString() : ''}>
-                      {fechasAjuste[codigo]
-                        ? new Date(fechasAjuste[codigo]).toLocaleDateString()
-                        : '-'}
+                    <td title={fechasAjuste[codigo] || ''}>
+                      {fechasAjuste[codigo] || '-'}
                     </td>
                     <td>
                       <button
