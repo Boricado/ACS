@@ -1,42 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Modal, Button } from 'react-bootstrap';
 
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
   const [fechaActual, setFechaActual] = useState(new Date());
   const [utv, setUTV] = useState({
-    fecha: '',
-    nombre_pauta: '',
-    numero_pauta: '',
-    tipo: 'PVC',
-    doble_corredera: 0,
-    proyectante: 0,
-    fijo: 0,
-    oscilobatiente: 0,
-    doble_corredera_fijo: 0,
-    marco_puerta: 0,
-    marco_adicionales: 0,
-    otro: 0,
-    observacion_marcos: '',
-    observacion_otro: '',
-    valor_m2: 3000
+    fecha: '', nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
+    doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
+    doble_corredera_fijo: 0, marco_puerta: 0, marco_adicionales: 0, otro: 0,
+    observacion_marcos: '', observacion_otro: '', valor_m2: 3000
   });
+  const [showModalUTV, setShowModalUTV] = useState(false);
   const [termopanel, setTermopanel] = useState({
-    fecha: '',
-    nombre_cliente: '',
-    cantidad: 0,
-    ancho: 0,
-    alto: 0,
-    m2: 0,
-    observacion: '',
-    valor_m2: 1500
+    fecha: '', nombre_cliente: '', cantidad: 0, ancho: 0, alto: 0,
+    m2: 0, observacion: '', valor_m2: 1500
   });
   const [instalacion, setInstalacion] = useState({
-    fecha: '',
-    nombre_cliente: '',
-    m2_rectificacion: 0,
-    observacion: '',
-    valor_m2: 3000
+    fecha: '', nombre_cliente: '', m2_rectificacion: 0,
+    observacion: '', valor_m2: 3000
   });
   const [utvData, setUtvData] = useState([]);
   const [termopanelData, setTermopanelData] = useState([]);
@@ -52,6 +34,7 @@ const SeguimientoUTVPage = () => {
   const registrarUTV = async () => {
     await axios.post(`${API}api/seguimiento_utv`, utv);
     obtenerDatos();
+    setShowModalUTV(false);
   };
 
   const registrarTermopanel = async () => {
@@ -111,21 +94,7 @@ const SeguimientoUTVPage = () => {
       <div className="row">
         <div className="col-md-4">
           <h5>UTV</h5>
-          <input type="date" name="fecha" className="form-control mb-1" value={utv.fecha} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="nombre_pauta" className="form-control mb-1" placeholder="Nombre pauta" value={utv.nombre_pauta} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="numero_pauta" className="form-control mb-1" placeholder="N° pauta" value={utv.numero_pauta} onChange={(e) => handleChange(e, setUTV)} />
-          <select name="tipo" className="form-select mb-1" value={utv.tipo} onChange={(e) => handleChange(e, setUTV)}>
-            <option value="PVC">PVC</option>
-            <option value="Aluminio">Aluminio</option>
-            <option value="Ambos">Ambos</option>
-          </select>
-          {['doble_corredera','proyectante','fijo','oscilobatiente','doble_corredera_fijo','marco_puerta','marco_adicionales','otro'].map(key => (
-            <input key={key} type="number" name={key} className="form-control mb-1" placeholder={key.replaceAll('_', ' ')} value={utv[key]} onChange={(e) => handleChange(e, setUTV)} />
-          ))}
-          <input type="text" name="observacion_marcos" className="form-control mb-1" placeholder="Obs. marcos" value={utv.observacion_marcos} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="observacion_otro" className="form-control mb-1" placeholder="Obs. otro" value={utv.observacion_otro} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={utv.valor_m2} onChange={(e) => handleChange(e, setUTV)} />
-          <button className="btn btn-sm btn-primary mt-2" onClick={registrarUTV}>Registrar UTV</button>
+          <button className="btn btn-primary btn-sm mb-2" onClick={() => setShowModalUTV(true)}>Registrar UTV</button>
         </div>
 
         <div className="col-md-4">
@@ -183,6 +152,43 @@ const SeguimientoUTVPage = () => {
           </tr>
         </tbody>
       </table>
+
+      {/* Modal para formulario detallado de UTV */}
+      <Modal show={showModalUTV} onHide={() => setShowModalUTV(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Formulario Detallado - UTV</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="row">
+            <div className="col-md-6">
+              <input type="date" name="fecha" className="form-control mb-1" value={utv.fecha} onChange={(e) => handleChange(e, setUTV)} />
+              <input type="text" name="nombre_pauta" className="form-control mb-1" placeholder="Nombre pauta" value={utv.nombre_pauta} onChange={(e) => handleChange(e, setUTV)} />
+              <input type="text" name="numero_pauta" className="form-control mb-1" placeholder="N° pauta" value={utv.numero_pauta} onChange={(e) => handleChange(e, setUTV)} />
+              <select name="tipo" className="form-select mb-1" value={utv.tipo} onChange={(e) => handleChange(e, setUTV)}>
+                <option value="PVC">PVC</option>
+                <option value="Aluminio">Aluminio</option>
+                <option value="Ambos">Ambos</option>
+              </select>
+            </div>
+            <div className="col-md-6">
+              {["doble_corredera", "proyectante", "fijo", "oscilobatiente", "doble_corredera_fijo", "marco_puerta", "marco_adicionales", "otro"].map((key) => (
+                <input key={key} type="number" name={key} className="form-control mb-1" placeholder={key.replaceAll("_", " ")} value={utv[key]} onChange={(e) => handleChange(e, setUTV)} />
+              ))}
+              <input type="text" name="observacion_marcos" className="form-control mb-1" placeholder="Obs. marcos" value={utv.observacion_marcos} onChange={(e) => handleChange(e, setUTV)} />
+              <input type="text" name="observacion_otro" className="form-control mb-1" placeholder="Obs. otro" value={utv.observacion_otro} onChange={(e) => handleChange(e, setUTV)} />
+              <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={utv.valor_m2} onChange={(e) => handleChange(e, setUTV)} />
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModalUTV(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={registrarUTV}>
+            Guardar UTV
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
