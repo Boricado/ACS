@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { format } from 'date-fns';
 
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
