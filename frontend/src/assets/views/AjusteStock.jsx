@@ -13,13 +13,13 @@ const AjusteStock = () => {
   const API = import.meta.env.VITE_API_URL;
 
   const ordenarPor = (campo) => {
-  if (ordenCampo === campo) {
-    setOrdenAscendente(!ordenAscendente);
-  } else {
-    setOrdenCampo(campo);
-    setOrdenAscendente(true);
-  }
-};
+    if (ordenCampo === campo) {
+      setOrdenAscendente(!ordenAscendente);
+    } else {
+      setOrdenCampo(campo);
+      setOrdenAscendente(true);
+    }
+  };
 
   useEffect(() => {
     axios.get(`${API}api/inventario`)
@@ -31,25 +31,17 @@ const AjusteStock = () => {
       .catch(err => console.error("❌ Error al cargar salidas:", err));
 
     axios.get(`${API}api/ajustes_stock`)
-    .then(res => setFechasAjuste(res.data))
-    .catch(err => console.error("❌ Error al cargar fechas de ajustes:", err));
+      .then(res => setFechasAjuste(res.data))
+      .catch(err => console.error("❌ Error al cargar fechas de ajustes:", err));
   }, []);
-
-  const getSalidas = (codigo) =>
-    salidas
-      .filter(s => s.codigo === codigo)
-      .reduce((sum, s) => sum + parseInt(s.cantidad || 0), 0);
 
   const handleChange = (codigo, nuevoValor) => {
     setAjustes(prev => ({ ...prev, [codigo]: nuevoValor }));
   };
-//
-  const ajustarStock = async (codigo, producto, stockComprado) => {
-    const salidasHechas = getSalidas(codigo);
-    const stockActual = stockComprado - salidasHechas;
+
+  const ajustarStock = async (codigo, producto, stockActual) => {
     const real = parseInt(ajustes[codigo] || 0);
     const diferencia = real - stockActual;
-
     if (diferencia === 0) return;
 
     try {
@@ -75,7 +67,7 @@ const AjusteStock = () => {
     }
   };
 
- return (
+  return (
     <div className="container mt-4">
       <h2 className="mb-4 text-center">Ajuste de Stock</h2>
 
@@ -92,20 +84,20 @@ const AjusteStock = () => {
 
       <table className="table table-bordered table-sm align-middle text-center">
         <thead className="table-light">
-        <tr>
-          <th>Código</th>
-          <th onClick={() => ordenarPor('producto')} style={{ cursor: 'pointer' }}>
-            Producto {ordenCampo === 'producto' ? (ordenAscendente ? '▲' : '▼') : ''}
-          </th>
-          <th onClick={() => ordenarPor('stock_actual')} style={{ cursor: 'pointer' }}>
-            Stock Actual {ordenCampo === 'stock_actual' ? (ordenAscendente ? '▲' : '▼') : ''}
-          </th>
-          <th>Stock Real</th>
-          <th>Diferencia</th>
-          <th>Último Ajuste</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
+          <tr>
+            <th>Código</th>
+            <th onClick={() => ordenarPor('producto')} style={{ cursor: 'pointer' }}>
+              Producto {ordenCampo === 'producto' ? (ordenAscendente ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => ordenarPor('stock_actual')} style={{ cursor: 'pointer' }}>
+              Stock Actual {ordenCampo === 'stock_actual' ? (ordenAscendente ? '▲' : '▼') : ''}
+            </th>
+            <th>Stock Real</th>
+            <th>Diferencia</th>
+            <th>Último Ajuste</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
         <tbody>
           {inventario.length > 0 ? (
             inventario
@@ -122,9 +114,8 @@ const AjusteStock = () => {
                   return ordenAscendente
                     ? a.stock_actual - b.stock_actual
                     : b.stock_actual - a.stock_actual;
-                } else {
-                  return 0;
                 }
+                return 0;
               })
               .map(({ codigo, producto, stock_actual }) => {
                 const actual = parseInt(stock_actual);
