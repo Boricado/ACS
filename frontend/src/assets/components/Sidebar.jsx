@@ -18,7 +18,7 @@ const Sidebar = ({ total }) => {
           className="img-fluid mt-4 shadow rounded"
           style={{ maxWidth: '170px' }}
         />
-        <h6 className="text-white">Control System v0.4b</h6>
+        <h6 className="text-white">Control System v0.5b</h6>
         <ul className="list-unstyled components mb-5">
           <li><NavLink to="/" className={({ isActive }) => isActive ? 'active-link' : ''}>Inicio</NavLink></li>
 
@@ -50,6 +50,7 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/CrearSolicitudBodegaPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Solicitud de materiales a OT</NavLink></li>
                 <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
                 <li><NavLink to="/AjusteStock" className={({ isActive }) => isActive ? 'active-link' : ''}>Ajuste de Stock/ Inventario</NavLink></li>
+                <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
               </ul>
             </li>
           )}

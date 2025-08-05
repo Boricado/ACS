@@ -31,6 +31,8 @@ import ProveedorPage from './assets/views/ProveedorPage';
 import FacturasGuiasPage from './assets/views/FacturasGuiasPage';
 import FacturasEstadoPage from './assets/views/FacturasEstadoPage';
 import PagosClientesPage from './assets/views/PagosClientesPage';
+import SeguimientoUTVPage from './assets/views/SeguimientoUTVPage';
+
 
 import PrivateRoute from './routes/PrivateRoute';
 
@@ -63,6 +65,7 @@ function App() {
         <Route path='CrearSolicitudBodegaPage' element={<CrearSolicitudBodegaPage />} />
         <Route path='BodegaSolicitudesPage' element={<BodegaSolicitudesPage />} />
         <Route path='AjusteStock' element={<AjusteStock />} />
+        <Route path='SeguimientoUTVPage' element={<SeguimientoUTVPage />} />
 
         {/* Oficina Técnica */}
         <Route path='OTPautasPage' element={<OTPautasPage />} />
