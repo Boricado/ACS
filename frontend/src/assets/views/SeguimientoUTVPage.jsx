@@ -107,18 +107,48 @@ const SeguimientoUTVPage = () => {
         </div>
       </div>
 
+      <h4 className="mt-4">Registrar Datos</h4>
       <div className="row">
-        <div className="col">
-          <h5>Registrar UTV</h5>
-          <button className="btn btn-sm btn-primary mb-2" onClick={registrarUTV}>Registrar UTV</button>
+        <div className="col-md-4">
+          <h5>UTV</h5>
+          <input type="date" name="fecha" className="form-control mb-1" value={utv.fecha} onChange={(e) => handleChange(e, setUTV)} />
+          <input type="text" name="nombre_pauta" className="form-control mb-1" placeholder="Nombre pauta" value={utv.nombre_pauta} onChange={(e) => handleChange(e, setUTV)} />
+          <input type="text" name="numero_pauta" className="form-control mb-1" placeholder="N° pauta" value={utv.numero_pauta} onChange={(e) => handleChange(e, setUTV)} />
+          <select name="tipo" className="form-select mb-1" value={utv.tipo} onChange={(e) => handleChange(e, setUTV)}>
+            <option value="PVC">PVC</option>
+            <option value="Aluminio">Aluminio</option>
+            <option value="Ambos">Ambos</option>
+          </select>
+          {['doble_corredera','proyectante','fijo','oscilobatiente','doble_corredera_fijo','marco_puerta','marco_adicionales','otro'].map(key => (
+            <input key={key} type="number" name={key} className="form-control mb-1" placeholder={key.replaceAll('_', ' ')} value={utv[key]} onChange={(e) => handleChange(e, setUTV)} />
+          ))}
+          <input type="text" name="observacion_marcos" className="form-control mb-1" placeholder="Obs. marcos" value={utv.observacion_marcos} onChange={(e) => handleChange(e, setUTV)} />
+          <input type="text" name="observacion_otro" className="form-control mb-1" placeholder="Obs. otro" value={utv.observacion_otro} onChange={(e) => handleChange(e, setUTV)} />
+          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={utv.valor_m2} onChange={(e) => handleChange(e, setUTV)} />
+          <button className="btn btn-sm btn-primary mt-2" onClick={registrarUTV}>Registrar UTV</button>
         </div>
-        <div className="col">
-          <h5>Registrar Termopanel</h5>
-          <button className="btn btn-sm btn-primary mb-2" onClick={registrarTermopanel}>Registrar Termopanel</button>
+
+        <div className="col-md-4">
+          <h5>Termopanel</h5>
+          <input type="date" name="fecha" className="form-control mb-1" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="text" name="nombre_cliente" className="form-control mb-1" placeholder="Cliente" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="number" name="cantidad" className="form-control mb-1" placeholder="Cantidad" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="number" name="ancho" className="form-control mb-1" placeholder="Ancho (mm)" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="number" name="alto" className="form-control mb-1" placeholder="Alto (mm)" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="number" name="m2" className="form-control mb-1" placeholder="M2" value={termopanel.m2} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="text" name="observacion" className="form-control mb-1" placeholder="Observación" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
+          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
+          <button className="btn btn-sm btn-primary mt-2" onClick={registrarTermopanel}>Registrar Termopanel</button>
         </div>
-        <div className="col">
-          <h5>Registrar Instalación</h5>
-          <button className="btn btn-sm btn-primary mb-2" onClick={registrarInstalacion}>Registrar Instalación</button>
+
+        <div className="col-md-4">
+          <h5>Instalación</h5>
+          <input type="date" name="fecha" className="form-control mb-1" value={instalacion.fecha} onChange={(e) => handleChange(e, setInstalacion)} />
+          <input type="text" name="nombre_cliente" className="form-control mb-1" placeholder="Cliente" value={instalacion.nombre_cliente} onChange={(e) => handleChange(e, setInstalacion)} />
+          <input type="number" name="m2_rectificacion" className="form-control mb-1" placeholder="m² rectificación" value={instalacion.m2_rectificacion} onChange={(e) => handleChange(e, setInstalacion)} />
+          <input type="text" name="observacion" className="form-control mb-1" placeholder="Observación" value={instalacion.observacion} onChange={(e) => handleChange(e, setInstalacion)} />
+          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={instalacion.valor_m2} onChange={(e) => handleChange(e, setInstalacion)} />
+          <button className="btn btn-sm btn-primary mt-2" onClick={registrarInstalacion}>Registrar Instalación</button>
         </div>
       </div>
 
