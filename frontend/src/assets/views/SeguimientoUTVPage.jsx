@@ -89,51 +89,189 @@ const SeguimientoUTVPage = () => {
 
       <h4 className="mt-4">Registrar Datos</h4>
       <div className="row">
+
+
         {/* Formulario UTV */}
-        <div className="col-md-4">
-          <h5>UTV</h5>
-          <input type="date" name="fecha" className="form-control mb-1" value={utv.fecha} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="nombre_pauta" className="form-control mb-1" placeholder="Nombre pauta" value={utv.nombre_pauta} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="numero_pauta" className="form-control mb-1" placeholder="N° pauta" value={utv.numero_pauta} onChange={(e) => handleChange(e, setUTV)} />
-          <select name="tipo" className="form-select mb-1" value={utv.tipo} onChange={(e) => handleChange(e, setUTV)}>
-            <option value="PVC">PVC</option>
-            <option value="Aluminio">Aluminio</option>
-            <option value="Ambos">Ambos</option>
-          </select>
-          {["doble_corredera", "proyectante", "fijo", "oscilobatiente", "doble_corredera_fijo", "marco_puerta", "marco_adicionales", "otro"].map((key) => (
-            <input key={key} type="number" name={key} className="form-control mb-1" placeholder={key.replaceAll("_", " ")} value={utv[key]} onChange={(e) => handleChange(e, setUTV)} />
-          ))}
-          <input type="text" name="observacion_marcos" className="form-control mb-1" placeholder="Obs. marcos" value={utv.observacion_marcos} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="text" name="observacion_otro" className="form-control mb-1" placeholder="Obs. otro" value={utv.observacion_otro} onChange={(e) => handleChange(e, setUTV)} />
-          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={utv.valor_m2} onChange={(e) => handleChange(e, setUTV)} />
-          <button className="btn btn-sm btn-primary mt-2" onClick={registrarUTV}>Registrar UTV</button>
+            <div className="accordion my-3" id="accordionUTV">
+            <div className="accordion-item">
+                <h2 className="accordion-header" id="headingUTV">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUTV" aria-expanded="false" aria-controls="collapseUTV">
+                    Registrar UTV
+                </button>
+                </h2>
+                <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
+                <div className="accordion-body">
+                    <div className="row g-2">
+                    <div className="col-md-4">
+                        <label>Fecha</label>
+                        <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Nombre Pauta</label>
+                        <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>N° Pauta</label>
+                        <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Tipo</label>
+                        <select className="form-select" name="tipo" value={utv.tipo} onChange={e => handleChange(e, setUTV)}>
+                        <option value="PVC">PVC</option>
+                        <option value="Aluminio">Aluminio</option>
+                        <option value="Ambos">Ambos</option>
+                        </select>
+                    </div>
+
+                    {/* Grupo de ventanas */}
+                    <div className="col-md-3">
+                        <label>Doble Corredera</label>
+                        <input type="number" className="form-control" name="doble_corredera" value={utv.doble_corredera} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Proyectante</label>
+                        <input type="number" className="form-control" name="proyectante" value={utv.proyectante} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Fijo</label>
+                        <input type="number" className="form-control" name="fijo" value={utv.fijo} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Oscilobatiente</label>
+                        <input type="number" className="form-control" name="oscilobatiente" value={utv.oscilobatiente} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Doble corredera + fijo</label>
+                        <input type="number" className="form-control" name="doble_corredera_fijo" value={utv.doble_corredera_fijo} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Marco Puerta</label>
+                        <input type="number" className="form-control" name="marco_puerta" value={utv.marco_puerta} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Marco Adicionales</label>
+                        <input type="number" className="form-control" name="marco_adicionales" value={utv.marco_adicionales} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Otro</label>
+                        <input type="number" className="form-control" name="otro" value={utv.otro} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-6">
+                        <label>Obs. Marcos</label>
+                        <input type="text" className="form-control" name="observacion_marcos" value={utv.observacion_marcos} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-6">
+                        <label>Obs. Otro</label>
+                        <input type="text" className="form-control" name="observacion_otro" value={utv.observacion_otro} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Valor m²</label>
+                        <input type="number" className="form-control" name="valor_m2" value={utv.valor_m2} onChange={e => handleChange(e, setUTV)} />
+                    </div>
+
+                    <div className="col-md-12 text-end mt-3">
+                        <button className="btn btn-success" onClick={registrarUTV}>Guardar UTV</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
         </div>
+
 
         {/* Termopanel */}
-        <div className="col-md-4">
-          <h5>Termopanel</h5>
-          <input type="date" name="fecha" className="form-control mb-1" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="text" name="nombre_cliente" className="form-control mb-1" placeholder="Cliente" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="number" name="cantidad" className="form-control mb-1" placeholder="Cantidad" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="number" name="ancho" className="form-control mb-1" placeholder="Ancho (mm)" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="number" name="alto" className="form-control mb-1" placeholder="Alto (mm)" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="number" name="m2" className="form-control mb-1" placeholder="M2" value={termopanel.m2} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="text" name="observacion" className="form-control mb-1" placeholder="Observación" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
-          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
-          <button className="btn btn-sm btn-primary mt-2" onClick={registrarTermopanel}>Registrar Termopanel</button>
-        </div>
+            <div className="accordion my-3" id="accordionTermopanel">
+            <div className="accordion-item">
+                <h2 className="accordion-header" id="headingTermopanel">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTermopanel" aria-expanded="false" aria-controls="collapseTermopanel">
+                    Registrar Termopanel
+                </button>
+                </h2>
+                <div id="collapseTermopanel" className="accordion-collapse collapse" aria-labelledby="headingTermopanel" data-bs-parent="#accordionTermopanel">
+                <div className="accordion-body">
+                    <div className="row g-2">
+                    <div className="col-md-4">
+                        <label>Fecha</label>
+                        <input type="date" name="fecha" className="form-control" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Cliente</label>
+                        <input type="text" name="nombre_cliente" className="form-control" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Cantidad</label>
+                        <input type="number" name="cantidad" className="form-control" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Ancho (mm)</label>
+                        <input type="number" name="ancho" className="form-control" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Alto (mm)</label>
+                        <input type="number" name="alto" className="form-control" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>M²</label>
+                        <input type="number" name="m2" className="form-control" value={termopanel.m2} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Valor m²</label>
+                        <input type="number" name="valor_m2" className="form-control" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-12">
+                        <label>Observación</label>
+                        <input type="text" name="observacion" className="form-control" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
+                    </div>
+                    <div className="col-md-12 text-end mt-3">
+                        <button className="btn btn-success" onClick={registrarTermopanel}>Guardar Termopanel</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+
 
         {/* Instalación */}
-        <div className="col-md-4">
-          <h5>Instalación</h5>
-          <input type="date" name="fecha" className="form-control mb-1" value={instalacion.fecha} onChange={(e) => handleChange(e, setInstalacion)} />
-          <input type="text" name="nombre_cliente" className="form-control mb-1" placeholder="Cliente" value={instalacion.nombre_cliente} onChange={(e) => handleChange(e, setInstalacion)} />
-          <input type="number" name="m2_rectificacion" className="form-control mb-1" placeholder="m² rectificación" value={instalacion.m2_rectificacion} onChange={(e) => handleChange(e, setInstalacion)} />
-          <input type="text" name="observacion" className="form-control mb-1" placeholder="Observación" value={instalacion.observacion} onChange={(e) => handleChange(e, setInstalacion)} />
-          <input type="number" name="valor_m2" className="form-control mb-1" placeholder="Valor m²" value={instalacion.valor_m2} onChange={(e) => handleChange(e, setInstalacion)} />
-          <button className="btn btn-sm btn-primary mt-2" onClick={registrarInstalacion}>Registrar Instalación</button>
+        <div className="accordion my-3" id="accordionInstalacion">
+            <div className="accordion-item">
+                <h2 className="accordion-header" id="headingInstalacion">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstalacion" aria-expanded="false" aria-controls="collapseInstalacion">
+                    Registrar Instalación
+                </button>
+                </h2>
+                <div id="collapseInstalacion" className="accordion-collapse collapse" aria-labelledby="headingInstalacion" data-bs-parent="#accordionInstalacion">
+                <div className="accordion-body">
+                    <div className="row g-2">
+                    <div className="col-md-4">
+                        <label>Fecha</label>
+                        <input type="date" name="fecha" className="form-control" value={instalacion.fecha} onChange={(e) => handleChange(e, setInstalacion)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>Cliente</label>
+                        <input type="text" name="nombre_cliente" className="form-control" value={instalacion.nombre_cliente} onChange={(e) => handleChange(e, setInstalacion)} />
+                    </div>
+                    <div className="col-md-4">
+                        <label>m² Rectificación</label>
+                        <input type="number" name="m2_rectificacion" className="form-control" value={instalacion.m2_rectificacion} onChange={(e) => handleChange(e, setInstalacion)} />
+                    </div>
+                    <div className="col-md-12">
+                        <label>Observación</label>
+                        <input type="text" name="observacion" className="form-control" value={instalacion.observacion} onChange={(e) => handleChange(e, setInstalacion)} />
+                    </div>
+                    <div className="col-md-3">
+                        <label>Valor m²</label>
+                        <input type="number" name="valor_m2" className="form-control" value={instalacion.valor_m2} onChange={(e) => handleChange(e, setInstalacion)} />
+                    </div>
+                    <div className="col-md-12 text-end mt-3">
+                        <button className="btn btn-success" onClick={registrarInstalacion}>Guardar Instalación</button>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
         </div>
-      </div>
+        </div>
 
       <h4 className="mt-4">Resumen</h4>
       <table className="table table-bordered mt-3">
@@ -167,6 +305,7 @@ const SeguimientoUTVPage = () => {
         </tbody>
       </table>
     </div>
+
   );
 };
 
