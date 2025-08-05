@@ -84,6 +84,28 @@ export const generarPDF_OC = ({ numeroOC, proveedor, rutProveedor, fecha, realiz
     doc.line(150, firmasY - 2, 200, firmasY - 2); // línea superior centrada
     doc.text('    Autorizado', 170, firmasY + 3, { align: 'center' });
 
+    // Sección: Datos de transferencia
+    const transferenciaY = firmasY + 20;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('DATOS DE TRANSFERENCIA:', 10, transferenciaY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const datos = [
+      proveedor,
+      `RUT: ${rutProveedor}`,
+      `Banco: ${bancoProveedor}`,
+      `Cuenta corriente`,
+      `${cuentaProveedor}`
+    ];
+
+    datos.forEach((linea, index) => {
+      doc.text(linea, 10, transferenciaY + 7 + index * 6);
+    });
+
+
   // Guardar PDF con nombre incluyendo proveedor
   const nombreArchivo = `OC_${numeroOC}_${proveedor.replace(/ /g, '_')}.pdf`;
   doc.save(nombreArchivo);

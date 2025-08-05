@@ -22,6 +22,9 @@ const CrearOCPage = () => {
   const [numeroOC, setNumeroOC] = useState('');
   const [esNuevoProducto, setEsNuevoProducto] = useState(false);
   const [advertenciaProductoExistente, setAdvertenciaProductoExistente] = useState('');
+  const [bancoProveedor, setBancoProveedor] = useState('');
+  const [cuentaProveedor, setCuentaProveedor] = useState('');
+
 
 
   const API = import.meta.env.VITE_API_URL;
@@ -230,10 +233,14 @@ return (
             onChange={(e) => {
               const nombre = e.target.value;
               setProveedor(nombre);
+
               const prov = proveedores.find(
                 p => p.proveedor && p.proveedor.trim().toLowerCase() === nombre.trim().toLowerCase()
               );
+
               setRutProveedor(prov?.rut || '');
+              setBancoProveedor(prov?.banco || '');
+              setCuentaProveedor(prov?.numero_cuenta || '');
             }}
             placeholder="Buscar proveedor"
           />
@@ -450,6 +457,8 @@ return (
             numeroOC,
             proveedor,
             rutProveedor,
+            bancoProveedor,
+            cuentaProveedor,
             fecha,
             realizadoPor,
             clienteNombre,
