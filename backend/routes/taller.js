@@ -107,4 +107,22 @@ router.get('/instalaciones', async (req, res) => {
   }
 });
 
+//Fechas
+
+router.get('/', async (req, res) => {
+  const { mes, anio } = req.query;
+
+  try {
+    const resultado = await pool.query(`
+      SELECT * FROM utv 
+      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2
+    `, [mes, anio]);
+
+    res.json(resultado.rows);
+  } catch (error) {
+    console.error('Error al obtener datos UTV:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 export default router;
