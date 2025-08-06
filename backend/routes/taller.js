@@ -3,66 +3,133 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// 🔹 Agregar UTV
+// POST /api/taller/utv
 router.post('/utv', async (req, res) => {
-  const { fecha, nombre_pauta, numero_pauta, tipo, cantidad_doble_corredera, cantidad_proyectante, cantidad_fijo, cantidad_oscilobatiente, cantidad_doble_corredera_fijo, cantidad_marco_puerta, cantidad_marcos_adicionales, comentario_marcos_adicionales, cantidad_otro, comentario_otro, valor_m2 } = req.body;
+  const {
+    fecha,
+    nombre_pauta,
+    numero_pauta,
+    tipo,
+    doble_corredera,
+    proyectante,
+    fijo,
+    oscilobatiente,
+    doble_corredera_fijo,
+    marco_puerta,
+    marcos_adicionales,
+    comentario_marcos,
+    otro,
+    comentario_otro,
+    valor_m2
+  } = req.body;
 
   try {
     await pool.query(`
       INSERT INTO utv_taller (
-        fecha, nombre_pauta, numero_pauta, tipo,
-        cantidad_doble_corredera, cantidad_proyectante, cantidad_fijo,
-        cantidad_oscilobatiente, cantidad_doble_corredera_fijo,
-        cantidad_marco_puerta, cantidad_marcos_adicionales, comentario_marcos_adicionales,
-        cantidad_otro, comentario_otro, valor_m2
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        fecha,
+        nombre_pauta,
+        numero_pauta,
+        tipo,
+        doble_corredera,
+        proyectante,
+        fijo,
+        oscilobatiente,
+        doble_corredera_fijo,
+        marco_puerta,
+        marcos_adicionales,
+        comentario_marcos,
+        otro,
+        comentario_otro,
+        valor_m2
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     `, [
-      fecha, nombre_pauta, numero_pauta, tipo,
-      cantidad_doble_corredera, cantidad_proyectante, cantidad_fijo,
-      cantidad_oscilobatiente, cantidad_doble_corredera_fijo,
-      cantidad_marco_puerta, cantidad_marcos_adicionales, comentario_marcos_adicionales,
-      cantidad_otro, comentario_otro, valor_m2
+      fecha,
+      nombre_pauta,
+      numero_pauta,
+      tipo,
+      doble_corredera,
+      proyectante,
+      fijo,
+      oscilobatiente,
+      doble_corredera_fijo,
+      marco_puerta,
+      marcos_adicionales,
+      comentario_marcos,
+      otro,
+      comentario_otro,
+      valor_m2
     ]);
-    res.sendStatus(200);
+
+    res.status(201).json({ message: 'Registro de UTV guardado con éxito' });
   } catch (error) {
-    console.error('Error insertando UTV:', error);
-    res.sendStatus(500);
+    console.error('Error al registrar UTV:', error);
+    res.status(500).json({ error: 'Error al registrar UTV' });
   }
 });
 
+
 // 🔹 Agregar Termopanel
 router.post('/termopanel', async (req, res) => {
-  const { fecha, nombre_cliente, cantidad, ancho_mm, alto_mm, m2, observaciones, valor_m2 } = req.body;
+  const {
+    fecha,
+    cliente,
+    cantidad,
+    ancho_mm,
+    alto_mm,
+    m2,
+    observaciones,
+    valor_m2
+  } = req.body;
 
   try {
     await pool.query(`
       INSERT INTO termopanel_taller (
-        fecha, nombre_cliente, cantidad, ancho_mm, alto_mm, m2, observaciones, valor_m2
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    `, [fecha, nombre_cliente, cantidad, ancho_mm, alto_mm, m2, observaciones, valor_m2]);
-    res.sendStatus(200);
+        fecha,
+        cliente,
+        cantidad,
+        ancho_mm,
+        alto_mm,
+        m2,
+        observaciones,
+        valor_m2
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
+      fecha,
+      cliente,
+      cantidad,
+      ancho_mm,
+      alto_mm,
+      m2,
+      observaciones,
+      valor_m2
+    ]);
+
+    res.status(201).json({ message: 'Registro de termopanel guardado correctamente' });
   } catch (error) {
     console.error('Error insertando Termopanel:', error);
-    res.sendStatus(500);
+    res.status(500).json({ error: 'Error al registrar termopanel' });
   }
 });
 
+
 // 🔹 Agregar Instalación
 router.post('/instalacion', async (req, res) => {
-  const { fecha, nombre_cliente, m2_rectificaciones, observaciones, valor_m2 } = req.body;
+  const { fecha, cliente, m2, observaciones, valor_m2 } = req.body;
 
   try {
     await pool.query(`
       INSERT INTO instalaciones_taller (
-        fecha, nombre_cliente, m2_rectificaciones, observaciones, valor_m2
-      ) VALUES ($1,$2,$3,$4,$5)
-    `, [fecha, nombre_cliente, m2_rectificaciones, observaciones, valor_m2]);
-    res.sendStatus(200);
+        fecha, cliente, m2, observaciones, valor_m2
+      ) VALUES ($1, $2, $3, $4, $5)
+    `, [fecha, cliente, m2, observaciones, valor_m2]);
+
+    res.status(201).json({ message: 'Instalación registrada correctamente' });
   } catch (error) {
     console.error('Error insertando Instalación:', error);
-    res.sendStatus(500);
+    res.status(500).json({ error: 'Error al registrar instalación' });
   }
 });
+
 
 // 🔸 Obtener registros por mes/año
 const generarFiltroFecha = (mes, anio) => {
