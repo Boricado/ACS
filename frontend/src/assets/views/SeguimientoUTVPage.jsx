@@ -187,15 +187,16 @@ const calcularUTV = (item) => {
             <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
             <div className="accordion-body">
                 <div className="row g-2">
-                <div className="col-md-4">
+                {/* Primera fila de campos generales */}
+                <div className="col-md-3">
                     <label>Fecha</label>
                     <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
                 </div>
-                <div className="col-md-4">
+                <div className="col-md-3">
                     <label>Nombre Pauta</label>
                     <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
                 </div>
-                <div className="col-md-4">
+                <div className="col-md-3">
                     <label>N° Pauta</label>
                     <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
                 </div>
@@ -208,55 +209,64 @@ const calcularUTV = (item) => {
                     </select>
                 </div>
 
-                {/* Grupo de ventanas */}
-                <div className="col-md-3">
-                    <label>Doble Corredera</label>
-                    <input type="number" className="form-control" name="doble_corredera" value={utv.doble_corredera} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Proyectante</label>
-                    <input type="number" className="form-control" name="proyectante" value={utv.proyectante} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Fijo</label>
-                    <input type="number" className="form-control" name="fijo" value={utv.fijo} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Oscilobatiente</label>
-                    <input type="number" className="form-control" name="oscilobatiente" value={utv.oscilobatiente} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Doble corredera + fijo</label>
-                    <input type="number" className="form-control" name="doble_corredera_fijo" value={utv.doble_corredera_fijo} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Marco Puerta</label>
-                    <input type="number" className="form-control" name="marco_puerta" value={utv.marco_puerta} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Marco Adicionales</label>
-                    <input type="number" className="form-control" name="marcos_adicionales" value={utv.marcos_adicionales} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Fijo + Corredera</label>
-                    <input type="number" className="form-control" name="fijo_mas_corredera" value={utv.fijo_mas_corredera} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-3">
-                    <label>Otro</label>
-                    <input type="number" className="form-control" name="otro" value={utv.otro} onChange={e => handleChange(e, setUTV)} />
+                {/* Columna izquierda: Inputs */}
+                <div className="col-md-6">
+                    {[
+                    { name: "fijo", label: "Fijo" },
+                    { name: "fijo_mas_corredera", label: <strong>Fijo + corredera</strong> },
+                    { name: "proyectante", label: "Proyectante" },
+                    { name: "oscilobatiente", label: "Oscilobatiente" },
+                    { name: "doble_corredera", label: "Doble Corredera" },
+                    { name: "marco_puerta", label: "Marco Puerta" },
+                    { name: "marcos_adicionales", label: "Marco Adicionales" },
+                    { name: "otro", label: "Otro" },
+                    ].map((item, idx) => (
+                    <div className="d-flex mb-2 align-items-center" key={idx}>
+                        <input
+                        type="number"
+                        className="form-control me-2"
+                        style={{ width: '80px' }}
+                        name={item.name}
+                        value={utv[item.name]}
+                        onChange={e => handleChange(e, setUTV)}
+                        />
+                        <span>{item.label}</span>
+                    </div>
+                    ))}
                 </div>
 
+                {/* Columna derecha: Observaciones y valor m² */}
                 <div className="col-md-6">
+                    <div className="mb-2">
                     <label>Obs. Marcos</label>
-                    <input type="text" className="form-control" name="comentario_marcos" value={utv.comentario_marcos} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-6">
+                    <input
+                        type="text"
+                        className="form-control"
+                        name="comentario_marcos"
+                        value={utv.comentario_marcos}
+                        onChange={e => handleChange(e, setUTV)}
+                    />
+                    </div>
+                    <div className="mb-2">
                     <label>Obs. Otro</label>
-                    <input type="text" className="form-control" name="comentario_otro" value={utv.comentario_otro} onChange={e => handleChange(e, setUTV)} />
-                </div>
-                <div className="col-md-4">
+                    <input
+                        type="text"
+                        className="form-control"
+                        name="comentario_otro"
+                        value={utv.comentario_otro}
+                        onChange={e => handleChange(e, setUTV)}
+                    />
+                    </div>
+                    <div className="mb-2">
                     <label>Valor m²</label>
-                    <input type="number" className="form-control" name="valor_m2" value={utv.valor_m2} onChange={e => handleChange(e, setUTV)} />
+                    <input
+                        type="number"
+                        className="form-control"
+                        name="valor_m2"
+                        value={utv.valor_m2}
+                        onChange={e => handleChange(e, setUTV)}
+                    />
+                    </div>
                 </div>
 
                 <div className="col-md-12 text-end mt-3">
@@ -267,6 +277,7 @@ const calcularUTV = (item) => {
             </div>
         </div>
         </div>
+
 
 
         {/* Termopanel */}
