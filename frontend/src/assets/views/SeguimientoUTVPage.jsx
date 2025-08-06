@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const formatearFecha = (fechaISO) => {
+  if (!fechaISO) return '';
+  const fecha = new Date(fechaISO);
+  return fecha.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
   const [fechaActual] = useState(new Date());
@@ -363,7 +373,7 @@ const SeguimientoUTVPage = () => {
         </thead>
         <tbody>
             <tr>
-            <td>{utvData[utvData.length - 1].fecha}</td>
+            <td>{formatearFecha(utvData[utvData.length - 1].fecha)}</td>
             <td>{utvData[utvData.length - 1].nombre_pauta}</td>
             <td>{utvData[utvData.length - 1].tipo}</td>
             <td>{calcularUTV(utvData[utvData.length - 1])}</td>
@@ -388,12 +398,7 @@ const SeguimientoUTVPage = () => {
         <tbody>
             <tr>
             <td>UTV</td>
-            <td>
-                {utvData.reduce((acc, item) =>
-                acc + item.doble_corredera + item.proyectante + item.fijo +
-                item.oscilobatiente + item.doble_corredera_fijo + item.marco_puerta +
-                item.marcos_adicionales + item.otro, 0)}
-            </td>
+            <td>0</td>
             <td>
                 {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
             </td>
