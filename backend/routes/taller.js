@@ -41,7 +41,7 @@ router.post('/utv', async (req, res) => {
         otro,
         comentario_otro,
         valor_m2
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     `, [
       fecha,
       nombre_pauta,
