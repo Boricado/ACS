@@ -161,7 +161,7 @@ const CrearOCPage = () => {
   };
 
 const guardarOC = async () => {
-  if (!clienteSeleccionado.trim() || !presupuestoSeleccionado.trim()) {
+  if ((clienteSeleccionado || '').toString().trim() === '' || (presupuestoSeleccionado || '').toString().trim() === '') {
     alert('Debes seleccionar un cliente y un presupuesto antes de guardar la OC.');
     return;
   }
