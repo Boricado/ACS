@@ -126,28 +126,23 @@ const SeguimientoUTVPage = () => {
   }, [mesFiltro, anioFiltro]);
 
   const calcularUTV = (item) => {
-    let base = 1;
-    switch (item.tipo) {
-      case 'Fijo': base = 0.5; break;
-      case 'Doble corredera con fijo':
-      case 'Marco puerta': base = 2; break;
-      default: base = 1;
-    }
     const adicionales = item.marcos_adicionales ? parseFloat(item.marcos_adicionales || 0) * 0.5 : 0;
-    const tieneObservacion = item.comentario_marcos || item.comentario_otro;
-    const utv = tieneObservacion ? 0 : base + adicionales;
+    const base =
+      (item.doble_corredera || 0) * 1 +
+      (item.proyectante || 0) * 1 +
+      (item.fijo || 0) * 0.5 +
+      (item.oscilobatiente || 0) * 1 +
+      (item.doble_corredera_fijo || 0) * 2 +
+      (item.marco_puerta || 0) * 2 +
+      (item.otro || 0) * 1;
 
-    return utv;
-    };
+    return base + adicionales;
+  };
 
-  const totalUTV = utvData.reduce((acc, item) => {
-    const utv = calcularUTV(item);
-    return acc + utv * parseFloat(item.valor_m2 || 0);
-  }, 0);
-
+  const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
+  const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
-
 
   return (
     <div className="container">
