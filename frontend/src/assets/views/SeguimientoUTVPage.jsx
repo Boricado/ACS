@@ -337,8 +337,47 @@ const calcularUTV = (item) => {
                 </div>
 
                 <div className="col-md-12 text-end mt-3">
-                    <button className="btn btn-success" onClick={registrarUTV}>
-                        {modoEdicion ? 'Actualizar UTV' : 'Guardar UTV'}
+                    <button
+                    className="btn btn-success"
+                    onClick={async () => {
+                        try {
+                        if (modoEdicion) {
+                            await actualizarUTV(); // Tu función de PUT
+                            alert('UTV actualizado con éxito'); // o toast.success(...)
+                        } else {
+                            await registrarUTV(); // Tu función de POST
+                            alert('UTV guardado con éxito'); // o toast.success(...)
+                        }
+
+                        await cargarRegistros(); // Vuelve a cargar la tabla
+                        setModoEdicion(false); // Salir del modo edición si aplica
+
+                        // Limpiar el formulario si deseas:
+                        setUTV({
+                            fecha: '',
+                            nombre_pauta: '',
+                            numero_pauta: '',
+                            tipo: 'PVC',
+                            doble_corredera: 0,
+                            proyectante: 0,
+                            fijo: 0,
+                            oscilobatiente: 0,
+                            doble_corredera_fijo: 0,
+                            marco_puerta: 0,
+                            marco_adicionales: 0,
+                            otro: 0,
+                            observacion_marcos: '',
+                            observacion_otro: '',
+                            valor_m2: 0
+                        });
+
+                        } catch (error) {
+                        console.error('Error al guardar/actualizar UTV:', error);
+                        alert('Error al guardar/actualizar UTV');
+                        }
+                    }}
+                    >
+                    {modoEdicion ? 'Actualizar UTV' : 'Guardar UTV'}
                     </button>
                 </div>
                 </div>
