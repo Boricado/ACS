@@ -20,7 +20,8 @@ router.post('/utv', async (req, res) => {
     comentario_marcos,
     otro,
     comentario_otro,
-    valor_m2
+    valor_m2,
+    fijo_mas_corredera // ✅ nueva columna
   } = req.body;
 
   try {
@@ -40,8 +41,12 @@ router.post('/utv', async (req, res) => {
         comentario_marcos,
         otro,
         comentario_otro,
-        valor_m2
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        valor_m2,
+        fijo_mas_corredera
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15, $16
+      )
     `, [
       fecha,
       nombre_pauta,
@@ -57,7 +62,8 @@ router.post('/utv', async (req, res) => {
       comentario_marcos,
       otro,
       comentario_otro,
-      valor_m2
+      valor_m2,
+      fijo_mas_corredera // ✅ nuevo valor
     ]);
 
     res.status(201).json({ message: 'Registro de UTV guardado con éxito' });

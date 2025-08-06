@@ -135,19 +135,18 @@ const SeguimientoUTVPage = () => {
     obtenerDatos();
   }, [mesFiltro, anioFiltro]);
 
-  const calcularUTV = (item) => {
-    const adicionales = item.marcos_adicionales ? parseFloat(item.marcos_adicionales || 0) * 0.5 : 0;
-    const base =
-      (item.doble_corredera || 0) * 1 +
-      (item.proyectante || 0) * 1 +
-      (item.fijo || 0) * 0.5 +
-      (item.oscilobatiente || 0) * 1 +
-      (item.doble_corredera_fijo || 0) * 2 +
-      (item.marco_puerta || 0) * 2 +
-      (item.otro || 0) * 1;
+const calcularUTV = (item) => {
+    const fijo = parseFloat(item.fijo || 0) * 0.5;
+    const fijoCorredera = parseFloat(item.doble_corredera_fijo || 0) * 1.5;
+    const proyectante = parseFloat(item.proyectante || 0) * 1;
+    const oscilobatiente = parseFloat(item.oscilobatiente || 0) * 1;
+    const dobleCorredera = parseFloat(item.doble_corredera || 0) * 2;
+    const marcoPuerta = parseFloat(item.marco_puerta || 0) * 2.5;
+    const marcoAdicional = parseFloat(item.marcos_adicionales || 0) * 0.5;
+    const otro = parseFloat(item.otro || 0) * 0.25;
 
-    return base + adicionales;
-  };
+    return fijo + fijoCorredera + proyectante + oscilobatiente + dobleCorredera + marcoPuerta + marcoAdicional + otro;
+};
 
   const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
   const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
@@ -178,90 +177,95 @@ const SeguimientoUTVPage = () => {
 
 
         {/* Formulario UTV */}
-            <div className="accordion my-3" id="accordionUTV">
-            <div className="accordion-item">
-                <h2 className="accordion-header" id="headingUTV">
-                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUTV" aria-expanded="false" aria-controls="collapseUTV">
-                    Registrar UTV
-                </button>
-                </h2>
-                <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
-                <div className="accordion-body">
-                    <div className="row g-2">
-                    <div className="col-md-4">
-                        <label>Fecha</label>
-                        <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>Nombre Pauta</label>
-                        <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>N° Pauta</label>
-                        <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Tipo</label>
-                        <select className="form-select" name="tipo" value={utv.tipo} onChange={e => handleChange(e, setUTV)}>
-                        <option value="PVC">PVC</option>
-                        <option value="Aluminio">Aluminio</option>
-                        <option value="Ambos">Ambos</option>
-                        </select>
-                    </div>
+        <div className="accordion my-3" id="accordionUTV">
+        <div className="accordion-item">
+            <h2 className="accordion-header" id="headingUTV">
+            <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUTV" aria-expanded="false" aria-controls="collapseUTV">
+                Registrar UTV
+            </button>
+            </h2>
+            <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
+            <div className="accordion-body">
+                <div className="row g-2">
+                <div className="col-md-4">
+                    <label>Fecha</label>
+                    <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-4">
+                    <label>Nombre Pauta</label>
+                    <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-4">
+                    <label>N° Pauta</label>
+                    <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Tipo</label>
+                    <select className="form-select" name="tipo" value={utv.tipo} onChange={e => handleChange(e, setUTV)}>
+                    <option value="PVC">PVC</option>
+                    <option value="Aluminio">Aluminio</option>
+                    <option value="Ambos">Ambos</option>
+                    </select>
+                </div>
 
-                    {/* Grupo de ventanas */}
-                    <div className="col-md-3">
-                        <label>Doble Corredera</label>
-                        <input type="number" className="form-control" name="doble_corredera" value={utv.doble_corredera} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Proyectante</label>
-                        <input type="number" className="form-control" name="proyectante" value={utv.proyectante} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Fijo</label>
-                        <input type="number" className="form-control" name="fijo" value={utv.fijo} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Oscilobatiente</label>
-                        <input type="number" className="form-control" name="oscilobatiente" value={utv.oscilobatiente} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Doble corredera + fijo</label>
-                        <input type="number" className="form-control" name="doble_corredera_fijo" value={utv.doble_corredera_fijo} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Marco Puerta</label>
-                        <input type="number" className="form-control" name="marco_puerta" value={utv.marco_puerta} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Marco Adicionales</label>
-                        <input type="number" className="form-control" name="marco_adicionales" value={utv.marco_adicionales} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Otro</label>
-                        <input type="number" className="form-control" name="otro" value={utv.otro} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-6">
-                        <label>Obs. Marcos</label>
-                        <input type="text" className="form-control" name="observacion_marcos" value={utv.observacion_marcos} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-6">
-                        <label>Obs. Otro</label>
-                        <input type="text" className="form-control" name="observacion_otro" value={utv.observacion_otro} onChange={e => handleChange(e, setUTV)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>Valor m²</label>
-                        <input type="number" className="form-control" name="valor_m2" value={utv.valor_m2} onChange={e => handleChange(e, setUTV)} />
-                    </div>
+                {/* Grupo de ventanas */}
+                <div className="col-md-3">
+                    <label>Doble Corredera</label>
+                    <input type="number" className="form-control" name="doble_corredera" value={utv.doble_corredera} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Proyectante</label>
+                    <input type="number" className="form-control" name="proyectante" value={utv.proyectante} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Fijo</label>
+                    <input type="number" className="form-control" name="fijo" value={utv.fijo} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Oscilobatiente</label>
+                    <input type="number" className="form-control" name="oscilobatiente" value={utv.oscilobatiente} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Doble corredera + fijo</label>
+                    <input type="number" className="form-control" name="doble_corredera_fijo" value={utv.doble_corredera_fijo} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Marco Puerta</label>
+                    <input type="number" className="form-control" name="marco_puerta" value={utv.marco_puerta} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Marco Adicionales</label>
+                    <input type="number" className="form-control" name="marcos_adicionales" value={utv.marcos_adicionales} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Fijo + Corredera</label>
+                    <input type="number" className="form-control" name="fijo_mas_corredera" value={utv.fijo_mas_corredera} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-3">
+                    <label>Otro</label>
+                    <input type="number" className="form-control" name="otro" value={utv.otro} onChange={e => handleChange(e, setUTV)} />
+                </div>
 
-                    <div className="col-md-12 text-end mt-3">
-                        <button className="btn btn-success" onClick={registrarUTV}>Guardar UTV</button>
-                    </div>
-                    </div>
+                <div className="col-md-6">
+                    <label>Obs. Marcos</label>
+                    <input type="text" className="form-control" name="comentario_marcos" value={utv.comentario_marcos} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-6">
+                    <label>Obs. Otro</label>
+                    <input type="text" className="form-control" name="comentario_otro" value={utv.comentario_otro} onChange={e => handleChange(e, setUTV)} />
+                </div>
+                <div className="col-md-4">
+                    <label>Valor m²</label>
+                    <input type="number" className="form-control" name="valor_m2" value={utv.valor_m2} onChange={e => handleChange(e, setUTV)} />
+                </div>
+
+                <div className="col-md-12 text-end mt-3">
+                    <button className="btn btn-success" onClick={registrarUTV}>Guardar UTV</button>
                 </div>
                 </div>
             </div>
+            </div>
+        </div>
         </div>
 
 
