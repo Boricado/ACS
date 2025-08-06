@@ -64,7 +64,7 @@ const cargarOrdenes = async () => {
         <input name="observacion" className="form-control" placeholder="Observación" value={filtro.observacion} onChange={handleFiltroChange} />
         <select name="estado" className="form-select" value={filtro.estado} onChange={handleFiltroChange}>
           <option>Pendiente</option>
-          <option>Completas</option>
+          <option>Completa</option>
           <option>Todas</option>
         </select>
       </div>
