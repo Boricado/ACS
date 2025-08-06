@@ -166,7 +166,7 @@ const guardarOC = async () => {
     return;
   }
 
-  if (!proveedores.some(p => p.proveedor.trim().toLowerCase() === proveedor.trim().toLowerCase())) {
+  if (!proveedores.some(p => (p.proveedor || '').trim().toLowerCase() === proveedor.trim().toLowerCase())) {
     alert('El proveedor ingresado no es válido o no existe en la base de datos.');
     return;
   }
@@ -235,7 +235,7 @@ return (
               setProveedor(nombre);
 
               const prov = proveedores.find(
-                p => p.proveedor && p.proveedor.trim().toLowerCase() === nombre.trim().toLowerCase()
+                p => (p.proveedor || '').toString().trim().toLowerCase() === nombre.trim().toLowerCase()
               );
 
               setRutProveedor(prov?.rut || '');
