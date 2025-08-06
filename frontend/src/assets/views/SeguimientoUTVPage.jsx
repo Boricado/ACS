@@ -1,44 +1,120 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { format } from 'date-fns';
 
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
-  const hoy = new Date();
-  const [mesFiltro, setMesFiltro] = useState((hoy.getMonth() + 1).toString().padStart(2, '0'));
-  const [anioFiltro, setAnioFiltro] = useState(hoy.getFullYear().toString());
+  const [fechaActual] = useState(new Date());
+
+  const [utv, setUTV] = useState({
+    fecha: '', nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
+    doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
+    doble_corredera_fijo: 0, marco_puerta: 0, marco_adicionales: 0, otro: 0,
+    observacion_marcos: '', observacion_otro: '', valor_m2: 3000
+  });
+
+  const [termopanel, setTermopanel] = useState({
+    fecha: '', nombre_cliente: '', cantidad: 0, ancho: 0, alto: 0,
+    m2: 0, observacion: '', valor_m2: 1500
+  });
+
+  const [instalacion, setInstalacion] = useState({
+    fecha: '', nombre_cliente: '', m2_rectificacion: 0,
+    observacion: '', valor_m2: 3000
+  });
 
   const [utvData, setUtvData] = useState([]);
   const [termopanelData, setTermopanelData] = useState([]);
   const [instalacionData, setInstalacionData] = useState([]);
 
-  const [formUtv, setFormUtv] = useState({
-    fecha: '', nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
-    doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
-    doble_corredera_fijo: 0, marco_puerta: 0, marcos_adicionales: 0,
-    comentario_marcos: '', otro: 0, comentario_otro: '', valor_m2: ''
+  const [mesFiltro, setMesFiltro] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
+  const [anioFiltro, setAnioFiltro] = useState(new Date().getFullYear().toString());
+
+  const handleChange = (e, setter) => {
+    const { name, value } = e.target;
+    setter(prev => ({ ...prev, [name]: value }));
+  };
+
+  const mapUTVtoBackend = () => ({
+    fecha: utv.fecha,
+    nombre_pauta: utv.nombre_pauta,
+    numero_pauta: utv.numero_pauta,
+    tipo: utv.tipo,
+    cantidad_doble_corredera: utv.doble_corredera,
+    cantidad_proyectante: utv.proyectante,
+    cantidad_fijo: utv.fijo,
+    cantidad_oscilobatiente: utv.oscilobatiente,
+    cantidad_doble_corredera_fijo: utv.doble_corredera_fijo,
+    cantidad_marco_puerta: utv.marco_puerta,
+    cantidad_marcos_adicionales: utv.marco_adicionales,
+    comentario_marcos_adicionales: utv.observacion_marcos,
+    cantidad_otro: utv.otro,
+    comentario_otro: utv.observacion_otro,
+    valor_m2: utv.valor_m2
   });
 
-  const [formTermopanel, setFormTermopanel] = useState({
-    fecha: '', nombre_cliente: '', cantidad: '', ancho_mm: '', alto_mm: '', m2: '', observaciones: '', valor_m2: ''
+  const mapTermopanelToBackend = () => ({
+    fecha: termopanel.fecha,
+    nombre_cliente: termopanel.nombre_cliente,
+    cantidad: termopanel.cantidad,
+    ancho_mm: termopanel.ancho,
+    alto_mm: termopanel.alto,
+    m2: termopanel.m2,
+    observaciones: termopanel.observacion,
+    valor_m2: termopanel.valor_m2
   });
 
-  const [formInstalacion, setFormInstalacion] = useState({
-    fecha: '', nombre_cliente: '', m2_rectificacion: '', observaciones: '', valor_m2: ''
+  const mapInstalacionToBackend = () => ({
+    fecha: instalacion.fecha,
+    nombre_cliente: instalacion.nombre_cliente,
+    m2_rectificaciones: instalacion.m2_rectificacion,
+    observaciones: instalacion.observacion,
+    valor_m2: instalacion.valor_m2
   });
+
+  const registrarUTV = async () => {
+    try {
+      await axios.post(`${API}api/taller/utv`, mapUTVtoBackend());
+      obtenerDatos();
+    } catch (error) {
+      console.error('Error al registrar UTV:', error);
+      alert('Error al guardar UTV.');
+    }
+  };
+
+  const registrarTermopanel = async () => {
+    try {
+      await axios.post(`${API}api/taller/termopanel`, mapTermopanelToBackend());
+      obtenerDatos();
+    } catch (error) {
+      console.error('Error al registrar termopanel:', error);
+      alert('Error al guardar termopanel.');
+    }
+  };
+
+  const registrarInstalacion = async () => {
+    try {
+      await axios.post(`${API}api/taller/instalaciones`, mapInstalacionToBackend());
+      obtenerDatos();
+    } catch (error) {
+      console.error('Error al registrar instalación:', error);
+      alert('Error al guardar instalación.');
+    }
+  };
 
   const obtenerDatos = async () => {
+    const params = { mes: mesFiltro, anio: anioFiltro };
     try {
       const [utvRes, termoRes, instRes] = await Promise.all([
-        axios.get(`${API}api/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`),
-        axios.get(`${API}api/taller/termopanel?mes=${mesFiltro}&anio=${anioFiltro}`),
-        axios.get(`${API}api/taller/instalaciones?mes=${mesFiltro}&anio=${anioFiltro}`)
+        axios.get(`${API}api/taller/utv`, { params }),
+        axios.get(`${API}api/taller/termopanel`, { params }),
+        axios.get(`${API}api/taller/instalaciones`, { params })
       ]);
       setUtvData(utvRes.data);
       setTermopanelData(termoRes.data);
       setInstalacionData(instRes.data);
-    } catch (err) {
-      console.error('Error al cargar datos:', err);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      alert('Error al cargar datos del taller.');
     }
   };
 
@@ -46,47 +122,14 @@ const SeguimientoUTVPage = () => {
     obtenerDatos();
   }, [mesFiltro, anioFiltro]);
 
-  const handleChangeUtv = e => {
-    const { name, value } = e.target;
-    setFormUtv({ ...formUtv, [name]: value });
-  };
+  const totalUTV = utvData.reduce((acc, item) => {
+    const totalCant = item.doble_corredera + item.proyectante + item.fijo + item.oscilobatiente + item.doble_corredera_fijo + item.marco_puerta + item.marco_adicionales + item.otro;
+    return acc + totalCant * parseFloat(item.valor_m2 || 0);
+  }, 0);
 
-  const handleChangeTermopanel = e => {
-    const { name, value } = e.target;
-    setFormTermopanel({ ...formTermopanel, [name]: value });
-  };
+  const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
+  const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
 
-  const handleChangeInstalacion = e => {
-    const { name, value } = e.target;
-    setFormInstalacion({ ...formInstalacion, [name]: value });
-  };
-
-  const registrarUtv = async () => {
-    try {
-      await axios.post(`${API}api/taller/utv`, formUtv);
-      obtenerDatos();
-    } catch (err) {
-      console.error('Error al registrar UTV:', err);
-    }
-  };
-
-  const registrarTermopanel = async () => {
-    try {
-      await axios.post(`${API}api/taller/termopanel`, formTermopanel);
-      obtenerDatos();
-    } catch (err) {
-      console.error('Error al registrar Termopanel:', err);
-    }
-  };
-
-  const registrarInstalacion = async () => {
-    try {
-      await axios.post(`${API}api/taller/instalaciones`, formInstalacion);
-      obtenerDatos();
-    } catch (err) {
-      console.error('Error al registrar Instalación:', err);
-    }
-  };
 
   return (
     <div className="container">
