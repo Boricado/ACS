@@ -187,7 +187,7 @@ const calcularUTV = (item) => {
             <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
             <div className="accordion-body">
                 <div className="row g-2">
-                {/* Primera fila de campos generales */}
+                {/* Cabecera */}
                 <div className="col-md-3">
                     <label>Fecha</label>
                     <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
@@ -209,17 +209,15 @@ const calcularUTV = (item) => {
                     </select>
                 </div>
 
-                {/* Columna izquierda: Inputs */}
+                {/* Lista de ventanas */}
                 <div className="col-md-6">
                     {[
                     { name: "fijo", label: "Fijo" },
-                    { name: "fijo_mas_corredera", label: <strong>Fijo + corredera</strong> },
+                    { name: "fijo_mas_corredera", label: "Fijo + corredera" },
                     { name: "proyectante", label: "Proyectante" },
                     { name: "oscilobatiente", label: "Oscilobatiente" },
                     { name: "doble_corredera", label: "Doble Corredera" },
-                    { name: "marco_puerta", label: "Marco Puerta" },
-                    { name: "marcos_adicionales", label: "Marco Adicionales" },
-                    { name: "otro", label: "Otro" },
+                    { name: "marco_puerta", label: "Marco Puerta" }
                     ].map((item, idx) => (
                     <div className="d-flex mb-2 align-items-center" key={idx}>
                         <input
@@ -227,36 +225,58 @@ const calcularUTV = (item) => {
                         className="form-control me-2"
                         style={{ width: '80px' }}
                         name={item.name}
-                        value={utv[item.name]}
+                        value={utv[item.name] || 0}
                         onChange={e => handleChange(e, setUTV)}
                         />
                         <span>{item.label}</span>
                     </div>
                     ))}
-                </div>
 
-                {/* Columna derecha: Observaciones y valor m² */}
-                <div className="col-md-6">
-                    <div className="mb-2">
-                    <label>Obs. Marcos</label>
+                    {/* Marco Adicionales con observación */}
+                    <div className="d-flex mb-2 align-items-center">
+                    <input
+                        type="number"
+                        className="form-control me-2"
+                        style={{ width: '80px' }}
+                        name="marcos_adicionales"
+                        value={utv.marcos_adicionales || 0}
+                        onChange={e => handleChange(e, setUTV)}
+                    />
+                    <span className="me-2">Marco Adicionales</span>
                     <input
                         type="text"
                         className="form-control"
+                        placeholder="Obs. Marcos"
                         name="comentario_marcos"
                         value={utv.comentario_marcos}
                         onChange={e => handleChange(e, setUTV)}
                     />
                     </div>
-                    <div className="mb-2">
-                    <label>Obs. Otro</label>
+
+                    {/* Otro con observación */}
+                    <div className="d-flex mb-2 align-items-center">
+                    <input
+                        type="number"
+                        className="form-control me-2"
+                        style={{ width: '80px' }}
+                        name="otro"
+                        value={utv.otro || 0}
+                        onChange={e => handleChange(e, setUTV)}
+                    />
+                    <span className="me-2">Otro</span>
                     <input
                         type="text"
                         className="form-control"
+                        placeholder="Obs. Otro"
                         name="comentario_otro"
                         value={utv.comentario_otro}
                         onChange={e => handleChange(e, setUTV)}
                     />
                     </div>
+                </div>
+
+                {/* Valor m2 */}
+                <div className="col-md-6">
                     <div className="mb-2">
                     <label>Valor m²</label>
                     <input
@@ -277,6 +297,7 @@ const calcularUTV = (item) => {
             </div>
         </div>
         </div>
+
 
 
 
