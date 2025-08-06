@@ -176,20 +176,19 @@ const SeguimientoUTVPage = () => {
     }
   };
 
-    const cargarRegistros = async () => {
-      try {
-        const res = await axios.get(`${API}/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
-        setUtvData(res.data);
-      } catch (error) {
-        console.error('Error al cargar registros UTV:', error);
-        // Manejar el error, por ejemplo, mostrando un mensaje al usuario
-      }
-    };
+    const cargarRegistros = async () => {
+      try {
+        const res = await axios.get(`${API}/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
+        setUtvData(res.data);
+      } catch (error) {
+        console.error('Error al cargar registros UTV:', error);
+        // Manejar el error, por ejemplo, mostrando un mensaje al usuario
+      }
+    };
 
-
-  useEffect(() => {
-    obtenerDatos();
-  }, [mesFiltro, anioFiltro]);
+  useEffect(() => {
+    obtenerDatos();
+    }, [mesFiltro, anioFiltro]);
 
 const calcularUTV = (item) => {
     const fijo = parseFloat(item.fijo || 0) * 0.5;
