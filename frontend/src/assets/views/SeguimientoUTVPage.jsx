@@ -36,8 +36,9 @@ const SeguimientoUTVPage = () => {
   const [termopanelData, setTermopanelData] = useState([]);
   const [instalacionData, setInstalacionData] = useState([]);
 
-  const [mesFiltro, setMesFiltro] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
-  const [anioFiltro, setAnioFiltro] = useState(new Date().getFullYear().toString());
+    const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
+    const [anio, setAnio] = useState(new Date().getFullYear().toString());
+
 
   const handleChange = (e, setter) => {
     const { name, value } = e.target;
@@ -458,27 +459,27 @@ const calcularUTV = (item) => {
 
 <>
   {/* Filtros */}
-  <div className="row my-3">
-    <div className="col-md-2">
-      <label>Mes</label>
-      <select className="form-select" value={mes} onChange={e => setMes(e.target.value)}>
-        {[...Array(12)].map((_, i) => (
-          <option key={i} value={i + 1}>{i + 1}</option>
-        ))}
-      </select>
-    </div>
-    <div className="col-md-2">
-      <label>Año</label>
-      <select className="form-select" value={anio} onChange={e => setAnio(e.target.value)}>
-        {[2024, 2025, 2026].map(a => (
-          <option key={a} value={a}>{a}</option>
-        ))}
-      </select>
-    </div>
-    <div className="col-md-2 align-self-end">
-      <button className="btn btn-primary" onClick={cargarRegistros}>Filtrar</button>
-    </div>
+<div className="row my-3">
+  <div className="col-md-2">
+    <label>Mes</label>
+    <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
+      {[...Array(12)].map((_, i) => (
+        <option key={i} value={(i + 1).toString().padStart(2, '0')}>
+          {(i + 1).toString().padStart(2, '0')}
+        </option>
+      ))}
+    </select>
   </div>
+  <div className="col-md-2">
+    <label>Año</label>
+    <select className="form-select" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)}>
+      {[2024, 2025, 2026].map(a => (
+        <option key={a} value={a.toString()}>{a}</option>
+      ))}
+    </select>
+  </div>
+</div>
+
 
   {/* Tabla */}
   {utvData.length > 0 ? (
