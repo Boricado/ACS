@@ -106,6 +106,15 @@ const SeguimientoUTVPage = () => {
     }
   };
 
+    const calcularUTV = (item) => {
+  let base = 1;
+  switch (item.tipo) {
+    case 'Fijo': base = 0.5; break;
+    case 'Doble corredera con fijo':
+    case 'Marco puerta': base = 2; break;
+    default: base = 1;
+  }
+
   const obtenerDatos = async () => {
     const params = { mes: mesFiltro, anio: anioFiltro };
     try {
@@ -134,15 +143,6 @@ const SeguimientoUTVPage = () => {
 
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
-
-  const calcularUTV = (item) => {
-  let base = 1;
-  switch (item.tipo) {
-    case 'Fijo': base = 0.5; break;
-    case 'Doble corredera con fijo':
-    case 'Marco puerta': base = 2; break;
-    default: base = 1;
-  }
 
   const adicionales = item.marcos_adicionales ? item.marcos_adicionales * 0.5 : 0;
   const utv = item.comentario_marcos || item.comentario_otro ? 0 : base + adicionales;
