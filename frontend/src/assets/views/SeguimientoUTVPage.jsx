@@ -133,10 +133,12 @@ const SeguimientoUTVPage = () => {
       case 'Marco puerta': base = 2; break;
       default: base = 1;
     }
-    const adicionales = item.marcos_adicionales ? item.marcos_adicionales * 0.5 : 0;
-    const utv = item.comentario_marcos || item.comentario_otro ? 0 : base + adicionales;
+    const adicionales = item.marcos_adicionales ? parseFloat(item.marcos_adicionales || 0) * 0.5 : 0;
+    const tieneObservacion = item.comentario_marcos || item.comentario_otro;
+    const utv = tieneObservacion ? 0 : base + adicionales;
+
     return utv;
-  };
+    };
 
   const totalUTV = utvData.reduce((acc, item) => {
     const utv = calcularUTV(item);
