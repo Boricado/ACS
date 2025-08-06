@@ -433,7 +433,7 @@ return (
             onChange={(e) => {
               const nombre = (e.target.value || '').trim();
               setClienteNombre(nombre);
-              const cliente = clientes.find(c => c.nombre === nombre);
+              const cliente = clientes.find(c => (c.nombre || '').trim().toLowerCase() === nombre.toLowerCase());
               setClienteSeleccionado(cliente?.id || '');
               if (cliente) {
                 axios.get(`${API}api/presupuestos/cliente/${cliente.id}`).then(res => setPresupuestos(res.data));
