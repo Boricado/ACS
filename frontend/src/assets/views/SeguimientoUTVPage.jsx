@@ -34,42 +34,44 @@ const SeguimientoUTVPage = () => {
     setter(prev => ({ ...prev, [name]: value }));
   };
 
-  const mapUTVtoBackend = () => ({
+    const mapUTVtoBackend = () => ({
     fecha: utv.fecha,
     nombre_pauta: utv.nombre_pauta,
     numero_pauta: utv.numero_pauta,
     tipo: utv.tipo,
-    cantidad_doble_corredera: utv.doble_corredera,
-    cantidad_proyectante: utv.proyectante,
-    cantidad_fijo: utv.fijo,
-    cantidad_oscilobatiente: utv.oscilobatiente,
-    cantidad_doble_corredera_fijo: utv.doble_corredera_fijo,
-    cantidad_marco_puerta: utv.marco_puerta,
-    cantidad_marcos_adicionales: utv.marco_adicionales,
-    comentario_marcos_adicionales: utv.observacion_marcos,
-    cantidad_otro: utv.otro,
+    doble_corredera: utv.doble_corredera,
+    proyectante: utv.proyectante,
+    fijo: utv.fijo,
+    oscilobatiente: utv.oscilobatiente,
+    doble_corredera_fijo: utv.doble_corredera_fijo,
+    marco_puerta: utv.marco_puerta,
+    marcos_adicionales: utv.marco_adicionales, // 👈 cambia esto
+    comentario_marcos: utv.observacion_marcos, // 👈 cambia esto
+    otro: utv.otro,
     comentario_otro: utv.observacion_otro,
     valor_m2: utv.valor_m2
-  });
+    });
 
-  const mapTermopanelToBackend = () => ({
+
+    const mapTermopanelToBackend = () => ({
     fecha: termopanel.fecha,
-    nombre_cliente: termopanel.nombre_cliente,
+    cliente: termopanel.nombre_cliente, // ← corregido
     cantidad: termopanel.cantidad,
     ancho_mm: termopanel.ancho,
     alto_mm: termopanel.alto,
     m2: termopanel.m2,
-    observaciones: termopanel.observacion,
+    observaciones: termopanel.observacion, // ← corregido
     valor_m2: termopanel.valor_m2
-  });
-
-  const mapInstalacionToBackend = () => ({
+    });
+    
+    const mapInstalacionToBackend = () => ({
     fecha: instalacion.fecha,
-    nombre_cliente: instalacion.nombre_cliente,
-    m2_rectificaciones: instalacion.m2_rectificacion,
+    cliente: instalacion.nombre_cliente, // ← corregido
+    m2: instalacion.m2_rectificacion,    // ← corregido
     observaciones: instalacion.observacion,
     valor_m2: instalacion.valor_m2
-  });
+    });
+
 
   const registrarUTV = async () => {
     try {
