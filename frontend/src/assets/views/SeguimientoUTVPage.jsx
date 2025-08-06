@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const [modoEdicion, setModoEdicion] = useState(false);
+const [idEditando, setIdEditando] = useState(null);
+
+
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
   const fecha = new Date(fechaISO);
@@ -81,16 +85,61 @@ const SeguimientoUTVPage = () => {
     valor_m2: instalacion.valor_m2
   });
 
-  const registrarUTV = async () => {
+    const registrarUTV = async () => {
+        try {
+            if (modoEdicion && idEditando) {
+            await axios.put(`${API}/taller/utv/${idEditando}`, utv);
+            } else {
+            await axios.post(`${API}/taller/utv`, utv);
+            }
+
+            await cargarRegistros(); // recarga la tabla
+            setUTV({ ...formularioVacio }); // limpia el formulario
+            setModoEdicion(false);
+            setIdEditando(null);
+        } catch (error) {
+            console.error('Error al guardar UTV:', error);
+        }
+        };
+
+        const editarRegistro = (item) => {
+    setUTV({
+        fecha: item.fecha,
+        nombre_pauta: item.nombre_pauta,
+        numero_pauta: item.numero_pauta,
+        tipo: item.tipo,
+        fijo: item.fijo,
+        fijo_mas_corredera: item.fijo_mas_corredera,
+        proyectante: item.proyectante,
+        oscilobatiente: item.oscilobatiente,
+        doble_corredera: item.doble_corredera,
+        doble_corredera_fijo: item.doble_corredera_fijo,
+        marco_puerta: item.marco_puerta,
+        marcos_adicionales: item.marcos_adicionales,
+        comentario_marcos: item.comentario_marcos,
+        otro: item.otro,
+        comentario_otro: item.comentario_otro,
+        valor_m2: item.valor_m2,
+    });
+
+    setModoEdicion(true);
+    setIdEditando(item.id);
+    };
+
+
+    const eliminarRegistro = async (id) => {
+    if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
+
     try {
-      await axios.post(`${API}api/taller/utv`, mapUTVtoBackend());
-      alert('UTV registrado correctamente');
-      obtenerDatos();
+        await axios.delete(`${API}/taller/utv/${id}`);
+        await cargarRegistros(); // recarga tabla después de eliminar
     } catch (error) {
-      console.error('Error al registrar UTV:', error);
-      alert('Error al guardar UTV.');
+        console.error('Error al eliminar UTV:', error);
+        alert('No se pudo eliminar el registro.');
     }
-  };
+    };
+
+
 
   const registrarTermopanel = async () => {
     try {
@@ -131,6 +180,12 @@ const SeguimientoUTVPage = () => {
     }
   };
 
+    const cargarRegistros = async () => {
+  const res = await axios.get(`${API}/taller/utv?mes=${mes}&anio=${anio}`);
+  setUTVData(res.data);
+    };
+
+
   useEffect(() => {
     obtenerDatos();
   }, [mesFiltro, anioFiltro]);
@@ -152,6 +207,8 @@ const calcularUTV = (item) => {
   const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
+
+
 
   return (
     <div className="container">
@@ -290,7 +347,9 @@ const calcularUTV = (item) => {
                 </div>
 
                 <div className="col-md-12 text-end mt-3">
-                    <button className="btn btn-success" onClick={registrarUTV}>Guardar UTV</button>
+                    <button className="btn btn-success" onClick={registrarUTV}>
+                        {modoEdicion ? 'Actualizar UTV' : 'Guardar UTV'}
+                    </button>
                 </div>
                 </div>
             </div>
@@ -395,29 +454,64 @@ const calcularUTV = (item) => {
         </div>
         </div>
 
-    {utvData.length > 0 && (
+<>
+  {/* Filtros */}
+  <div className="row my-3">
+    <div className="col-md-2">
+      <label>Mes</label>
+      <select className="form-select" value={mes} onChange={e => setMes(e.target.value)}>
+        {[...Array(12)].map((_, i) => (
+          <option key={i} value={i + 1}>{i + 1}</option>
+        ))}
+      </select>
+    </div>
+    <div className="col-md-2">
+      <label>Año</label>
+      <select className="form-select" value={anio} onChange={e => setAnio(e.target.value)}>
+        {[2024, 2025, 2026].map(a => (
+          <option key={a} value={a}>{a}</option>
+        ))}
+      </select>
+    </div>
+    <div className="col-md-2 align-self-end">
+      <button className="btn btn-primary" onClick={cargarRegistros}>Filtrar</button>
+    </div>
+  </div>
+
+  {/* Tabla */}
+  {utvData.length > 0 ? (
     <>
-        <h4 className="mt-4">Último Registro Ingresado</h4>
-        <table className="table table-sm table-bordered">
+      <h4 className="mt-4">Registros UTV</h4>
+      <table className="table table-sm table-bordered">
         <thead className="table-light">
-            <tr>
+          <tr>
             <th>Fecha</th>
             <th>Nombre Pauta</th>
             <th>Tipo</th>
             <th>Suma UTV</th>
-            </tr>
+            <th>Acciones</th>
+          </tr>
         </thead>
         <tbody>
-            <tr>
-            <td>{formatearFecha(utvData[utvData.length - 1].fecha)}</td>
-            <td>{utvData[utvData.length - 1].nombre_pauta}</td>
-            <td>{utvData[utvData.length - 1].tipo}</td>
-            <td>{calcularUTV(utvData[utvData.length - 1])}</td>
+          {utvData.map(item => (
+            <tr key={item.id}>
+              <td>{formatearFecha(item.fecha)}</td>
+              <td>{item.nombre_pauta}</td>
+              <td>{item.tipo}</td>
+              <td>{calcularUTV(item)}</td>
+              <td>
+                <button className="btn btn-warning btn-sm me-2" onClick={() => editarRegistro(item)}>✏️ Editar</button>
+                <button className="btn btn-danger btn-sm" onClick={() => eliminarRegistro(item.id)}>🗑️ Eliminar</button>
+              </td>
             </tr>
+          ))}
         </tbody>
-        </table>
+      </table>
     </>
-    )}
+  ) : (
+    <p>No hay registros para este mes/año.</p>
+  )}
+</>
 
 
 

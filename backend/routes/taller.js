@@ -73,6 +73,86 @@ router.post('/utv', async (req, res) => {
   }
 });
 
+// PUT /api/taller/utv/:id
+router.put('/utv/:id', async (req, res) => {
+  const {
+    fecha,
+    nombre_pauta,
+    numero_pauta,
+    tipo,
+    fijo,
+    fijo_mas_corredera,
+    proyectante,
+    oscilobatiente,
+    doble_corredera,
+    doble_corredera_fijo,
+    marco_puerta,
+    marcos_adicionales,
+    comentario_marcos,
+    otro,
+    comentario_otro,
+    valor_m2
+  } = req.body;
+
+  try {
+    await pool.query(`
+      UPDATE utv_taller SET
+        fecha = $1,
+        nombre_pauta = $2,
+        numero_pauta = $3,
+        tipo = $4,
+        fijo = $5,
+        fijo_mas_corredera = $6,
+        proyectante = $7,
+        oscilobatiente = $8,
+        doble_corredera = $9,
+        doble_corredera_fijo = $10,
+        marco_puerta = $11,
+        marcos_adicionales = $12,
+        comentario_marcos = $13,
+        otro = $14,
+        comentario_otro = $15,
+        valor_m2 = $16
+      WHERE id = $17
+    `, [
+      fecha,
+      nombre_pauta,
+      numero_pauta,
+      tipo,
+      fijo,
+      fijo_mas_corredera,
+      proyectante,
+      oscilobatiente,
+      doble_corredera,
+      doble_corredera_fijo,
+      marco_puerta,
+      marcos_adicionales,
+      comentario_marcos,
+      otro,
+      comentario_otro,
+      valor_m2,
+      req.params.id
+    ]);
+
+    res.json({ message: 'Registro actualizado con éxito' });
+  } catch (error) {
+    console.error('Error al actualizar UTV:', error);
+    res.status(500).json({ error: 'Error al actualizar UTV' });
+  }
+});
+
+// DELETE /api/taller/utv/:id
+router.delete('/utv/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM utv_taller WHERE id = $1', [id]);
+    res.json({ message: 'Registro eliminado con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar UTV:', error);
+    res.status(500).json({ error: 'Error al eliminar UTV' });
+  }
+});
 
 // 🔹 Agregar Termopanel
 router.post('/termopanel', async (req, res) => {
