@@ -34,7 +34,7 @@ const SeguimientoUTVPage = () => {
     setter(prev => ({ ...prev, [name]: value }));
   };
 
-    const mapUTVtoBackend = () => ({
+  const mapUTVtoBackend = () => ({
     fecha: utv.fecha,
     nombre_pauta: utv.nombre_pauta,
     numero_pauta: utv.numero_pauta,
@@ -45,33 +45,31 @@ const SeguimientoUTVPage = () => {
     oscilobatiente: utv.oscilobatiente,
     doble_corredera_fijo: utv.doble_corredera_fijo,
     marco_puerta: utv.marco_puerta,
-    marcos_adicionales: utv.marco_adicionales, // 👈 cambia esto
-    comentario_marcos: utv.observacion_marcos, // 👈 cambia esto
+    marcos_adicionales: utv.marco_adicionales,
+    comentario_marcos: utv.observacion_marcos,
     otro: utv.otro,
     comentario_otro: utv.observacion_otro,
     valor_m2: utv.valor_m2
-    });
+  });
 
-
-    const mapTermopanelToBackend = () => ({
+  const mapTermopanelToBackend = () => ({
     fecha: termopanel.fecha,
-    cliente: termopanel.nombre_cliente, // ← corregido
+    cliente: termopanel.nombre_cliente,
     cantidad: termopanel.cantidad,
     ancho_mm: termopanel.ancho,
     alto_mm: termopanel.alto,
     m2: termopanel.m2,
-    observaciones: termopanel.observacion, // ← corregido
+    observaciones: termopanel.observacion,
     valor_m2: termopanel.valor_m2
-    });
-    
-    const mapInstalacionToBackend = () => ({
+  });
+
+  const mapInstalacionToBackend = () => ({
     fecha: instalacion.fecha,
-    cliente: instalacion.nombre_cliente, // ← corregido
-    m2: instalacion.m2_rectificacion,    // ← corregido
+    cliente: instalacion.nombre_cliente,
+    m2: instalacion.m2_rectificacion,
     observaciones: instalacion.observacion,
     valor_m2: instalacion.valor_m2
-    });
-
+  });
 
   const registrarUTV = async () => {
     try {
@@ -106,15 +104,6 @@ const SeguimientoUTVPage = () => {
     }
   };
 
-    const calcularUTV = (item) => {
-  let base = 1;
-  switch (item.tipo) {
-    case 'Fijo': base = 0.5; break;
-    case 'Doble corredera con fijo':
-    case 'Marco puerta': base = 2; break;
-    default: base = 1;
-  }
-
   const obtenerDatos = async () => {
     const params = { mes: mesFiltro, anio: anioFiltro };
     try {
@@ -136,18 +125,26 @@ const SeguimientoUTVPage = () => {
     obtenerDatos();
   }, [mesFiltro, anioFiltro]);
 
-    const totalUTV = utvData.reduce((acc, item) => {
+  const calcularUTV = (item) => {
+    let base = 1;
+    switch (item.tipo) {
+      case 'Fijo': base = 0.5; break;
+      case 'Doble corredera con fijo':
+      case 'Marco puerta': base = 2; break;
+      default: base = 1;
+    }
+    const adicionales = item.marcos_adicionales ? item.marcos_adicionales * 0.5 : 0;
+    const utv = item.comentario_marcos || item.comentario_otro ? 0 : base + adicionales;
+    return utv;
+  };
+
+  const totalUTV = utvData.reduce((acc, item) => {
     const utv = calcularUTV(item);
     return acc + utv * parseFloat(item.valor_m2 || 0);
-    }, 0);
+  }, 0);
 
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
-
-  const adicionales = item.marcos_adicionales ? item.marcos_adicionales * 0.5 : 0;
-  const utv = item.comentario_marcos || item.comentario_otro ? 0 : base + adicionales;
-  return utv;
-};
 
 
   return (
