@@ -87,9 +87,9 @@ const SeguimientoUTVPage = () => {
     const registrarUTV = async () => {
         try {
             if (modoEdicion && idEditando) {
-            await axios.put(`${API}/taller/utv/${idEditando}`, utv);
+            await axios.put(`${API}api/taller/utv/${idEditando}`, utv);
             } else {
-            await axios.post(`${API}/taller/utv`, utv);
+            await axios.post(`${API}api/taller/utv`, utv);
             }
 
             await cargarRegistros(); // recarga la tabla
@@ -130,7 +130,7 @@ const SeguimientoUTVPage = () => {
     if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
 
     try {
-        await axios.delete(`${API}/taller/utv/${id}`);
+        await axios.delete(`${API}api/taller/utv/${id}`);
         await cargarRegistros(); // recarga tabla después de eliminar
     } catch (error) {
         console.error('Error al eliminar UTV:', error);
@@ -181,7 +181,7 @@ const SeguimientoUTVPage = () => {
 
     const cargarRegistros = async () => {
       try {
-        const res = await axios.get(`${API}/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
+        const res = await axios.get(`${API}api/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
         setUtvData(res.data);
       } catch (error) {
         console.error('Error al cargar registros UTV:', error);
@@ -218,21 +218,6 @@ const calcularUTV = (item) => {
   return (
     <div className="container">
       <h2 className="mt-4">Seguimiento de UTV - Ingreso de Datos</h2>
-
-      <div className="row mb-3">
-        <div className="col-md-2">
-          <label>Mes</label>
-          <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
-            {[...Array(12)].map((_, i) => (
-              <option key={i} value={(i + 1).toString().padStart(2, '0')}>{(i + 1).toString().padStart(2, '0')}</option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <label>Año</label>
-          <input type="text" className="form-control" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)} />
-        </div>
-      </div>
 
       <h4 className="mt-4">Registrar Datos</h4>
       <div className="row">
