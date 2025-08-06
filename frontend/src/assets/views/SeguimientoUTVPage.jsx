@@ -38,6 +38,8 @@ const SeguimientoUTVPage = () => {
 
     const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
     const [anio, setAnio] = useState(new Date().getFullYear().toString());
+    const [mesFiltro, setMesFiltro] = useState(mes);
+    const [anioFiltro, setAnioFiltro] = useState(anio);
 
 
   const handleChange = (e, setter) => {
