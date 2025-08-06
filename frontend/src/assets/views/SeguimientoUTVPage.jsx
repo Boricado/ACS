@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const [modoEdicion, setModoEdicion] = useState(false);
-const [idEditando, setIdEditando] = useState(null);
-
-
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
   const fecha = new Date(fechaISO);
@@ -208,6 +204,8 @@ const calcularUTV = (item) => {
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
 
+    const [modoEdicion, setModoEdicion] = useState(false);
+    const [idEditando, setIdEditando] = useState(null);
 
 
   return (
