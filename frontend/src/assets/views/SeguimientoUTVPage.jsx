@@ -76,6 +76,7 @@ const SeguimientoUTVPage = () => {
   const registrarUTV = async () => {
     try {
       await axios.post(`${API}api/taller/utv`, mapUTVtoBackend());
+      alert('UTV registrado correctamente');
       obtenerDatos();
     } catch (error) {
       console.error('Error al registrar UTV:', error);
@@ -86,6 +87,7 @@ const SeguimientoUTVPage = () => {
   const registrarTermopanel = async () => {
     try {
       await axios.post(`${API}api/taller/termopanel`, mapTermopanelToBackend());
+      alert('Termopanel registrado correctamente');
       obtenerDatos();
     } catch (error) {
       console.error('Error al registrar termopanel:', error);
@@ -96,6 +98,7 @@ const SeguimientoUTVPage = () => {
   const registrarInstalacion = async () => {
     try {
       await axios.post(`${API}api/taller/instalaciones`, mapInstalacionToBackend());
+      alert('Instalación registrada correctamente');
       obtenerDatos();
     } catch (error) {
       console.error('Error al registrar instalación:', error);
@@ -124,13 +127,27 @@ const SeguimientoUTVPage = () => {
     obtenerDatos();
   }, [mesFiltro, anioFiltro]);
 
-  const totalUTV = utvData.reduce((acc, item) => {
-    const totalCant = item.doble_corredera + item.proyectante + item.fijo + item.oscilobatiente + item.doble_corredera_fijo + item.marco_puerta + item.marco_adicionales + item.otro;
-    return acc + totalCant * parseFloat(item.valor_m2 || 0);
-  }, 0);
+    const totalUTV = utvData.reduce((acc, item) => {
+    const utv = calcularUTV(item);
+    return acc + utv * parseFloat(item.valor_m2 || 0);
+    }, 0);
 
   const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
   const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
+
+  const calcularUTV = (item) => {
+  let base = 1;
+  switch (item.tipo) {
+    case 'Fijo': base = 0.5; break;
+    case 'Doble corredera con fijo':
+    case 'Marco puerta': base = 2; break;
+    default: base = 1;
+  }
+
+  const adicionales = item.marcos_adicionales ? item.marcos_adicionales * 0.5 : 0;
+  const utv = item.comentario_marcos || item.comentario_otro ? 0 : base + adicionales;
+  return utv;
+};
 
 
   return (
@@ -338,37 +355,76 @@ const SeguimientoUTVPage = () => {
         </div>
         </div>
 
-      <h4 className="mt-4">Resumen</h4>
-      <table className="table table-bordered mt-3">
+    {utvData.length > 0 && (
+    <>
+        <h4 className="mt-4">Último Registro Ingresado</h4>
+        <table className="table table-sm table-bordered">
         <thead className="table-light">
-          <tr>
-            <th>Sección</th>
-            <th>Cantidad / m²</th>
-            <th>Valor Acumulado</th>
-          </tr>
+            <tr>
+            <th>Fecha</th>
+            <th>Nombre Pauta</th>
+            <th>Tipo</th>
+            <th>Suma UTV</th>
+            </tr>
         </thead>
         <tbody>
-          <tr>
+            <tr>
+            <td>{utvData[utvData.length - 1].fecha}</td>
+            <td>{utvData[utvData.length - 1].nombre_pauta}</td>
+            <td>{utvData[utvData.length - 1].tipo}</td>
+            <td>{calcularUTV(utvData[utvData.length - 1])}</td>
+            </tr>
+        </tbody>
+        </table>
+    </>
+    )}
+
+
+
+        <h4 className="mt-4">Resumen</h4>
+        <table className="table table-bordered mt-3">
+        <thead className="table-light">
+            <tr>
+            <th>Sección</th>
+            <th>Cantidad / m²</th>
+            <th>Suma UTV</th>
+            <th>Valor Acumulado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
             <td>UTV</td>
-            <td>{utvData.reduce((acc, item) => acc + item.doble_corredera + item.proyectante + item.fijo + item.oscilobatiente + item.doble_corredera_fijo + item.marco_puerta + item.marco_adicionales + item.otro, 0)}</td>
+            <td>
+                {utvData.reduce((acc, item) =>
+                acc + item.doble_corredera + item.proyectante + item.fijo +
+                item.oscilobatiente + item.doble_corredera_fijo + item.marco_puerta +
+                item.marcos_adicionales + item.otro, 0)}
+            </td>
+            <td>
+                {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
+            </td>
             <td>${totalUTV.toLocaleString('es-CL')}</td>
-          </tr>
-          <tr>
+            </tr>
+            <tr>
             <td>Termopanel</td>
             <td>{termopanelData.reduce((acc, item) => acc + item.m2, 0)}</td>
+            <td>-</td>
             <td>${totalTermopanel.toLocaleString('es-CL')}</td>
-          </tr>
-          <tr>
+            </tr>
+            <tr>
             <td>Instalación</td>
             <td>{instalacionData.reduce((acc, item) => acc + item.m2_rectificacion, 0)}</td>
+            <td>-</td>
             <td>${totalInstalacion.toLocaleString('es-CL')}</td>
-          </tr>
-          <tr className="fw-bold">
+            </tr>
+            <tr className="fw-bold">
             <td>Total a Pagar</td>
-            <td colSpan={2}>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
-          </tr>
+            <td colSpan={2}>-</td>
+            <td>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
+            </tr>
         </tbody>
-      </table>
+        </table>
+
     </div>
 
   );
