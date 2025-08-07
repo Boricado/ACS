@@ -3,33 +3,28 @@ import axios from 'axios';
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
-  const fecha = new Date(fechaISO);
-  return fecha.toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+  const [anio, mes, dia] = fechaISO.split('-');
+  return `${dia}-${mes}-${anio}`; // Formato DD-MM-YYYY
+};
+
+const obtenerFechaHoy = () => {
+  return new Date().toISOString().split('T')[0];
 };
 
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
-  const [fechaActual] = useState(new Date());
+  const [fechaActual] = useState(obtenerFechaHoy());
 
   const [utv, setUTV] = useState({
-    fecha: '', nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
+    fecha: obtenerFechaHoy(), nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
     doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
     doble_corredera_fijo: 0, marco_puerta: 0, marco_adicionales: 0, otro: 0,
     observacion_marcos: '', observacion_otro: '', valor_m2: 3000
   });
 
   const [termopanel, setTermopanel] = useState({
-    fecha: '', nombre_cliente: '', cantidad: 0, ancho: 0, alto: 0,
+    fecha: obtenerFechaHoy(), nombre_cliente: '', cantidad: 0, ancho: 0, alto: 0,
     m2: 0, observacion: '', valor_m2: 1500
-  });
-
-  const [instalacion, setInstalacion] = useState({
-    fecha: '', nombre_cliente: '', m2_rectificacion: 0,
-    observacion: '', valor_m2: 3000
   });
 
   const [utvData, setUtvData] = useState([]);
@@ -380,7 +375,8 @@ return (
                           otro: 0,
                           observacion_marcos: '',
                           observacion_otro: '',
-                          valor_m2: 3000
+                          valor_m2: 3000,
+                          m2_instalador: 0,
                         });
 
                       } catch (error) {
@@ -505,9 +501,9 @@ return (
                       onChange={async (e) => {
                         try {
                           const nuevoInstalador = e.target.value;
-                          await axios.put(`${API}api/taller/utv/${item.id}`, {
+                          await axios.put(`${API}api/taller/utv/${item.id}/instalador`, {
                             instalador: nuevoInstalador,
-                          });
+                        });
                           await cargarRegistros(); // Recarga la tabla
                         } catch (err) {
                           console.error('Error al actualizar instalador:', err);

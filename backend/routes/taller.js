@@ -290,4 +290,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// PUT /api/taller/utv/:id/instalador
+router.put('/utv/:id/instalador', async (req, res) => {
+  const { instalador } = req.body;
+
+  if (!instalador && instalador !== '') {
+    return res.status(400).json({ error: 'Instalador es requerido' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE utv_taller SET instalador = $1 WHERE id = $2',
+      [instalador, req.params.id]
+    );
+    res.json({ message: 'Instalador actualizado con éxito' });
+  } catch (error) {
+    console.error('Error al actualizar instalador:', error);
+    res.status(500).json({ error: 'Error al actualizar instalador' });
+  }
+});
+
 export default router;
