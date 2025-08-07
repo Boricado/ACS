@@ -3,10 +3,7 @@ import axios from 'axios';
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
-  const fecha = new Date(fechaISO);
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const anio = fecha.getFullYear();
+  const [anio, mes, dia] = fechaISO.split('-');
   return `${dia}-${mes}-${anio}`;
 };
 
