@@ -3,8 +3,11 @@ import axios from 'axios';
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
-  const soloFecha = fechaISO.split('T')[0]; // "2025-08-02"
-  const [anio, mes, dia] = soloFecha.split('-');
+  const fecha = new Date(fechaISO);
+  fecha.setHours(fecha.getHours() + 4); // Sumar 4 horas (corrige UTC-4)
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const anio = fecha.getFullYear();
   return `${dia}-${mes}-${anio}`;
 };
 
