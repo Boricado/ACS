@@ -223,148 +223,147 @@ useEffect(() => {
 }, [termopanel.ancho, termopanel.alto]);
 
 
-  return (
-    <div className="container">
-      <h2 className="mt-4">Seguimiento de UTV - Ingreso de Datos</h2>
+return (
+  <div className="container">
+    <h2 className="mt-4">Seguimiento de UTV - Ingreso de Datos</h2>
 
-      <h4 className="mt-4">Registrar Datos</h4>
-      <div className="row">
+    <h4 className="mt-4">Registrar Datos</h4>
+    <div className="row">
 
-
-        {/* Formulario UTV */}
-        <div className="accordion my-3" id="accordionUTV">
+      {/* Formulario UTV */}
+      <div className="accordion my-3" id="accordionUTV">
         <div className="accordion-item">
-            <h2 className="accordion-header" id="headingUTV">
+          <h2 className="accordion-header" id="headingUTV">
             <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUTV" aria-expanded="false" aria-controls="collapseUTV">
-                Registrar UTV
+              Registrar UTV
             </button>
-            </h2>
-            <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
+          </h2>
+          <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
             <div className="accordion-body">
-                <div className="row g-2">
+              <div className="row g-2">
                 {/* Cabecera */}
                 <div className="col-md-3">
-                    <label>Fecha</label>
-                    <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
+                  <label>Fecha</label>
+                  <input type="date" className="form-control" name="fecha" value={utv.fecha} onChange={e => handleChange(e, setUTV)} />
                 </div>
                 <div className="col-md-3">
-                    <label>Nombre Pauta</label>
-                    <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
+                  <label>Nombre Pauta</label>
+                  <input type="text" className="form-control" name="nombre_pauta" value={utv.nombre_pauta} onChange={e => handleChange(e, setUTV)} />
                 </div>
                 <div className="col-md-3">
-                    <label>N° Pauta</label>
-                    <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
+                  <label>N° Pauta</label>
+                  <input type="text" className="form-control" name="numero_pauta" value={utv.numero_pauta} onChange={e => handleChange(e, setUTV)} />
                 </div>
                 <div className="col-md-3">
-                    <label>Tipo</label>
-                    <select className="form-select" name="tipo" value={utv.tipo} onChange={e => handleChange(e, setUTV)}>
+                  <label>Tipo</label>
+                  <select className="form-select" name="tipo" value={utv.tipo} onChange={e => handleChange(e, setUTV)}>
                     <option value="PVC">PVC</option>
                     <option value="Aluminio">Aluminio</option>
                     <option value="Ambos">Ambos</option>
-                    </select>
+                  </select>
                 </div>
 
                 {/* Lista de ventanas */}
                 <div className="col-md-6">
-                    {[
+                  {[
                     { name: "fijo", label: "Fijo" },
                     { name: "fijo_mas_corredera", label: "Fijo + corredera" },
                     { name: "proyectante", label: "Proyectante" },
                     { name: "oscilobatiente", label: "Oscilobatiente" },
                     { name: "doble_corredera", label: "Doble Corredera" },
                     { name: "marco_puerta", label: "Marco Puerta" }
-                    ].map((item, idx) => (
+                  ].map((item, idx) => (
                     <div className="d-flex mb-2 align-items-center" key={idx}>
-                        <input
+                      <input
                         type="number"
                         className="form-control me-2"
                         style={{ width: '80px' }}
                         name={item.name}
                         value={utv[item.name] || 0}
                         onChange={e => handleChange(e, setUTV)}
-                        />
-                        <span>{item.label}</span>
+                      />
+                      <span>{item.label}</span>
                     </div>
-                    ))}
+                  ))}
 
-                    {/* Marco Adicionales con observación */}
-                    <div className="d-flex mb-2 align-items-center">
+                  {/* Marco Adicionales con observación */}
+                  <div className="d-flex mb-2 align-items-center">
                     <input
-                        type="number"
-                        className="form-control me-2"
-                        style={{ width: '80px' }}
-                        name="marcos_adicionales"
-                        value={utv.marcos_adicionales || 0}
-                        onChange={e => handleChange(e, setUTV)}
+                      type="number"
+                      className="form-control me-2"
+                      style={{ width: '80px' }}
+                      name="marcos_adicionales"
+                      value={utv.marcos_adicionales || 0}
+                      onChange={e => handleChange(e, setUTV)}
                     />
                     <span className="me-2">Marco Adicionales</span>
                     <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Obs. Marcos"
-                        name="comentario_marcos"
-                        value={utv.comentario_marcos}
-                        onChange={e => handleChange(e, setUTV)}
+                      type="text"
+                      className="form-control"
+                      placeholder="Obs. Marcos"
+                      name="comentario_marcos"
+                      value={utv.comentario_marcos}
+                      onChange={e => handleChange(e, setUTV)}
                     />
-                    </div>
+                  </div>
 
-                    {/* Otro con observación */}
-                    <div className="d-flex mb-2 align-items-center">
+                  {/* Otro con observación */}
+                  <div className="d-flex mb-2 align-items-center">
                     <input
-                        type="number"
-                        className="form-control me-2"
-                        style={{ width: '80px' }}
-                        name="otro"
-                        value={utv.otro || 0}
-                        onChange={e => handleChange(e, setUTV)}
+                      type="number"
+                      className="form-control me-2"
+                      style={{ width: '80px' }}
+                      name="otro"
+                      value={utv.otro || 0}
+                      onChange={e => handleChange(e, setUTV)}
                     />
                     <span className="me-2">Otro</span>
                     <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Obs. Otro"
-                        name="comentario_otro"
-                        value={utv.comentario_otro}
-                        onChange={e => handleChange(e, setUTV)}
+                      type="text"
+                      className="form-control"
+                      placeholder="Obs. Otro"
+                      name="comentario_otro"
+                      value={utv.comentario_otro}
+                      onChange={e => handleChange(e, setUTV)}
                     />
-                    </div>
+                  </div>
                 </div>
 
                 {/* Valor m2 */}
                 <div className="col-md-6">
-                    <div className="mb-2">
+                  <div className="mb-2">
                     <label>Valor m²</label>
                     <input
-                        type="number"
-                        className="form-control"
-                        name="valor_m2"
-                        value={utv.valor_m2}
-                        onChange={e => handleChange(e, setUTV)}
+                      type="number"
+                      className="form-control"
+                      name="valor_m2"
+                      value={utv.valor_m2}
+                      onChange={e => handleChange(e, setUTV)}
                     />
-                    </div>
-                    <div className="mb-2">
-                        <label>M² Totales</label>
-                        <input
-                        type="number"
-                        className="form-control"
-                        name="m2_instalador"
-                        value={utv.m2_instalador}
-                        onChange={e => handleChange(e, setUTV)}
-                        />
-                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <label>M² Totales</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="m2_instalador"
+                      value={utv.m2_instalador}
+                      onChange={e => handleChange(e, setUTV)}
+                    />
+                  </div>
                 </div>
 
                 <div className="col-md-12 text-end mt-3">
-                    <button
+                  <button
                     className="btn btn-success"
                     onClick={async () => {
-                        try {
+                      try {
                         if (modoEdicion) {
-                            await actualizarUTV(); // Tu función de PUT
-                            alert('UTV actualizado con éxito'); // o toast.success(...)
+                          await actualizarUTV(); // Tu función de PUT
+                          alert('UTV actualizado con éxito'); // o toast.success(...)
                         } else {
-                            await registrarUTV(); // Tu función de POST
-                            alert('UTV guardado con éxito'); // o toast.success(...)
+                          await registrarUTV(); // Tu función de POST
+                          alert('UTV guardado con éxito'); // o toast.success(...)
                         }
 
                         await cargarRegistros(); // Vuelve a cargar la tabla
@@ -372,222 +371,213 @@ useEffect(() => {
 
                         // Limpiar el formulario si deseas:
                         setUTV({
-                            fecha: '',
-                            nombre_pauta: '',
-                            numero_pauta: '',
-                            tipo: 'PVC',
-                            doble_corredera: 0,
-                            proyectante: 0,
-                            fijo: 0,
-                            oscilobatiente: 0,
-                            doble_corredera_fijo: 0,
-                            marco_puerta: 0,
-                            marco_adicionales: 0,
-                            otro: 0,
-                            observacion_marcos: '',
-                            observacion_otro: '',
-                            valor_m2: 0
+                          fecha: '',
+                          nombre_pauta: '',
+                          numero_pauta: '',
+                          tipo: 'PVC',
+                          doble_corredera: 0,
+                          proyectante: 0,
+                          fijo: 0,
+                          oscilobatiente: 0,
+                          doble_corredera_fijo: 0,
+                          marco_puerta: 0,
+                          marco_adicionales: 0,
+                          otro: 0,
+                          observacion_marcos: '',
+                          observacion_otro: '',
+                          valor_m2: 0
                         });
 
-                        } catch (error) {
+                      } catch (error) {
                         console.error('Error al guardar/actualizar UTV:', error);
                         alert('Error al guardar/actualizar UTV');
-                        }
+                      }
                     }}
-                    >
+                  >
                     {modoEdicion ? 'Actualizar UTV' : 'Guardar UTV'}
-                    </button>
+                  </button>
                 </div>
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Termopanel */}
+      <div className="accordion my-3" id="accordionTermopanel">
+        <div className="accordion-item">
+          <h2 className="accordion-header" id="headingTermopanel">
+            <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTermopanel" aria-expanded="false" aria-controls="collapseTermopanel">
+              Registrar Termopanel
+            </button>
+          </h2>
+          <div id="collapseTermopanel" className="accordion-collapse collapse" aria-labelledby="headingTermopanel" data-bs-parent="#accordionTermopanel">
+            <div className="accordion-body">
+              <div className="row g-2">
+                <div className="col-md-4">
+                  <label>Fecha</label>
+                  <input type="date" name="fecha" className="form-control" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-4">
+                  <label>Cliente</label>
+                  <input type="text" name="nombre_cliente" className="form-control" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-4">
+                  <label>Cantidad</label>
+                  <input type="number" name="cantidad" className="form-control" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-3">
+                  <label>Ancho (mm)</label>
+                  <input type="number" name="ancho" className="form-control" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-3">
+                  <label>Alto (mm)</label>
+                  <input type="number" name="alto" className="form-control" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-3">
+                  <label>M²</label>
+                  <input type="number" name="m2" className="form-control" value={termopanel.m2} readOnly />
+                </div>
+                <div className="col-md-3">
+                  <label>Valor m²</label>
+                  <input type="number" name="valor_m2" className="form-control" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-12">
+                  <label>Observación</label>
+                  <input type="text" name="observacion" className="form-control" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
+                </div>
+                <div className="col-md-12 text-end mt-3">
+                  <button className="btn btn-success" onClick={registrarTermopanel}>Guardar Termopanel</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
+      {/* Filtros */}
+      <div className="row my-3">
+        <div className="col-md-2">
+          <label>Mes</label>
+          <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
+            {[...Array(12)].map((_, i) => (
+              <option key={i} value={(i + 1).toString().padStart(2, '0')}>
+                {(i + 1).toString().padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label>Año</label>
+          <select className="form-select" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)}>
+            {[2024, 2025, 2026].map(a => (
+              <option key={a} value={a.toString()}>{a}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
+      {/* Tabla */}
+      {utvData.length > 0 ? (
+        <>
+          <h4 className="mt-4">Registros UTV</h4>
+          <table className="table table-sm table-bordered">
+            <thead className="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th>Nombre Pauta</th>
+                <th>Tipo</th>
+                <th>Suma UTV</th>
+                <th>Acciones</th>
+                <th>Instalador</th>
+              </tr>
+            </thead>
+            <tbody>
+              {utvData.map(item => (
+                <tr key={item.id}>
+                  <td>{formatearFecha(item.fecha)}</td>
+                  <td>{item.nombre_pauta}</td>
+                  <td>{item.tipo}</td>
+                  <td>{calcularUTV(item)}</td>
+                  <td>
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => editarRegistro(item)}>✏️ Editar</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => eliminarRegistro(item.id)}>🗑️ Eliminar</button>
+                  </td>
+                  <td>
+                    <select
+                      className="form-select form-select-sm"
+                      value={item.instalador || ''}
+                      onChange={async (e) => {
+                        try {
+                          const nuevoInstalador = e.target.value;
+                          await axios.put(`${API}/taller/utv/${item.id}`, {
+                            instalador: nuevoInstalador,
+                          });
+                          await cargarRegistros(); // Recarga la tabla
+                        } catch (err) {
+                          console.error('Error al actualizar instalador:', err);
+                          alert('No se pudo actualizar el instalador.');
+                        }
+                      }}
+                    >
+                      <option value="">-</option>
+                      <option value="Bernardo">Bernardo</option>
+                      <option value="Alumce">Alumce</option>
+                      <option value="Manuel">Manuel</option>
+                      <option value="Osmani">Osmani</option>
+                      <option value="José">José</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : (
+        <p>No hay registros para este mes/año.</p>
+      )}
 
-
-        {/* Termopanel */}
-            <div className="accordion my-3" id="accordionTermopanel">
-            <div className="accordion-item">
-                <h2 className="accordion-header" id="headingTermopanel">
-                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTermopanel" aria-expanded="false" aria-controls="collapseTermopanel">
-                    Registrar Termopanel
-                </button>
-                </h2>
-                <div id="collapseTermopanel" className="accordion-collapse collapse" aria-labelledby="headingTermopanel" data-bs-parent="#accordionTermopanel">
-                <div className="accordion-body">
-                    <div className="row g-2">
-                    <div className="col-md-4">
-                        <label>Fecha</label>
-                        <input type="date" name="fecha" className="form-control" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>Cliente</label>
-                        <input type="text" name="nombre_cliente" className="form-control" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>Cantidad</label>
-                        <input type="number" name="cantidad" className="form-control" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Ancho (mm)</label>
-                        <input type="number" name="ancho" className="form-control" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Alto (mm)</label>
-                        <input type="number" name="alto" className="form-control" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>M²</label>
-                        <input type="number" name="m2" className="form-control" value={termopanel.m2} readOnly />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Valor m²</label>
-                        <input type="number" name="valor_m2" className="form-control" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-12">
-                        <label>Observación</label>
-                        <input type="text" name="observacion" className="form-control" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
-                    </div>
-                    <div className="col-md-12 text-end mt-3">
-                        <button className="btn btn-success" onClick={registrarTermopanel}>Guardar Termopanel</button>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            </div>
-
-<>
-  {/* Filtros */}
-<div className="row my-3">
-  <div className="col-md-2">
-    <label>Mes</label>
-    <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
-      {[...Array(12)].map((_, i) => (
-        <option key={i} value={(i + 1).toString().padStart(2, '0')}>
-          {(i + 1).toString().padStart(2, '0')}
-        </option>
-      ))}
-    </select>
-  </div>
-  <div className="col-md-2">
-    <label>Año</label>
-    <select className="form-select" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)}>
-      {[2024, 2025, 2026].map(a => (
-        <option key={a} value={a.toString()}>{a}</option>
-      ))}
-    </select>
-  </div>
-</div>
-
-
-  {/* Tabla */}
-  {utvData.length > 0 ? (
-    <>
-      <h4 className="mt-4">Registros UTV</h4>
-      <table className="table table-sm table-bordered">
+      <h4 className="mt-4">Resumen</h4>
+      <table className="table table-bordered mt-3">
         <thead className="table-light">
           <tr>
-            <th>Fecha</th>
-            <th>Nombre Pauta</th>
-            <th>Tipo</th>
-            <th>Suma UTV</th>
-            <th>Acciones</th>
-            <th>Instalador</th>
-          </tr>
-        </thead>
-        <tbody>
-          {utvData.map(item => (
-            <tr key={item.id}>
-              <td>{formatearFecha(item.fecha)}</td>
-              <td>{item.nombre_pauta}</td>
-              <td>{item.tipo}</td>
-              <td>{calcularUTV(item)}</td>
-              <td>
-                <button className="btn btn-warning btn-sm me-2" onClick={() => editarRegistro(item)}>✏️ Editar</button>
-                <button className="btn btn-danger btn-sm" onClick={() => eliminarRegistro(item.id)}>🗑️ Eliminar</button>
-              </td>
-              <td>
-                <select
-                    className="form-select form-select-sm"
-                    value={item.instalador || ''}
-                    onChange={async (e) => {
-                    try {
-                        const nuevoInstalador = e.target.value;
-                        await axios.put(`${API}/taller/utv/${item.id}`, {
-                          instalador: nuevoInstalador,
-                        });
-                        await cargarRegistros(); // Recarga la tabla
-                    } catch (err) {
-                        console.error('Error al actualizar instalador:', err);
-                        alert('No se pudo actualizar el instalador.');
-                    }
-                    }}
-                >
-                    <option value="">-</option>
-                    <option value="Bernardo">Bernardo</option>
-                    <option value="Alumce">Alumce</option>
-                    <option value="Manuel">Manuel</option>
-                    <option value="Osmani">Osmani</option>
-                    <option value="José">José</option>
-                </select>
-               </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  ) : (
-    <p>No hay registros para este mes/año.</p>
-  )}
-</>
-
-
-
-        <h4 className="mt-4">Resumen</h4>
-        <table className="table table-bordered mt-3">
-        <thead className="table-light">
-            <tr>
             <th>Sección</th>
             <th>Cantidad / m²</th>
             <th>Suma UTV</th>
             <th>Valor Acumulado</th>
-            </tr>
+          </tr>
         </thead>
         <tbody>
-            <tr>
+          <tr>
             <td>UTV</td>
             <td>0</td>
             <td>
-                {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
+              {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
             </td>
             <td>${totalUTV.toLocaleString('es-CL')}</td>
-            </tr>
-            <tr>
+          </tr>
+          <tr>
             <td>Termopanel</td>
             <td>{termopanelData.reduce((acc, item) => acc + item.m2, 0)}</td>
             <td>-</td>
             <td>${totalTermopanel.toLocaleString('es-CL')}</td>
-            </tr>
-            <tr>
+          </tr>
+          <tr>
             <td>Instalación</td>
             <td>{instalacionData.reduce((acc, item) => acc + item.m2_rectificacion, 0)}</td>
             <td>-</td>
             <td>${totalInstalacion.toLocaleString('es-CL')}</td>
-            </tr>
-            <tr className="fw-bold">
+          </tr>
+          <tr className="fw-bold">
             <td>Total a Pagar</td>
             <td colSpan={2}>-</td>
             <td>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
-            </tr>
+          </tr>
         </tbody>
-        </table>
-
+      </table>
     </div>
-
-  );
+  </div>
+);
 };
 
 export default SeguimientoUTVPage;
