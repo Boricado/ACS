@@ -526,6 +526,7 @@ return (
                       <option value="Manuel">Manuel</option>
                       <option value="Osmani">Osmani</option>
                       <option value="José">José</option>
+                      <option value="Retiro en planta">Retiro en planta</option>
                     </select>
                   </td>
                 </tr>
