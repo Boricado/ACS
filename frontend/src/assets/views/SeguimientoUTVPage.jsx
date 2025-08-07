@@ -3,7 +3,8 @@ import axios from 'axios';
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
-  const [anio, mes, dia] = fechaISO.split('-');
+  const soloFecha = fechaISO.split('T')[0]; // "2025-08-02"
+  const [anio, mes, dia] = soloFecha.split('-');
   return `${dia}-${mes}-${anio}`;
 };
 
