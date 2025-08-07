@@ -119,6 +119,7 @@ const SeguimientoUTVPage = () => {
         otro: item.otro,
         comentario_otro: item.comentario_otro,
         valor_m2: item.valor_m2,
+        m2_instalador: item.m2_instalador || 0,
     });
 
     setModoEdicion(true);
@@ -357,18 +358,12 @@ return (
                   <button
                     className="btn btn-success"
                     onClick={async () => {
-                      try {
-                        if (modoEdicion) {
-                          await actualizarUTV(); // Tu función de PUT
-                          alert('UTV actualizado con éxito'); // o toast.success(...)
-                        } else {
-                          await registrarUTV(); // Tu función de POST
-                          alert('UTV guardado con éxito'); // o toast.success(...)
-                        }
+                        try {
+                            await registrarUTV(); // Esta maneja tanto creación como actualización
 
-                        await cargarRegistros(); // Vuelve a cargar la tabla
-                        setModoEdicion(false); // Salir del modo edición si aplica
-
+                            alert(modoEdicion ? 'UTV actualizado con éxito' : 'UTV guardado con éxito');
+                            await cargarRegistros();
+                            setModoEdicion(false);
                         // Limpiar el formulario si deseas:
                         setUTV({
                           fecha: '',
@@ -385,7 +380,7 @@ return (
                           otro: 0,
                           observacion_marcos: '',
                           observacion_otro: '',
-                          valor_m2: 0
+                          valor_m2: 3000
                         });
 
                       } catch (error) {
@@ -510,7 +505,7 @@ return (
                       onChange={async (e) => {
                         try {
                           const nuevoInstalador = e.target.value;
-                          await axios.put(`${API}/taller/utv/${item.id}`, {
+                          await axios.put(`${API}api/taller/utv/${item.id}`, {
                             instalador: nuevoInstalador,
                           });
                           await cargarRegistros(); // Recarga la tabla
