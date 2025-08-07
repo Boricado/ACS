@@ -20,6 +20,15 @@ const SalidasPage = () => {
   const [salidasHistorico, setSalidasHistorico] = useState([]);
   const [clienteTexto, setClienteTexto] = useState('');
 
+  const cargarSalidas = async () => {
+  try {
+    const res = await axios.get(`${API}api/salidas_inventario2`);
+    setSalidasHistorico(res.data);
+  } catch (err) {
+    console.error('Error al cargar salidas:', err);
+  }
+};
+
   const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -31,9 +40,7 @@ const SalidasPage = () => {
       .then(res => setClientes(res.data))
       .catch(err => console.error('Error al cargar clientes:', err));
 
-    axios.get(`${API}api/salidas_inventario2`)
-      .then(res => setSalidasHistorico(res.data))
-      .catch(err => console.error('Error al cargar salidas:', err));
+    cargarSalidas(); // ✅ ahora separado para poder reutilizar
   }, []);
 
   useEffect(() => {
@@ -117,6 +124,7 @@ const SalidasPage = () => {
       setCodigo('');
       setProducto('');
       setObservacion('');
+      await cargarSalidas(); // Recargar el historial de salidas
     } catch (error) {
       console.error('Error al registrar salida:', error);
       alert('Error al registrar salida');
