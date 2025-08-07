@@ -48,10 +48,10 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/SalidasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Salidas de Material</NavLink></li>
                 <li><NavLink to="/StockReservado" className={({ isActive }) => isActive ? 'active-link' : ''}>Stock reservado por OT</NavLink></li>
                 <li><NavLink to="/CrearSolicitudBodegaPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Solicitud de materiales a OT</NavLink></li>
-                <li><NavLink to="/SeguimientoObrasPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento Obras</NavLink></li>
                 <li><NavLink to="/AjusteStock" className={({ isActive }) => isActive ? 'active-link' : ''}>Ajuste de Stock/ Inventario</NavLink></li>
-                <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
+                <li><NavLink to="/OCPendientePage" className={({ isActive }) => isActive ? 'active-link' : ''}>OC Pendientes/Historico de Compras</NavLink></li>
               </ul>
+              <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
             </li>
           )}
 

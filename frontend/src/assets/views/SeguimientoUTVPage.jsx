@@ -106,7 +106,7 @@ const SeguimientoUTVPage = () => {
         numero_pauta: item.numero_pauta,
         tipo: item.tipo,
         fijo: item.fijo,
-        fijo_mas_corredera: item.fijo_mas_corredera,
+        doble_corredera_fijo: item.doble_corredera_fijo,
         proyectante: item.proyectante,
         oscilobatiente: item.oscilobatiente,
         doble_corredera: item.doble_corredera,
@@ -266,7 +266,7 @@ return (
                 <div className="col-md-6">
                   {[
                     { name: "fijo", label: "Fijo" },
-                    { name: "fijo_mas_corredera", label: "Fijo + corredera" },
+                    { name: "doble_corredera_fijo", label: "Fijo + corredera" },
                     { name: "proyectante", label: "Proyectante" },
                     { name: "oscilobatiente", label: "Oscilobatiente" },
                     { name: "doble_corredera", label: "Doble Corredera" },
