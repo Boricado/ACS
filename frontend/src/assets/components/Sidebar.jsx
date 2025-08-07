@@ -50,8 +50,8 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/CrearSolicitudBodegaPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Solicitud de materiales a OT</NavLink></li>
                 <li><NavLink to="/AjusteStock" className={({ isActive }) => isActive ? 'active-link' : ''}>Ajuste de Stock/ Inventario</NavLink></li>
                 <li><NavLink to="/OCPendientePage" className={({ isActive }) => isActive ? 'active-link' : ''}>OC Pendientes/Historico de Compras</NavLink></li>
+                <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
               </ul>
-              <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
             </li>
           )}
 
