@@ -9,7 +9,6 @@ const SalidasPage = () => {
   const [codigo, setCodigo] = useState('');
   const [producto, setProducto] = useState('');
   const [cantidadSalida, setCantidadSalida] = useState('');
-  const [precioUnitario, setPrecioUnitario] = useState('');
 
   const [clienteSeleccionado, setClienteSeleccionado] = useState('');
   const [clienteNombre, setClienteNombre] = useState('');
@@ -64,11 +63,9 @@ const SalidasPage = () => {
     const m = materiales.find(m => m.codigo.toString() === codigo);
     if (m) {
       setProducto(m.producto);
-      setPrecioUnitario(m.precio_unitario || '');
     } else {
       obtenerPrecioUltimo(codigo).then(precio => {
         setProducto('');
-        setPrecioUnitario(precio || '');
       });
     }
   }, [codigo]);
@@ -78,10 +75,8 @@ const SalidasPage = () => {
     const m = materiales.find(m => m.producto === producto);
     if (m) {
       setCodigo(m.codigo);
-      setPrecioUnitario(m.precio_unitario || '');
     } else {
       setCodigo('');
-      setPrecioUnitario('');
     }
   }, [producto]);
 
@@ -122,7 +117,6 @@ const SalidasPage = () => {
       setCantidadSalida('');
       setCodigo('');
       setProducto('');
-      setPrecioUnitario('');
       setObservacion('');
     } catch (error) {
       console.error('Error al registrar salida:', error);
@@ -172,16 +166,6 @@ const SalidasPage = () => {
             className="form-control"
             value={cantidadSalida}
             onChange={(e) => setCantidadSalida(e.target.value)}
-          />
-        </div>
-
-        <div className="col-md-3">
-          <label>Precio unitario</label>
-          <input
-            type="number"
-            className="form-control"
-            value={precioUnitario}
-            onChange={(e) => setPrecioUnitario(e.target.value)}
           />
         </div>
       </div>
