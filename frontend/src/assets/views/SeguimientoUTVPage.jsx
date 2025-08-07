@@ -459,48 +459,6 @@ useEffect(() => {
             </div>
             </div>
 
-
-        {/* Instalación */}
-        <div className="accordion my-3" id="accordionInstalacion">
-            <div className="accordion-item">
-                <h2 className="accordion-header" id="headingInstalacion">
-                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInstalacion" aria-expanded="false" aria-controls="collapseInstalacion">
-                    Registrar Instalación
-                </button>
-                </h2>
-                <div id="collapseInstalacion" className="accordion-collapse collapse" aria-labelledby="headingInstalacion" data-bs-parent="#accordionInstalacion">
-                <div className="accordion-body">
-                    <div className="row g-2">
-                    <div className="col-md-4">
-                        <label>Fecha</label>
-                        <input type="date" name="fecha" className="form-control" value={instalacion.fecha} onChange={(e) => handleChange(e, setInstalacion)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>Cliente</label>
-                        <input type="text" name="nombre_cliente" className="form-control" value={instalacion.nombre_cliente} onChange={(e) => handleChange(e, setInstalacion)} />
-                    </div>
-                    <div className="col-md-4">
-                        <label>m² Rectificación</label>
-                        <input type="number" name="m2_rectificacion" className="form-control" value={instalacion.m2_rectificacion} onChange={(e) => handleChange(e, setInstalacion)} />
-                    </div>
-                    <div className="col-md-12">
-                        <label>Observación</label>
-                        <input type="text" name="observacion" className="form-control" value={instalacion.observacion} onChange={(e) => handleChange(e, setInstalacion)} />
-                    </div>
-                    <div className="col-md-3">
-                        <label>Valor m²</label>
-                        <input type="number" name="valor_m2" className="form-control" value={instalacion.valor_m2} onChange={(e) => handleChange(e, setInstalacion)} />
-                    </div>
-                    <div className="col-md-12 text-end mt-3">
-                        <button className="btn btn-success" onClick={registrarInstalacion}>Guardar Instalación</button>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
-        </div>
-
 <>
   {/* Filtros */}
 <div className="row my-3">
@@ -554,12 +512,12 @@ useEffect(() => {
               <td>
                 <select
                     className="form-select form-select-sm"
-                    value={registro.instalador || ''}
+                    value={item.instalador || ''}
                     onChange={async (e) => {
                     try {
                         const nuevoInstalador = e.target.value;
-                        await axios.put(`${API}/taller/utv/${registro.id}`, {
-                        instalador: nuevoInstalador,
+                        await axios.put(`${API}/taller/utv/${item.id}`, {
+                          instalador: nuevoInstalador,
                         });
                         await cargarRegistros(); // Recarga la tabla
                     } catch (err) {
