@@ -109,7 +109,6 @@ const SalidasPage = () => {
         cliente_nombre: clienteNombre,
         presupuesto_numero: presupuestoNumero,
         nombre_obra: nombreObra,
-        precio_unitario: parseInt(precioUnitario),
         observacion: observacion?.trim() || ''
       });
 
