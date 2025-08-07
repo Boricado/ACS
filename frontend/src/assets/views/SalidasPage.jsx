@@ -19,6 +19,7 @@ const SalidasPage = () => {
   const [nombreObra, setNombreObra] = useState('');
   const [observacion, setObservacion] = useState('');
   const [salidasHistorico, setSalidasHistorico] = useState([]);
+  const [clienteTexto, setClienteTexto] = useState('');
 
   const API = import.meta.env.VITE_API_URL;
 
@@ -37,15 +38,17 @@ const SalidasPage = () => {
   }, []);
 
   useEffect(() => {
+    const cliente = clientes.find(c => c.id.toString() === clienteSeleccionado);
+    setClienteNombre(cliente?.nombre || '');
+    setClienteTexto(cliente?.nombre || '');
+
     if (clienteSeleccionado) {
-      const cliente = clientes.find(c => c.id === parseInt(clienteSeleccionado));
-      setClienteNombre(cliente?.nombre || '');
-      axios.get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
-        .then(res => setPresupuestos(res.data))
-        .catch(err => console.error('Error al obtener presupuestos:', err));
+      axios
+        .get(`${API}api/presupuestos/cliente/${clienteSeleccionado}`)
+        .then((res) => setPresupuestos(res.data))
+        .catch((err) => console.error('Error al obtener presupuestos:', err));
     } else {
       setPresupuestos([]);
-      setClienteNombre('');
     }
   }, [clienteSeleccionado]);
 
@@ -189,12 +192,17 @@ const SalidasPage = () => {
           <input
             className="form-control"
             list="lista_clientes"
-            value={
-              clientes.find(c => c.id.toString() === clienteSeleccionado)?.nombre || ''
-            }
+            value={clienteTexto}
             onChange={(e) => {
-              const cliente = clientes.find(c => c.nombre === e.target.value);
-              setClienteSeleccionado(cliente?.id?.toString() || '');
+              const nombreIngresado = e.target.value;
+              setClienteTexto(nombreIngresado);
+
+              const cliente = clientes.find(c => c.nombre === nombreIngresado);
+              if (cliente) {
+                setClienteSeleccionado(cliente.id.toString());
+              } else {
+                setClienteSeleccionado('');
+              }
             }}
             placeholder="Escriba nombre del cliente"
           />
