@@ -36,10 +36,10 @@ const SeguimientoUTVPage = () => {
   const [termopanelData, setTermopanelData] = useState([]);
   const [instalacionData, setInstalacionData] = useState([]);
 
-    const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
-    const [anio, setAnio] = useState(new Date().getFullYear().toString());
-    const [mesFiltro, setMesFiltro] = useState(mes);
-    const [anioFiltro, setAnioFiltro] = useState(anio);
+  const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
+  const [anio, setAnio] = useState(new Date().getFullYear().toString());
+  const [mesFiltro, setMesFiltro] = useState(mes);
+  const [anioFiltro, setAnioFiltro] = useState(anio);
 
 
   const handleChange = (e, setter) => {
@@ -206,13 +206,21 @@ const calcularUTV = (item) => {
     return fijo + fijoCorredera + proyectante + oscilobatiente + dobleCorredera + marcoPuerta + marcoAdicional + otro;
 };
 
-  const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
-  const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
-  const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
-  const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
+const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
+const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
+const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
+const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
 
-    const [modoEdicion, setModoEdicion] = useState(false);
-    const [idEditando, setIdEditando] = useState(null);
+const [modoEdicion, setModoEdicion] = useState(false);
+const [idEditando, setIdEditando] = useState(null);
+
+useEffect(() => {
+    const ancho = parseFloat(termopanel.ancho) || 0;
+    const alto = parseFloat(termopanel.alto) || 0;
+    const m2 = ((ancho / 1000) * (alto / 1000)).toFixed(2); // convierte de mm a m y calcula m2
+
+    setTermopanel(prev => ({ ...prev, m2 }));
+}, [termopanel.ancho, termopanel.alto]);
 
 
   return (
@@ -334,6 +342,16 @@ const calcularUTV = (item) => {
                         onChange={e => handleChange(e, setUTV)}
                     />
                     </div>
+                    <div className="mb-2">
+                        <label>M² Totales</label>
+                        <input
+                        type="number"
+                        className="form-control"
+                        name="m2_instalador"
+                        value={utv.m2_instalador}
+                        onChange={e => handleChange(e, setUTV)}
+                        />
+                    </div>
                 </div>
 
                 <div className="col-md-12 text-end mt-3">
@@ -422,7 +440,7 @@ const calcularUTV = (item) => {
                     </div>
                     <div className="col-md-3">
                         <label>M²</label>
-                        <input type="number" name="m2" className="form-control" value={termopanel.m2} onChange={(e) => handleChange(e, setTermopanel)} />
+                        <input type="number" name="m2" className="form-control" value={termopanel.m2} readOnly />
                     </div>
                     <div className="col-md-3">
                         <label>Valor m²</label>
@@ -519,6 +537,7 @@ const calcularUTV = (item) => {
             <th>Tipo</th>
             <th>Suma UTV</th>
             <th>Acciones</th>
+            <th>Instalador</th>
           </tr>
         </thead>
         <tbody>
@@ -532,6 +551,31 @@ const calcularUTV = (item) => {
                 <button className="btn btn-warning btn-sm me-2" onClick={() => editarRegistro(item)}>✏️ Editar</button>
                 <button className="btn btn-danger btn-sm" onClick={() => eliminarRegistro(item.id)}>🗑️ Eliminar</button>
               </td>
+              <td>
+                <select
+                    className="form-select form-select-sm"
+                    value={registro.instalador || ''}
+                    onChange={async (e) => {
+                    try {
+                        const nuevoInstalador = e.target.value;
+                        await axios.put(`${API}/taller/utv/${registro.id}`, {
+                        instalador: nuevoInstalador,
+                        });
+                        await cargarRegistros(); // Recarga la tabla
+                    } catch (err) {
+                        console.error('Error al actualizar instalador:', err);
+                        alert('No se pudo actualizar el instalador.');
+                    }
+                    }}
+                >
+                    <option value="">-</option>
+                    <option value="Bernardo">Bernardo</option>
+                    <option value="Alumce">Alumce</option>
+                    <option value="Manuel">Manuel</option>
+                    <option value="Osmani">Osmani</option>
+                    <option value="José">José</option>
+                </select>
+               </td>
             </tr>
           ))}
         </tbody>

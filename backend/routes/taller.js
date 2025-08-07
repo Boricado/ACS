@@ -21,7 +21,9 @@ router.post('/utv', async (req, res) => {
     otro,
     comentario_otro,
     valor_m2,
-    fijo_mas_corredera // ✅ nueva columna
+    fijo_mas_corredera,
+    m2_instalador,
+    instalador
   } = req.body;
 
   try {
@@ -42,10 +44,12 @@ router.post('/utv', async (req, res) => {
         otro,
         comentario_otro,
         valor_m2,
-        fijo_mas_corredera
+        fijo_mas_corredera,
+        m2_instalador,
+        instalador
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16
+        $11, $12, $13, $14, $15, $16, $17, $18, $19
       )
     `, [
       fecha,
@@ -63,7 +67,9 @@ router.post('/utv', async (req, res) => {
       otro,
       comentario_otro,
       valor_m2,
-      fijo_mas_corredera // ✅ nuevo valor
+      fijo_mas_corredera,
+      m2_instalador,
+      instalador
     ]);
 
     res.status(201).json({ message: 'Registro de UTV guardado con éxito' });
@@ -91,7 +97,9 @@ router.put('/utv/:id', async (req, res) => {
     comentario_marcos,
     otro,
     comentario_otro,
-    valor_m2
+    valor_m2,
+    m2_instalador,   
+    instalador         
   } = req.body;
 
   try {
@@ -112,8 +120,10 @@ router.put('/utv/:id', async (req, res) => {
         comentario_marcos = $13,
         otro = $14,
         comentario_otro = $15,
-        valor_m2 = $16
-      WHERE id = $17
+        valor_m2 = $16,
+        m2_instalador = $17,
+        instalador = $18
+      WHERE id = $19
     `, [
       fecha,
       nombre_pauta,
@@ -131,6 +141,8 @@ router.put('/utv/:id', async (req, res) => {
       otro,
       comentario_otro,
       valor_m2,
+      m2_instalador,
+      instalador,  
       req.params.id
     ]);
 
