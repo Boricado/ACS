@@ -310,4 +310,35 @@ router.put('/utv/:id/instalador', async (req, res) => {
   }
 });
 
+// Ruta: Obtener registros termopanel filtrados por mes/año
+router.get('/termopanel', async (req, res) => {
+  const { mes, anio } = req.query;
+
+  try {
+    const result = await pool.query(`
+      SELECT * FROM termopanel_taller
+      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2
+      ORDER BY fecha DESC
+    `, [mes, anio]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener termopaneles:', error);
+    res.status(500).json({ error: 'Error al obtener registros de termopanel' });
+  }
+});
+
+// Eliminar registro termopanel
+router.delete('/termopanel/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM termopanel_taller WHERE id = $1', [id]);
+    res.json({ message: 'Registro eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar registro termopanel:', error);
+    res.status(500).json({ error: 'Error al eliminar registro' });
+  }
+});
+
 export default router;

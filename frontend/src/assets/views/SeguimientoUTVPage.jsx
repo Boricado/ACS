@@ -20,6 +20,7 @@ const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
   const [fechaActual] = useState(obtenerFechaHoy());
   const refUTVAccordion = useRef(null);
+  const [termoData, setTermoData] = useState([]);
 
   const [utv, setUTV] = useState({
     fecha: obtenerFechaHoy(), nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
@@ -166,6 +167,29 @@ const SeguimientoUTVPage = () => {
     }
   };
 
+    const cargarTermos = async () => {
+    try {
+        const res = await axios.get(`${API}api/taller/termopanel?mes=${filtroMes}&anio=${filtroAnio}`);
+        setTermoData(res.data);
+    } catch (error) {
+        console.error('Error al cargar datos de termopanel:', error);
+    }
+    };
+
+    const editarTermo = (item) => {
+    setModoEdicionTermo(true);
+    setTermoEditando(item);
+    // Opcional: despliegue acordeón de edición
+    };
+
+    const eliminarTermo = async (id) => {
+    if (window.confirm('¿Deseas eliminar este registro termo?')) {
+        await axios.delete(`${API}api/taller/termopanel/${id}`);
+        await cargarTermos(); // vuelve a cargar
+    }
+    };
+
+
   const registrarInstalacion = async () => {
     try {
       await axios.post(`${API}api/taller/instalaciones`, mapInstalacionToBackend());
@@ -206,6 +230,7 @@ const SeguimientoUTVPage = () => {
 
   useEffect(() => {
     obtenerDatos();
+    cargarTermos();
     }, [mesFiltro, anioFiltro]);
 
 const calcularUTV = (item) => {
@@ -583,6 +608,46 @@ return (
       ) : (
         <p>No hay registros para este mes/año.</p>
       )}
+
+        {/* Tabla de Registro Termo */}
+        {termoData.length > 0 ? (
+        <>
+            <h4 className="mt-4">Registro Termo</h4>
+            <table className="table table-sm table-bordered">
+            <thead className="table-light">
+                <tr>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Cantidad</th>
+                <th>Ancho (mm)</th>
+                <th>Alto (mm)</th>
+                <th>M²</th>
+                <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {termoData.map(item => (
+                <tr key={item.id}>
+                    <td>{formatearFecha(item.fecha)}</td>
+                    <td>{item.nombre_cliente}</td>
+                    <td>{item.cantidad}</td>
+                    <td>{item.ancho}</td>
+                    <td>{item.alto}</td>
+                    <td>{((item.ancho * item.alto * item.cantidad) / 1000000).toFixed(2)}</td>
+                    <td>
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => editarTermo(item)}>✏️ Editar</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => eliminarTermo(item.id)}>🗑️ Eliminar</button>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        </>
+        ) : (
+        <p>No hay registros termo para este mes/año.</p>
+        )}
+
+
 
       <h4 className="mt-4">Resumen</h4>
       <table className="table table-bordered mt-3">
