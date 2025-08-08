@@ -169,7 +169,7 @@ const SeguimientoUTVPage = () => {
 
     const cargarTermos = async () => {
     try {
-        const res = await axios.get(`${API}api/taller/termopanel?mes=${filtroMes}&anio=${filtroAnio}`);
+        const res = await axios.get(`${API}api/taller/termopanel?mes=${mesFiltro}&anio=${anioFiltro}`);
         setTermoData(res.data);
     } catch (error) {
         console.error('Error al cargar datos de termopanel:', error);
