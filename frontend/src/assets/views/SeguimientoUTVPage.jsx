@@ -22,6 +22,24 @@ const SeguimientoUTVPage = () => {
   const refUTVAccordion = useRef(null);
   const [termoData, setTermoData] = useState([]);
 
+  const totalM2Termo = termoData.reduce((acum, item) => {
+  const ancho = parseFloat(item.ancho_mm) || 0;
+  const alto = parseFloat(item.alto_mm) || 0;
+  const cantidad = parseInt(item.cantidad) || 1;
+  const m2 = (ancho * alto * cantidad) / 1000000;
+  return acum + m2;
+    }, 0);
+
+const totalValorTermo = termoData.reduce((acum, item) => {
+  const valorM2 = parseFloat(item.valor_m2) || 0;
+  const ancho = parseFloat(item.ancho_mm) || 0;
+  const alto = parseFloat(item.alto_mm) || 0;
+  const cantidad = parseInt(item.cantidad) || 1;
+  const m2 = (ancho * alto * cantidad) / 1000000;
+  return acum + (m2 * valorM2);
+    }, 0);
+
+
   const [utv, setUTV] = useState({
     fecha: obtenerFechaHoy(), nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
     doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
@@ -676,12 +694,12 @@ return (
             </td>
             <td>${totalUTV.toLocaleString('es-CL')}</td>
           </tr>
-          <tr>
+            <tr>
             <td>Termopanel</td>
-            <td>{termopanelData.reduce((acc, item) => acc + item.m2, 0)}</td>
+            <td>{totalM2Termo.toFixed(2)}</td>
             <td>-</td>
-            <td>${totalTermopanel.toFixed(2)}</td>
-          </tr>
+            <td>${totalValorTermo.toLocaleString('es-CL')}</td>
+            </tr>
           <tr>
             <td>Instalación</td>
             <td>{instalacionData.reduce((acc, item) => acc + item.m2_rectificacion, 0)}</td>
@@ -691,7 +709,11 @@ return (
           <tr className="fw-bold">
             <td>Total a Pagar</td>
             <td colSpan={2}>-</td>
-            <td>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
+              <td>
+                    ${(
+                    valorAcumuladoUTV + totalValorTermo + valorAcumuladoInstalacion
+                    ).toLocaleString('es-CL')}
+                </td>
           </tr>
         </tbody>
       </table>
