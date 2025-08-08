@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import Collapse from 'bootstrap/js/dist/collapse'
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
@@ -125,10 +126,10 @@ const SeguimientoUTVPage = () => {
         setModoEdicion(true);
         setIdEditando(item.id);
 
-          // 🔽 Mostrar el acordeón si está colapsado
+        // Mostrar el acordeón
         const collapseEl = document.getElementById('collapseUTV');
         if (collapseEl && !collapseEl.classList.contains('show')) {
-            const collapse = new window.bootstrap.Collapse(collapseEl, { toggle: true });
+            const collapse = new Collapse(collapseEl, { toggle: true });
             collapse.show();
         }
 
