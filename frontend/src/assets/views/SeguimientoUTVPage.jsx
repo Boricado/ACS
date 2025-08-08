@@ -248,7 +248,7 @@ const calcularUTV = (item) => {
 
 const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
 const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
-const totalTermopanel = termopanelData.reduce((acc, item) => acc + parseFloat(item.m2 || 0) * parseFloat(item.valor_m2 || 0), 0);
+const cantidadTermopanel = termoData.reduce((sum, t) => sum + Number(t.m2), 0);
 const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
 
 const [modoEdicion, setModoEdicion] = useState(false);
@@ -672,7 +672,7 @@ return (
             <td>Termopanel</td>
             <td>{termopanelData.reduce((acc, item) => acc + item.m2, 0)}</td>
             <td>-</td>
-            <td>${totalTermopanel.toLocaleString('es-CL')}</td>
+            <td>${totalTermopanel.toFixed(2)}</td>
           </tr>
           <tr>
             <td>Instalación</td>

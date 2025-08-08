@@ -248,17 +248,6 @@ router.get('/utv', async (req, res) => {
   }
 });
 
-router.get('/termopanel', async (req, res) => {
-  const { mes, anio } = req.query;
-  const [inicio, fin] = generarFiltroFecha(mes, anio);
-  try {
-    const resultado = await pool.query(`SELECT * FROM termopanel_taller WHERE fecha BETWEEN $1 AND $2`, [inicio, fin]);
-    res.json(resultado.rows);
-  } catch (err) {
-    console.error('Error obteniendo Termopanel:', err);
-    res.sendStatus(500);
-  }
-});
 
 router.get('/instalaciones', async (req, res) => {
   const { mes, anio } = req.query;
