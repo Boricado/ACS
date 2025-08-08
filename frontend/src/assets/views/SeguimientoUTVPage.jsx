@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+
+const refUTVAccordion = useRef(null);
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
@@ -101,29 +103,42 @@ const SeguimientoUTVPage = () => {
         };
 
         const editarRegistro = (item) => {
-    setUTV({
-        fecha: item.fecha,
-        nombre_pauta: item.nombre_pauta,
-        numero_pauta: item.numero_pauta,
-        tipo: item.tipo,
-        fijo: item.fijo,
-        doble_corredera_fijo: item.doble_corredera_fijo,
-        proyectante: item.proyectante,
-        oscilobatiente: item.oscilobatiente,
-        doble_corredera: item.doble_corredera,
-        doble_corredera_fijo: item.doble_corredera_fijo,
-        marco_puerta: item.marco_puerta,
-        marcos_adicionales: item.marcos_adicionales,
-        comentario_marcos: item.comentario_marcos,
-        otro: item.otro,
-        comentario_otro: item.comentario_otro,
-        valor_m2: item.valor_m2,
-        m2_instalador: item.m2_instalador || 0,
-    });
+        setUTV({
+            fecha: item.fecha ? item.fecha.split('T')[0] : '', // ✅ importante
+            // los demás campos igual que antes...
+            nombre_pauta: item.nombre_pauta,
+            numero_pauta: item.numero_pauta,
+            tipo: item.tipo,
+            fijo: item.fijo,
+            doble_corredera_fijo: item.doble_corredera_fijo,
+            proyectante: item.proyectante,
+            oscilobatiente: item.oscilobatiente,
+            doble_corredera: item.doble_corredera,
+            marco_puerta: item.marco_puerta,
+            marcos_adicionales: item.marcos_adicionales,
+            comentario_marcos: item.comentario_marcos,
+            otro: item.otro,
+            comentario_otro: item.comentario_otro,
+            valor_m2: item.valor_m2,
+            m2_instalador: item.m2_instalador || 0,
+        });
 
-    setModoEdicion(true);
-    setIdEditando(item.id);
-    };
+        setModoEdicion(true);
+        setIdEditando(item.id);
+
+          // 🔽 Mostrar el acordeón si está colapsado
+        const collapseEl = document.getElementById('collapseUTV');
+        if (collapseEl && !collapseEl.classList.contains('show')) {
+            const collapse = new window.bootstrap.Collapse(collapseEl, { toggle: true });
+            collapse.show();
+        }
+
+        // 📜 Hacer scroll hacia la sección
+        setTimeout(() => {
+            refUTVAccordion.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300); // espera a que el acordeón se despliegue
+        };
+
 
 
     const eliminarRegistro = async (id) => {
@@ -238,7 +253,13 @@ return (
               Registrar UTV
             </button>
           </h2>
-          <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV">
+          <div
+            id="collapseUTV"
+            className="accordion-collapse collapse"
+            aria-labelledby="headingUTV"
+            data-bs-parent="#accordionUTV"
+            ref={refUTVAccordion}
+            >
             <div className="accordion-body">
               <div className="row g-2">
                 {/* Cabecera */}
@@ -266,12 +287,12 @@ return (
                 {/* Lista de ventanas */}
                 <div className="col-md-6">
                   {[
-                    { name: "fijo", label: "Fijo" },
-                    { name: "doble_corredera_fijo", label: "Fijo + corredera" },
-                    { name: "proyectante", label: "Proyectante" },
-                    { name: "oscilobatiente", label: "Oscilobatiente" },
-                    { name: "doble_corredera", label: "Doble Corredera" },
-                    { name: "marco_puerta", label: "Marco Puerta" }
+                    { name: "fijo", label: "Fijo (0.5 UTV)" },
+                    { name: "doble_corredera_fijo", label: "Fijo + corredera (1.5 UTV)" },
+                    { name: "proyectante", label: "Proyectante (0.5 UTV)" },
+                    { name: "oscilobatiente", label: "Oscilobatiente (1 UTV)" },
+                    { name: "doble_corredera", label: "Doble Corredera (2 UTV)" },
+                    { name: "marco_puerta", label: "Marco Puerta (2.5 UTV)" }
                   ].map((item, idx) => (
                     <div className="d-flex mb-2 align-items-center" key={idx}>
                       <input
@@ -292,7 +313,7 @@ return (
                       type="number"
                       className="form-control me-2"
                       style={{ width: '80px' }}
-                      name="marcos_adicionales"
+                      name="marcos_adicionales (0.5 UTV)"
                       value={utv.marcos_adicionales || 0}
                       onChange={e => handleChange(e, setUTV)}
                     />
@@ -313,7 +334,7 @@ return (
                       type="number"
                       className="form-control me-2"
                       style={{ width: '80px' }}
-                      name="otro"
+                      name="otro  (0.25 UTV)"
                       value={utv.otro || 0}
                       onChange={e => handleChange(e, setUTV)}
                     />
@@ -355,6 +376,34 @@ return (
 
                 <div className="col-md-12 text-end mt-3">
                   <button
+                    className="btn btn-secondary me-2"
+                    onClick={() => {
+                    setUTV({
+                        fecha: obtenerFechaHoy(),
+                        nombre_pauta: '',
+                        numero_pauta: '',
+                        tipo: 'PVC',
+                        doble_corredera: 0,
+                        proyectante: 0,
+                        fijo: 0,
+                        oscilobatiente: 0,
+                        doble_corredera_fijo: 0,
+                        marco_puerta: 0,
+                        marcos_adicionales: 0,
+                        comentario_marcos: '',
+                        otro: 0,
+                        comentario_otro: '',
+                        valor_m2: 3000,
+                        m2_instalador: 0,
+                    });
+                    setModoEdicion(false);
+                    setIdEditando(null);
+                    cargarRegistros(); // 🔄 opcional: refrescar tabla
+                    }}
+                >
+                    Limpiar
+                </button>
+                  <button
                     className="btn btn-success"
                     onClick={async () => {
                         try {
@@ -365,7 +414,7 @@ return (
                             setModoEdicion(false);
                         // Limpiar el formulario si deseas:
                         setUTV({
-                          fecha: '',
+                          fecha: obtenerFechaHoy(),
                           nombre_pauta: '',
                           numero_pauta: '',
                           tipo: 'PVC',
