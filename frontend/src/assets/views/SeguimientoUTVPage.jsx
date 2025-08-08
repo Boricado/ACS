@@ -626,21 +626,29 @@ return (
                 </tr>
             </thead>
             <tbody>
-                {termoData.map(item => (
-                <tr key={item.id}>
-                    <td>{formatearFecha(item.fecha)}</td>
-                    <td>{item.nombre_cliente}</td>
-                    <td>{item.cantidad}</td>
-                    <td>{item.ancho}</td>
-                    <td>{item.alto}</td>
-                    <td>{((item.ancho * item.alto * item.cantidad) / 1000000).toFixed(2)}</td>
-                    <td>
-                    <button className="btn btn-warning btn-sm me-2" onClick={() => editarTermo(item)}>✏️ Editar</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => eliminarTermo(item.id)}>🗑️ Eliminar</button>
-                    </td>
-                </tr>
-                ))}
-            </tbody>
+                {termoData.map(item => {
+                    const ancho = parseFloat(item.ancho_mm) || 0;
+                    const alto = parseFloat(item.alto_mm) || 0;
+                    const cantidad = parseInt(item.cantidad) || 1;
+                    const m2 = (ancho * alto * cantidad) / 1000000;
+
+                    return (
+                    <tr key={item.id}>
+                        <td>{formatearFecha(item.fecha)}</td>
+                        <td>{item.cliente || '-'}</td>
+                        <td>{cantidad}</td>
+                        <td>{ancho > 0 ? ancho : '-'}</td>
+                        <td>{alto > 0 ? alto : '-'}</td>
+                        <td>{m2 > 0 ? m2.toFixed(2) : '-'}</td>
+                        <td>
+                        <button className="btn btn-warning btn-sm me-2" onClick={() => editarTermo(item)}>✏️ Editar</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => eliminarTermo(item.id)}>🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                    );
+                })}
+                </tbody>
+
             </table>
         </>
         ) : (
