@@ -709,11 +709,7 @@ return (
           <tr className="fw-bold">
             <td>Total a Pagar</td>
             <td colSpan={2}>-</td>
-              <td>
-                    ${(
-                    valorAcumuladoUTV + totalValorTermo + valorAcumuladoInstalacion
-                    ).toLocaleString('es-CL')}
-                </td>
+            <td>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
           </tr>
         </tbody>
       </table>
