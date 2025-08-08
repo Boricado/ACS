@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
-const refUTVAccordion = useRef(null);
-
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
   const fecha = new Date(fechaISO);
@@ -20,6 +18,7 @@ const obtenerFechaHoy = () => {
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
   const [fechaActual] = useState(obtenerFechaHoy());
+  const refUTVAccordion = useRef(null);
 
   const [utv, setUTV] = useState({
     fecha: obtenerFechaHoy(), nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
