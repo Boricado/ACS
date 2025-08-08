@@ -531,6 +531,7 @@ return (
                 <th>Nombre Pauta</th>
                 <th>Tipo</th>
                 <th>Suma UTV</th>
+                <th>M² Instalador</th>
                 <th>Acciones</th>
                 <th>Instalador</th>
               </tr>
@@ -542,6 +543,7 @@ return (
                   <td>{item.nombre_pauta}</td>
                   <td>{item.tipo}</td>
                   <td>{calcularUTV(item)}</td>
+                  <td>{item.m2_instalador || '-'}</td>
                   <td>
                     <button className="btn btn-warning btn-sm me-2" onClick={() => editarRegistro(item)}>✏️ Editar</button>
                     <button className="btn btn-danger btn-sm" onClick={() => eliminarRegistro(item.id)}>🗑️ Eliminar</button>
