@@ -246,22 +246,6 @@ const totalValorTermo = termoData.reduce((acum, item) => {
       }
     };
 
-    // Filtrar UTV donde instalador sea "Alumce"
-    const utvAlumce = utvData.filter(item => item.instalador === "Alumce");
-
-    // Calcular m² totales de Alumce
-    const totalM2Alumce = utvAlumce.reduce((acum, item) => {
-    return acum + (parseFloat(item.m2_instalador) || 0);
-    }, 0);
-
-    // Calcular valor acumulado (multiplica por valor_m2)
-    const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
-    const valorM2 = parseFloat(item.valor_m2) || 0;
-    const m2 = parseFloat(item.m2_instalador) || 0;
-    return acum + (valorM2 * m2);
-    }, 0);
-
-
   useEffect(() => {
     obtenerDatos();
     cargarTermos();
@@ -287,6 +271,21 @@ const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(
 
 const [modoEdicion, setModoEdicion] = useState(false);
 const [idEditando, setIdEditando] = useState(null);
+
+// Filtrar UTV donde instalador sea "Alumce"
+const utvAlumce = utvData.filter(item => item.instalador === "Alumce");
+
+// Calcular m² totales de Alumce
+const totalM2Alumce = utvAlumce.reduce((acum, item) => {
+return acum + (parseFloat(item.m2_instalador) || 0);
+}, 0);
+
+// Calcular valor acumulado (multiplica por valor_m2)
+const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
+const valorM2 = parseFloat(item.valor_m2) || 0;
+const m2 = parseFloat(item.m2_instalador) || 0;
+return acum + (valorM2 * m2);
+}, 0);
 
 useEffect(() => {
     const ancho = parseFloat(termopanel.ancho) || 0;
