@@ -14,6 +14,14 @@ const EditarOCPage = () => {
   const [comentario, setComentario] = useState('');
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
 
+  // Formateador CLP
+  const fmtCLP = (n) =>
+    new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0,
+    }).format(Math.round(Number(n) || 0));
+
   // Cabecera (incluye realizadoPor)
   const [cabeceraOC, setCabeceraOC] = useState({
     proveedor: '',
@@ -84,7 +92,7 @@ const EditarOCPage = () => {
       // Campos base
       const proveedor = detalle.proveedor ?? ocDeLista?.proveedor ?? '';
       const fecha = (detalle.fecha ?? ocDeLista?.fecha ?? '').toString().slice(0, 10) || '';
-      const realizadoPor = detalle.realizado_por ?? ocDeLista?.realizado_por ?? ''; // 👈 lo buscamos
+      const realizadoPor = detalle.realizado_por ?? ocDeLista?.realizado_por ?? '';
       const clienteNombre =
         detalle.cliente_nombre ?? ocDeLista?.cliente_nombre ?? ocDeLista?.cliente_id ?? '';
       const presupuestoNumero =
@@ -203,14 +211,16 @@ const EditarOCPage = () => {
     }
   };
 
+  // Totales cerrados como en Crear OC
   const calcularTotales = (lista) => {
-    const neto = (lista || []).reduce(
+    const netoRaw = (lista || []).reduce(
       (sum, it) =>
         sum + ((parseFloat(it.precio_unitario) || 0) * (parseFloat(it.cantidad) || 0)),
       0
     );
-    const iva = Math.round(neto * 0.19);
-    const total = neto + iva;
+    const neto = Math.round(netoRaw);     // cerrar a peso
+    const iva = Math.round(neto * 0.19);  // IVA cerrado
+    const total = neto + iva;             // total cerrado
     setTotales({ neto, iva, total });
   };
 
@@ -228,7 +238,7 @@ const EditarOCPage = () => {
       bancoProveedor: cabeceraOC.bancoProveedor,
       cuentaProveedor: cabeceraOC.cuentaProveedor,
       fecha: cabeceraOC.fecha || new Date().toISOString().split('T')[0],
-      realizadoPor: cabeceraOC.realizadoPor || '—', // 👈 ahora sí lo pasamos
+      realizadoPor: cabeceraOC.realizadoPor || '—',
       clienteNombre: cabeceraOC.clienteNombre || '',
       presupuestoNumero: cabeceraOC.presupuestoNumero || '',
       items: itemsSanitizados,
@@ -354,9 +364,9 @@ const EditarOCPage = () => {
       </div>
 
       <div className="text-end me-3">
-        <p><strong>Total Neto:</strong> ${totales.neto.toLocaleString('es-CL')}</p>
-        <p><strong>IVA 19%:</strong> ${totales.iva.toLocaleString('es-CL')}</p>
-        <p><strong>TOTAL:</strong> ${totales.total.toLocaleString('es-CL')}</p>
+        <p><strong>Total Neto:</strong> {fmtCLP(totales.neto)}</p>
+        <p><strong>IVA 19%:</strong> {fmtCLP(totales.iva)}</p>
+        <p><strong>TOTAL:</strong> {fmtCLP(totales.total)}</p>
       </div>
 
       <label>Comentario</label>
