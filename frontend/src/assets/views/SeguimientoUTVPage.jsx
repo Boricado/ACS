@@ -272,20 +272,36 @@ const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(
 const [modoEdicion, setModoEdicion] = useState(false);
 const [idEditando, setIdEditando] = useState(null);
 
+// Instalaciones (normales)
+const totalM2Instalaciones = instalacionData.reduce((acum, item) => {
+  return acum + (parseFloat(item.m2_rectificacion) || 0);
+}, 0);
+
+const valorAcumuladoInstalaciones = instalacionData.reduce((acum, item) => {
+  const m2 = parseFloat(item.m2_rectificacion) || 0;
+  const valorM2 = parseFloat(item.valor_m2) || 0;
+  return acum + (valorM2 * m2);
+}, 0);
+
 // Filtrar UTV donde instalador sea "Alumce"
 const utvAlumce = utvData.filter(item => item.instalador === "Alumce");
 
 // Calcular m² totales de Alumce
 const totalM2Alumce = utvAlumce.reduce((acum, item) => {
-return acum + (parseFloat(item.m2_instalador) || 0);
+  return acum + (parseFloat(item.m2_instalador) || 0);
 }, 0);
 
-// Calcular valor acumulado (multiplica por valor_m2)
+// Calcular valor acumulado de Alumce
 const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
-const valorM2 = parseFloat(item.valor_m2) || 0;
-const m2 = parseFloat(item.m2_instalador) || 0;
-return acum + (valorM2 * m2);
+  const valorM2 = parseFloat(item.valor_m2) || 0;
+  const m2 = parseFloat(item.m2_instalador) || 0;
+  return acum + (valorM2 * m2);
 }, 0);
+
+// Suma total para mostrar en "Instalación"
+const totalM2InstalacionesConAlumce = totalM2Instalaciones + totalM2Alumce;
+const valorAcumuladoInstalacionesConAlumce = valorAcumuladoInstalaciones + valorAcumuladoAlumce;
+
 
 useEffect(() => {
     const ancho = parseFloat(termopanel.ancho) || 0;
@@ -716,10 +732,10 @@ return (
             <td>${totalValorTermo.toLocaleString('es-CL')}</td>
             </tr>
             <tr>
-            <td>Instalaciones</td>
-            <td>{(totalM2Instalaciones + totalM2Alumce).toFixed(2)}</td>
+            <td>Instalación</td>
+            <td>{totalM2InstalacionesConAlumce.toFixed(2)}</td>
             <td>-</td>
-            <td>${(valorAcumuladoInstalaciones + valorAcumuladoAlumce).toLocaleString('es-CL')}</td>
+            <td>${valorAcumuladoInstalacionesConAlumce.toLocaleString('es-CL')}</td>
             </tr>
           <tr className="fw-bold">
             <td>Total a Pagar</td>
