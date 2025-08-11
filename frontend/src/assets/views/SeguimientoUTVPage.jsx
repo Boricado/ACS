@@ -246,6 +246,22 @@ const totalValorTermo = termoData.reduce((acum, item) => {
       }
     };
 
+    // Filtrar UTV donde instalador sea "Alumce"
+    const utvAlumce = utvData.filter(item => item.instalador === "Alumce");
+
+    // Calcular m² totales de Alumce
+    const totalM2Alumce = utvAlumce.reduce((acum, item) => {
+    return acum + (parseFloat(item.m2_instalador) || 0);
+    }, 0);
+
+    // Calcular valor acumulado (multiplica por valor_m2)
+    const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
+    const valorM2 = parseFloat(item.valor_m2) || 0;
+    const m2 = parseFloat(item.m2_instalador) || 0;
+    return acum + (valorM2 * m2);
+    }, 0);
+
+
   useEffect(() => {
     obtenerDatos();
     cargarTermos();
@@ -688,7 +704,7 @@ return (
         <tbody>
           <tr>
             <td>UTV</td>
-            <td>0</td>
+            <td>-</td>
             <td>
               {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
             </td>
@@ -700,16 +716,16 @@ return (
             <td>-</td>
             <td>${totalValorTermo.toLocaleString('es-CL')}</td>
             </tr>
-          <tr>
-            <td>Instalación</td>
-            <td>{instalacionData.reduce((acc, item) => acc + item.m2_rectificacion, 0)}</td>
+            <tr>
+            <td>Instalaciones</td>
+            <td>{(totalM2Instalaciones + totalM2Alumce).toFixed(2)}</td>
             <td>-</td>
-            <td>${totalInstalacion.toLocaleString('es-CL')}</td>
-          </tr>
+            <td>${(valorAcumuladoInstalaciones + valorAcumuladoAlumce).toLocaleString('es-CL')}</td>
+            </tr>
           <tr className="fw-bold">
             <td>Total a Pagar</td>
             <td colSpan={2}>-</td>
-            <td>${(totalUTV + totalTermopanel + totalInstalacion).toLocaleString('es-CL')}</td>
+            <td>${(totalUTV + totalValorTermo + totalInstalacion).toLocaleString('es-CL')}</td>
           </tr>
         </tbody>
       </table>
