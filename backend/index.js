@@ -704,6 +704,47 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
 });
 
 
+// ✅ Detalle de una OC por número: /api/ordenes_compra/:numero_oc
+app.get('/api/ordenes_compra/:numero_oc', async (req, res) => {
+  const { numero_oc } = req.params;
+
+  try {
+    const query = `
+      SELECT
+        oc.numero_oc,
+        TO_CHAR(oc.fecha, 'YYYY-MM-DD') AS fecha,
+        oc.proveedor,
+        oc.realizado_por,
+        oc.comentario,
+        oc.numero_presupuesto,
+        -- Cliente: si guardaste el nombre en oc.cliente_id, lo respeta; si es id, lo resuelve
+        COALESCE(c.nombre, oc.cliente_id) AS cliente_nombre,
+        -- Datos proveedor desde catálogo
+        p.rut AS rut_proveedor,
+        p.banco,
+        p.numero_cuenta
+      FROM ordenes_compra oc
+      LEFT JOIN proveedores p
+        ON UPPER(TRIM(p.proveedor)) = UPPER(TRIM(oc.proveedor))
+      LEFT JOIN clientes c
+        ON c.id::text = oc.cliente_id
+        OR UPPER(TRIM(c.nombre)) = UPPER(TRIM(oc.cliente_id))
+      WHERE oc.numero_oc = $1
+      LIMIT 1;
+    `;
+
+    const { rows } = await pool.query(query, [numero_oc]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Orden de compra no encontrada' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Error al obtener detalle OC:', error.message);
+    res.status(500).json({ error: 'Error al obtener detalle de la orden de compra' });
+  }
+});
+
+
 ///////////////
 
 app.get('/api/inventario', async (req, res) => {

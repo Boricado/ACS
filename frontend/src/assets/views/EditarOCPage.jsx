@@ -14,7 +14,7 @@ const EditarOCPage = () => {
   const [comentario, setComentario] = useState('');
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
 
-  // Cabecera para el PDF
+  // Cabecera (incluye realizadoPor)
   const [cabeceraOC, setCabeceraOC] = useState({
     proveedor: '',
     rutProveedor: '',
@@ -28,7 +28,7 @@ const EditarOCPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  // Cargar ordenes (según filtro), materiales y proveedores
+  // Cargar órdenes, materiales y proveedores
   useEffect(() => {
     const fetchOrdenes = async () => {
       try {
@@ -54,7 +54,7 @@ const EditarOCPage = () => {
       .catch(() => setProveedores([]));
   }, [estadoFiltro, API]);
 
-  // Cargar ítems y cabecera al elegir una OC
+  // Cargar ítems + cabecera (incluye realizadoPor) al elegir una OC
   useEffect(() => {
     if (!numeroOCSeleccionado) return;
 
@@ -69,32 +69,32 @@ const EditarOCPage = () => {
         calcularTotales([]);
       }
 
-      // Cabecera desde lista
-      const ocDeLista = ordenes.find(
-        (o) => String(o.numero_oc) === String(numeroOCSeleccionado)
-      );
+      // Datos desde la lista
+      const ocDeLista = ordenes.find(o => String(o.numero_oc) === String(numeroOCSeleccionado));
 
-      // Intentar endpoint de detalle (si existe)
+      // Intentar detalle (si existe)
       let detalle = {};
       try {
         const det = await axios.get(`${API}api/ordenes_compra/${numeroOCSeleccionado}`);
         detalle = det.data || {};
       } catch {
-        // si no existe, sigue con lo que haya
+        // si no existe, seguimos con la lista
       }
 
-      // Normaliza básicos
+      // Campos base
       const proveedor = detalle.proveedor ?? ocDeLista?.proveedor ?? '';
       const fecha = (detalle.fecha ?? ocDeLista?.fecha ?? '').toString().slice(0, 10) || '';
-      const realizadoPor = detalle.realizado_por ?? ocDeLista?.realizado_por ?? '';
+      const realizadoPor = detalle.realizado_por ?? ocDeLista?.realizado_por ?? ''; // 👈 lo buscamos
       const clienteNombre =
         detalle.cliente_nombre ?? ocDeLista?.cliente_nombre ?? ocDeLista?.cliente_id ?? '';
       const presupuestoNumero =
         detalle.numero_presupuesto ?? ocDeLista?.numero_presupuesto ?? '';
 
-      // Buscar datos del proveedor en la lista de proveedores
+      // Buscar datos del proveedor en catálogo
       const prov = proveedores.find(
-        (p) => (p.proveedor || '').toString().trim().toLowerCase() === (proveedor || '').toString().trim().toLowerCase()
+        p =>
+          (p.proveedor || '').toString().trim().toLowerCase() ===
+          (proveedor || '').toString().trim().toLowerCase()
       ) || {};
 
       const rutProveedor = detalle.rut_proveedor ?? detalle.rut ?? prov.rut ?? '';
@@ -112,7 +112,7 @@ const EditarOCPage = () => {
         presupuestoNumero,
       });
 
-      // Precargar comentario si viene desde detalle
+      // Comentario (si lo trae el detalle)
       if (!comentario && (detalle.comentario ?? '') !== '') {
         setComentario(detalle.comentario);
       }
@@ -137,16 +137,15 @@ const EditarOCPage = () => {
     actualizados[index][field] = value === null ? '' : value;
 
     if (field === 'codigo') {
-      const m = materiales.find((m) => m.codigo === value);
+      const m = materiales.find(m => m.codigo === value);
       const precio = m?.precio_unitario || (value ? await obtenerPrecioUltimo(value) : '');
       actualizados[index].producto = m ? m.producto : '';
       actualizados[index].precio_unitario = precio;
     }
 
     if (field === 'producto') {
-      const m = materiales.find((m) => m.producto === value);
-      const precio =
-        m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
+      const m = materiales.find(m => m.producto === value);
+      const precio = m?.precio_unitario || (m?.codigo ? await obtenerPrecioUltimo(m.codigo) : '');
       actualizados[index].codigo = m ? m.codigo : '';
       actualizados[index].precio_unitario = precio;
     }
@@ -206,7 +205,8 @@ const EditarOCPage = () => {
 
   const calcularTotales = (lista) => {
     const neto = (lista || []).reduce(
-      (sum, it) => sum + ((parseFloat(it.precio_unitario) || 0) * (parseFloat(it.cantidad) || 0)),
+      (sum, it) =>
+        sum + ((parseFloat(it.precio_unitario) || 0) * (parseFloat(it.cantidad) || 0)),
       0
     );
     const iva = Math.round(neto * 0.19);
@@ -215,7 +215,7 @@ const EditarOCPage = () => {
   };
 
   const imprimirPDF = () => {
-    const itemsSanitizados = items.map((i) => ({
+    const itemsSanitizados = items.map(i => ({
       ...i,
       cantidad: parseFloat(i.cantidad) || 0,
       precio_unitario: parseFloat(i.precio_unitario) || 0,
@@ -228,7 +228,7 @@ const EditarOCPage = () => {
       bancoProveedor: cabeceraOC.bancoProveedor,
       cuentaProveedor: cabeceraOC.cuentaProveedor,
       fecha: cabeceraOC.fecha || new Date().toISOString().split('T')[0],
-      realizadoPor: cabeceraOC.realizadoPor || '—',
+      realizadoPor: cabeceraOC.realizadoPor || '—', // 👈 ahora sí lo pasamos
       clienteNombre: cabeceraOC.clienteNombre || '',
       presupuestoNumero: cabeceraOC.presupuestoNumero || '',
       items: itemsSanitizados,
