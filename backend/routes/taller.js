@@ -330,4 +330,93 @@ router.delete('/termopanel/:id', async (req, res) => {
   }
 });
 
+// ==============================
+// TRABAJADORES (CRUD sencillo)
+// ==============================
+
+// GET: listar
+app.get('/api/trabajadores', async (req, res) => {
+  try {
+    const q = `SELECT id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+               FROM trabajadores
+               ORDER BY id ASC`;
+    const r = await pool.query(q);
+    res.json(r.rows);
+  } catch (err) {
+    console.error('❌ GET /api/trabajadores', err.message);
+    res.status(500).json({ error: 'Error al obtener trabajadores' });
+  }
+});
+
+// POST: crear
+app.post('/api/trabajadores', async (req, res) => {
+  const {
+    nombre,
+    dias_trab = 0,
+    horas_trab = 0,
+    horas_extras = 0,
+    horas_retraso = 0,
+    observacion = '',
+    horas_acum_trab = 0
+  } = req.body;
+
+  try {
+    const q = `
+      INSERT INTO trabajadores (nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+    `;
+    const v = [nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab];
+    const r = await pool.query(q, v);
+    res.status(201).json(r.rows[0]);
+  } catch (err) {
+    console.error('❌ POST /api/trabajadores', err.message);
+    res.status(500).json({ error: 'Error al crear trabajador' });
+  }
+});
+
+// PUT: actualizar
+app.put('/api/trabajadores/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    nombre,
+    dias_trab = 0,
+    horas_trab = 0,
+    horas_extras = 0,
+    horas_retraso = 0,
+    observacion = '',
+    horas_acum_trab = 0
+  } = req.body;
+
+  try {
+    const q = `
+      UPDATE trabajadores
+      SET nombre=$1, dias_trab=$2, horas_trab=$3, horas_extras=$4, horas_retraso=$5, observacion=$6, horas_acum_trab=$7
+      WHERE id=$8
+      RETURNING id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+    `;
+    const v = [nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab, id];
+    const r = await pool.query(q, v);
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
+    res.json(r.rows[0]);
+  } catch (err) {
+    console.error('❌ PUT /api/trabajadores/:id', err.message);
+    res.status(500).json({ error: 'Error al actualizar trabajador' });
+  }
+});
+
+// DELETE: borrar
+app.delete('/api/trabajadores/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const r = await pool.query('DELETE FROM trabajadores WHERE id=$1', [id]);
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
+    res.json({ message: 'Trabajador eliminado' });
+  } catch (err) {
+    console.error('❌ DELETE /api/trabajadores/:id', err.message);
+    res.status(500).json({ error: 'Error al eliminar trabajador' });
+  }
+});
+
+
 export default router;

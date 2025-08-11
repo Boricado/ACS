@@ -51,6 +51,7 @@ const Sidebar = ({ total }) => {
                 <li><NavLink to="/AjusteStock" className={({ isActive }) => isActive ? 'active-link' : ''}>Ajuste de Stock/ Inventario</NavLink></li>
                 <li><NavLink to="/OCPendientePage" className={({ isActive }) => isActive ? 'active-link' : ''}>OC Pendientes/Historico de Compras</NavLink></li>
                 <li><NavLink to="/SeguimientoUTVPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Seguimiento UTV</NavLink></li>
+                <li><NavLink to="/TrabajadoresPage" className={({ isActive }) => isActive ? 'active-link' : ''}>Asistencia Trabajadores</NavLink></li>
               </ul>
             </li>
           )}
