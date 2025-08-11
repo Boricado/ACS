@@ -331,16 +331,22 @@ router.delete('/termopanel/:id', async (req, res) => {
 });
 
 // ==============================
-// TRABAJADORES (CRUD sencillo)
+// TRABAJADORES (CRUD con periodo)
 // ==============================
 
-// GET: listar
+// GET: listar (opcional ?periodo=YYYY-MM)
 app.get('/api/trabajadores', async (req, res) => {
   try {
-    const q = `SELECT id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
-               FROM trabajadores
-               ORDER BY id ASC`;
-    const r = await pool.query(q);
+    const { periodo } = req.query;
+    let q = `SELECT id, periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+             FROM trabajadores`;
+    const vals = [];
+    if (periodo) {
+      q += ` WHERE periodo = $1`;
+      vals.push(periodo);
+    }
+    q += ` ORDER BY id ASC`;
+    const r = await pool.query(q, vals);
     res.json(r.rows);
   } catch (err) {
     console.error('❌ GET /api/trabajadores', err.message);
@@ -351,6 +357,7 @@ app.get('/api/trabajadores', async (req, res) => {
 // POST: crear
 app.post('/api/trabajadores', async (req, res) => {
   const {
+    periodo,
     nombre,
     dias_trab = 0,
     horas_trab = 0,
@@ -362,11 +369,14 @@ app.post('/api/trabajadores', async (req, res) => {
 
   try {
     const q = `
-      INSERT INTO trabajadores (nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-      RETURNING id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+      INSERT INTO trabajadores (periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      RETURNING id, periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
     `;
-    const v = [nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab];
+    const v = [
+      periodo || new Date().toISOString().slice(0, 7),
+      nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+    ];
     const r = await pool.query(q, v);
     res.status(201).json(r.rows[0]);
   } catch (err) {
@@ -379,6 +389,7 @@ app.post('/api/trabajadores', async (req, res) => {
 app.put('/api/trabajadores/:id', async (req, res) => {
   const { id } = req.params;
   const {
+    periodo,
     nombre,
     dias_trab = 0,
     horas_trab = 0,
@@ -391,11 +402,11 @@ app.put('/api/trabajadores/:id', async (req, res) => {
   try {
     const q = `
       UPDATE trabajadores
-      SET nombre=$1, dias_trab=$2, horas_trab=$3, horas_extras=$4, horas_retraso=$5, observacion=$6, horas_acum_trab=$7
-      WHERE id=$8
-      RETURNING id, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
+      SET periodo=$1, nombre=$2, dias_trab=$3, horas_trab=$4, horas_extras=$5, horas_retraso=$6, observacion=$7, horas_acum_trab=$8
+      WHERE id=$9
+      RETURNING id, periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab
     `;
-    const v = [nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab, id];
+    const v = [periodo || new Date().toISOString().slice(0, 7), nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab, id];
     const r = await pool.query(q, v);
     if (r.rowCount === 0) return res.status(404).json({ error: 'Trabajador no encontrado' });
     res.json(r.rows[0]);

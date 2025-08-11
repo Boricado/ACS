@@ -4,13 +4,18 @@ import axios from 'axios';
 const TrabajadoresPage = () => {
   const API = import.meta.env.VITE_API_URL;
 
+  // yyyy-mm actual
+  const periodoActual = new Date().toISOString().slice(0, 7);
+
+  const [periodo, setPeriodo] = useState(periodoActual);
   const [trabajadores, setTrabajadores] = useState([]);
   const [mensaje, setMensaje] = useState(null);
-  const [jornadaHoras, setJornadaHoras] = useState(8); // jornada diaria para el % asistencia
 
   const cargarTrabajadores = async () => {
     try {
-      const res = await axios.get(`${API}api/trabajadores`);
+      const res = await axios.get(`${API}api/trabajadores`, {
+        params: { periodo }
+      });
       setTrabajadores(res.data || []);
     } catch (e) {
       console.error(e);
@@ -21,7 +26,7 @@ const TrabajadoresPage = () => {
   useEffect(() => {
     cargarTrabajadores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [periodo]);
 
   const handleChange = (idx, field, value) => {
     const next = [...trabajadores];
@@ -43,6 +48,7 @@ const TrabajadoresPage = () => {
       ...prev,
       {
         id: null,
+        periodo,                 // 👈 se guarda el mes visible
         nombre: '',
         dias_trab: 0,
         horas_trab: 0,
@@ -57,13 +63,13 @@ const TrabajadoresPage = () => {
   const guardarFila = async (idx) => {
     const t = trabajadores[idx];
 
-    // Validaciones simples
     if (!t.nombre?.trim()) {
       setMensaje({ tipo: 'danger', texto: 'El nombre es obligatorio.' });
       return;
     }
 
     const payload = {
+      periodo: t.periodo || periodo, // por si se cambió manualmente
       nombre: t.nombre?.trim(),
       dias_trab: parseInt(t.dias_trab || 0, 10),
       horas_trab: parseFloat(t.horas_trab || 0),
@@ -112,29 +118,26 @@ const TrabajadoresPage = () => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-    const pctAsistencia = (t) => {
+  // % HORA ASIST = horas acumuladas / horas trabajadas
+  const pctAsistencia = (t) => {
     const horasAcum = Number(t.horas_acum_trab) || 0;
     const horasTrab = Number(t.horas_trab) || 0;
     if (horasTrab <= 0) return 0;
-    return (horasAcum / horasTrab) * 100;
-    };
-
+    return Math.max(0, Math.min(100, (horasAcum / horasTrab) * 100));
+  };
 
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">Trabajadores</h3>
         <div className="d-flex align-items-center gap-2">
-          <label className="mb-0">Jornada diaria (h):</label>
+          <label className="mb-0">Mes:</label>
           <input
-            type="number"
-            min="1"
-            step="0.5"
-            value={jornadaHoras}
-            onChange={(e) => setJornadaHoras(e.target.value)}
+            type="month"
             className="form-control form-control-sm"
-            style={{ width: 90 }}
-            title="Se usa para calcular % HORA ASIST"
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+            style={{ width: 160 }}
           />
           <button className="btn btn-primary" onClick={agregarFila}>
             Nuevo trabajador
@@ -153,6 +156,7 @@ const TrabajadoresPage = () => {
           <thead className="table-dark">
             <tr>
               <th style={{width: 70}}>ID</th>
+              <th style={{width: 130}}>MES</th>
               <th>NOMBRE</th>
               <th style={{width: 120}}>DIAS TRAB</th>
               <th style={{width: 140}}>HORAS TRAB</th>
@@ -168,6 +172,14 @@ const TrabajadoresPage = () => {
             {trabajadores.map((t, idx) => (
               <tr key={t.id ?? `nuevo-${idx}`}>
                 <td>{t.id ?? '—'}</td>
+                <td>
+                  <input
+                    type="month"
+                    className="form-control form-control-sm"
+                    value={t.periodo || periodo}
+                    onChange={(e) => handleChange(idx, 'periodo', e.target.value)}
+                  />
+                </td>
                 <td>
                   <input
                     type="text"
@@ -252,8 +264,8 @@ const TrabajadoresPage = () => {
 
             {trabajadores.length === 0 && (
               <tr>
-                <td colSpan="10" className="text-center text-muted py-4">
-                  No hay trabajadores. Crea uno con “Nuevo trabajador”.
+                <td colSpan="11" className="text-center text-muted py-4">
+                  No hay registros para {periodo}. Crea uno con “Nuevo trabajador”.
                 </td>
               </tr>
             )}
