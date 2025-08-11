@@ -15,6 +15,7 @@ import proveedoresRoutes from './routes/proveedores.js';
 import facturasGuiasRouter from './routes/facturasGuias.js';
 import proveedoresCreditoRoutes from './routes/proveedores_credito.js';
 import tallerRoutes from './routes/taller.js';
+import trabajadoresRoutes from './routes/trabajadores.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/facturas_guias', facturasGuiasRouter);
 app.use('/api/proveedores_credito', proveedoresCreditoRoutes);
 app.use('/api/taller', tallerRoutes);
+app.use('/api/trabajadores', trabajadoresRoutes);
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({

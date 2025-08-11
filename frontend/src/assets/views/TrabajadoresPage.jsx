@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const JORNADA_DIARIA = 9; // ← DIAS TRAB * 9
+
+const inputStyle = {
+  minWidth: 110,
+  minHeight: 38,
+  fontSize: '0.95rem',
+  backgroundColor: '#fff'
+};
+const inputWide = { ...inputStyle, minWidth: 220 };
+
 const TrabajadoresPage = () => {
   const API = import.meta.env.VITE_API_URL;
 
-  // yyyy-mm actual
   const periodoActual = new Date().toISOString().slice(0, 7);
-
   const [periodo, setPeriodo] = useState(periodoActual);
+
   const [trabajadores, setTrabajadores] = useState([]);
   const [mensaje, setMensaje] = useState(null);
 
   const cargarTrabajadores = async () => {
     try {
-      const res = await axios.get(`${API}api/trabajadores`, {
-        params: { periodo }
-      });
-      setTrabajadores(res.data || []);
+      const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
+      // Aseguramos que los derivados estén coherentes al cargar
+      const recalculados = (res.data || []).map(recalcDerivados);
+      setTrabajadores(recalculados);
     } catch (e) {
       console.error(e);
       setTrabajadores([]);
@@ -28,40 +37,50 @@ const TrabajadoresPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo]);
 
+  // Recalcular campos derivados a partir de una fila
+  const recalcDerivados = (t) => {
+    const dias = Number(t.dias_trab) || 0;
+    const extras = Number(t.horas_extras) || 0;
+    const retraso = Number(t.horas_retraso) || 0;
+    const horas_trab = Math.max(0, dias * JORNADA_DIARIA);
+    const horas_acum_trab = Math.max(0, horas_trab + extras - retraso);
+    return { ...t, horas_trab, horas_acum_trab };
+  };
+
   const handleChange = (idx, field, value) => {
     const next = [...trabajadores];
-    // numéricos
-    const numericFields = [
-      'dias_trab', 'horas_trab', 'horas_extras', 'horas_retraso', 'horas_acum_trab'
-    ];
+
+    // Normaliza numéricos
+    const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
     if (numericFields.includes(field)) {
       const v = value === '' ? '' : Number(value);
       next[idx][field] = isNaN(v) ? '' : v;
+    } else if (field === 'periodo' || field === 'nombre' || field === 'observacion') {
+      next[idx][field] = value;
     } else {
       next[idx][field] = value;
     }
+
+    // Recalcula derivados
+    next[idx] = recalcDerivados(next[idx]);
     setTrabajadores(next);
   };
 
   const agregarFila = () => {
-    setTrabajadores(prev => ([
-      ...prev,
-      {
-        id: null,
-        periodo,                 // 👈 se guarda el mes visible
-        nombre: '',
-        dias_trab: 0,
-        horas_trab: 0,
-        horas_extras: 0,
-        horas_retraso: 0,
-        observacion: '',
-        horas_acum_trab: 0,
-      }
-    ]));
+    const base = recalcDerivados({
+      id: null,
+      periodo,
+      nombre: '',
+      dias_trab: 0,
+      horas_extras: 0,
+      horas_retraso: 0,
+      observacion: ''
+    });
+    setTrabajadores(prev => [...prev, base]);
   };
 
   const guardarFila = async (idx) => {
-    const t = trabajadores[idx];
+    const t = recalcDerivados(trabajadores[idx]); // asegurar consistencia antes de guardar
 
     if (!t.nombre?.trim()) {
       setMensaje({ tipo: 'danger', texto: 'El nombre es obligatorio.' });
@@ -69,27 +88,27 @@ const TrabajadoresPage = () => {
     }
 
     const payload = {
-      periodo: t.periodo || periodo, // por si se cambió manualmente
+      periodo: t.periodo || periodo,
       nombre: t.nombre?.trim(),
       dias_trab: parseInt(t.dias_trab || 0, 10),
-      horas_trab: parseFloat(t.horas_trab || 0),
-      horas_extras: parseFloat(t.horas_extras || 0),
-      horas_retraso: parseFloat(t.horas_retraso || 0),
+      horas_trab: Number(t.horas_trab || 0),               // derivado
+      horas_extras: Number(t.horas_extras || 0),
+      horas_retraso: Number(t.horas_retraso || 0),
       observacion: t.observacion || '',
-      horas_acum_trab: parseFloat(t.horas_acum_trab || 0),
+      horas_acum_trab: Number(t.horas_acum_trab || 0)      // derivado
     };
 
     try {
       if (t.id) {
         const res = await axios.put(`${API}api/trabajadores/${t.id}`, payload);
         const next = [...trabajadores];
-        next[idx] = res.data;
+        next[idx] = recalcDerivados(res.data);
         setTrabajadores(next);
         setMensaje({ tipo: 'success', texto: 'Trabajador actualizado.' });
       } else {
         const res = await axios.post(`${API}api/trabajadores`, payload);
         const next = [...trabajadores];
-        next[idx] = res.data;
+        next[idx] = recalcDerivados(res.data);
         setTrabajadores(next);
         setMensaje({ tipo: 'success', texto: 'Trabajador creado.' });
       }
@@ -118,12 +137,12 @@ const TrabajadoresPage = () => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-  // % HORA ASIST = horas acumuladas / horas trabajadas
+  // % HORA ASIST = (HORAS ACUM. TRAB / HORAS TRAB) * 100
   const pctAsistencia = (t) => {
     const horasAcum = Number(t.horas_acum_trab) || 0;
     const horasTrab = Number(t.horas_trab) || 0;
     if (horasTrab <= 0) return 0;
-    return Math.max(0, Math.min(100, (horasAcum / horasTrab) * 100));
+    return (horasAcum / horasTrab) * 100; // si quieres, limita a 0..100 con Math.min/Math.max
   };
 
   return (
@@ -137,7 +156,7 @@ const TrabajadoresPage = () => {
             className="form-control form-control-sm"
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value)}
-            style={{ width: 160 }}
+            style={{ width: 170, minHeight: 38, fontSize: '0.95rem' }}
           />
           <button className="btn btn-primary" onClick={agregarFila}>
             Nuevo trabajador
@@ -155,100 +174,118 @@ const TrabajadoresPage = () => {
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-dark">
             <tr>
-              <th style={{width: 70}}>ID</th>
-              <th style={{width: 130}}>MES</th>
-              <th>NOMBRE</th>
-              <th style={{width: 120}}>DIAS TRAB</th>
-              <th style={{width: 140}}>HORAS TRAB</th>
-              <th style={{width: 140}}>HORAS EXTRAS</th>
-              <th style={{width: 180}}>HORAS RETRASO / PERMISO</th>
-              <th>OBSERVACIÓN</th>
-              <th style={{width: 160}}>HORAS ACUM. TRAB</th>
-              <th style={{width: 140}}>% HORA ASIST</th>
-              <th style={{width: 170}}>ACCIONES</th>
+              <th style={{ minWidth: 70 }}>ID</th>
+              <th style={{ minWidth: 150 }}>MES</th>
+              <th style={{ minWidth: 180 }}>NOMBRE</th>
+              <th style={{ minWidth: 120 }}>DIAS TRAB</th>
+              <th style={{ minWidth: 140 }}>HORAS TRAB</th>
+              <th style={{ minWidth: 140 }}>HORAS EXTRAS</th>
+              <th style={{ minWidth: 190 }}>HORAS RETRASO / PERMISO</th>
+              <th style={{ minWidth: 220 }}>OBSERVACIÓN</th>
+              <th style={{ minWidth: 170 }}>HORAS ACUM. TRAB</th>
+              <th style={{ minWidth: 140 }}>% HORA ASIST</th>
+              <th style={{ minWidth: 170 }}>ACCIONES</th>
             </tr>
           </thead>
           <tbody>
             {trabajadores.map((t, idx) => (
               <tr key={t.id ?? `nuevo-${idx}`}>
                 <td>{t.id ?? '—'}</td>
+
                 <td>
                   <input
                     type="month"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputStyle}
                     value={t.periodo || periodo}
                     onChange={(e) => handleChange(idx, 'periodo', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="text"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputStyle}
                     value={t.nombre ?? ''}
                     onChange={(e) => handleChange(idx, 'nombre', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="number"
                     min="0"
                     step="1"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputStyle}
                     value={t.dias_trab ?? 0}
                     onChange={(e) => handleChange(idx, 'dias_trab', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="number"
-                    min="0"
-                    step="0.25"
-                    className="form-control form-control-sm"
+                    className="form-control bg-light"
+                    style={inputStyle}
                     value={t.horas_trab ?? 0}
-                    onChange={(e) => handleChange(idx, 'horas_trab', e.target.value)}
+                    readOnly
+                    tabIndex={-1}
+                    title="Calculado automáticamente: DIAS TRAB × 9"
                   />
                 </td>
+
                 <td>
                   <input
                     type="number"
                     min="0"
                     step="0.25"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputStyle}
                     value={t.horas_extras ?? 0}
                     onChange={(e) => handleChange(idx, 'horas_extras', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="number"
                     min="0"
                     step="0.25"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputStyle}
                     value={t.horas_retraso ?? 0}
                     onChange={(e) => handleChange(idx, 'horas_retraso', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="text"
-                    className="form-control form-control-sm"
+                    className="form-control"
+                    style={inputWide}
                     value={t.observacion ?? ''}
                     onChange={(e) => handleChange(idx, 'observacion', e.target.value)}
                   />
                 </td>
+
                 <td>
                   <input
                     type="number"
-                    min="0"
-                    step="0.25"
-                    className="form-control form-control-sm"
+                    className="form-control bg-light"
+                    style={inputStyle}
                     value={t.horas_acum_trab ?? 0}
-                    onChange={(e) => handleChange(idx, 'horas_acum_trab', e.target.value)}
+                    readOnly
+                    tabIndex={-1}
+                    title="Calculado: HORAS TRAB + HORAS EXTRAS − HORAS RETRASO / PERMISO"
                   />
                 </td>
-                <td className="text-center">
+
+                <td className="text-center" style={{ fontWeight: 600 }}>
                   {pctAsistencia(t).toFixed(1)}%
                 </td>
+
                 <td>
                   <div className="d-flex gap-2">
                     <button className="btn btn-success btn-sm" onClick={() => guardarFila(idx)}>
