@@ -9,6 +9,7 @@ const EditarOCPage = () => {
 
   const [items, setItems] = useState([]);
   const [materiales, setMateriales] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
   const [mensaje, setMensaje] = useState(null);
   const [comentario, setComentario] = useState('');
   const [totales, setTotales] = useState({ neto: 0, iva: 0, total: 0 });
@@ -27,7 +28,7 @@ const EditarOCPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  // Cargar ordenes (según filtro) y materiales
+  // Cargar ordenes (según filtro), materiales y proveedores
   useEffect(() => {
     const fetchOrdenes = async () => {
       try {
@@ -44,10 +45,13 @@ const EditarOCPage = () => {
 
     fetchOrdenes();
 
-    axios
-      .get(`${API}api/materiales`)
-      .then((res) => setMateriales(res.data || []))
+    axios.get(`${API}api/materiales`)
+      .then(res => setMateriales(res.data || []))
       .catch(() => setMateriales([]));
+
+    axios.get(`${API}api/proveedores`)
+      .then(res => setProveedores(res.data || []))
+      .catch(() => setProveedores([]));
   }, [estadoFiltro, API]);
 
   // Cargar ítems y cabecera al elegir una OC
@@ -79,19 +83,23 @@ const EditarOCPage = () => {
         // si no existe, sigue con lo que haya
       }
 
-      // Normaliza campos
+      // Normaliza básicos
       const proveedor = detalle.proveedor ?? ocDeLista?.proveedor ?? '';
-      const rutProveedor =
-        detalle.rut_proveedor ?? detalle.rut ?? ocDeLista?.rut_proveedor ?? '';
-      const bancoProveedor = detalle.banco ?? ocDeLista?.banco ?? '';
-      const cuentaProveedor = detalle.numero_cuenta ?? ocDeLista?.numero_cuenta ?? '';
       const fecha = (detalle.fecha ?? ocDeLista?.fecha ?? '').toString().slice(0, 10) || '';
       const realizadoPor = detalle.realizado_por ?? ocDeLista?.realizado_por ?? '';
-      // En tu lista venía "cliente_id" como texto visible; si tienes "cliente_nombre", úsalo
       const clienteNombre =
         detalle.cliente_nombre ?? ocDeLista?.cliente_nombre ?? ocDeLista?.cliente_id ?? '';
       const presupuestoNumero =
         detalle.numero_presupuesto ?? ocDeLista?.numero_presupuesto ?? '';
+
+      // Buscar datos del proveedor en la lista de proveedores
+      const prov = proveedores.find(
+        (p) => (p.proveedor || '').toString().trim().toLowerCase() === (proveedor || '').toString().trim().toLowerCase()
+      ) || {};
+
+      const rutProveedor = detalle.rut_proveedor ?? detalle.rut ?? prov.rut ?? '';
+      const bancoProveedor = detalle.banco ?? prov.banco ?? '';
+      const cuentaProveedor = detalle.numero_cuenta ?? prov.numero_cuenta ?? '';
 
       setCabeceraOC({
         proveedor,
@@ -112,7 +120,7 @@ const EditarOCPage = () => {
 
     cargarItemsYCabecera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numeroOCSeleccionado, ordenes, API]);
+  }, [numeroOCSeleccionado, ordenes, proveedores, API]);
 
   const obtenerPrecioUltimo = async (codigo) => {
     try {
@@ -346,15 +354,9 @@ const EditarOCPage = () => {
       </div>
 
       <div className="text-end me-3">
-        <p>
-          <strong>Total Neto:</strong> ${totales.neto.toLocaleString('es-CL')}
-        </p>
-        <p>
-          <strong>IVA 19%:</strong> ${totales.iva.toLocaleString('es-CL')}
-        </p>
-        <p>
-          <strong>TOTAL:</strong> ${totales.total.toLocaleString('es-CL')}
-        </p>
+        <p><strong>Total Neto:</strong> ${totales.neto.toLocaleString('es-CL')}</p>
+        <p><strong>IVA 19%:</strong> ${totales.iva.toLocaleString('es-CL')}</p>
+        <p><strong>TOTAL:</strong> ${totales.total.toLocaleString('es-CL')}</p>
       </div>
 
       <label>Comentario</label>
