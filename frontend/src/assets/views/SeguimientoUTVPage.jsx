@@ -387,11 +387,11 @@ return (
                       type="number"
                       className="form-control me-2"
                       style={{ width: '80px' }}
-                      name="marcos_adicionales (0.5 UTV)"
+                      name="marcos_adicionales"
                       value={utv.marcos_adicionales || 0}
                       onChange={e => handleChange(e, setUTV)}
                     />
-                    <span className="me-2">Marco Adicionales</span>
+                    <span className="me-2">Marco Adicionales (0.5 UTV)</span>
                     <input
                       type="text"
                       className="form-control"
@@ -408,11 +408,11 @@ return (
                       type="number"
                       className="form-control me-2"
                       style={{ width: '80px' }}
-                      name="otro  (0.25 UTV)"
+                      name="otro"
                       value={utv.otro || 0}
                       onChange={e => handleChange(e, setUTV)}
                     />
-                    <span className="me-2">Otro</span>
+                    <span className="me-2">Otro (0.25 UTV)</span>
                     <input
                       type="text"
                       className="form-control"
