@@ -42,7 +42,7 @@ app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/facturas_guias', facturasGuiasRouter);
 app.use('/api/proveedores_credito', proveedoresCreditoRoutes);
 app.use('/api/taller', tallerRoutes);
-app.use('/api/trabajadores', trabajadoresRoutes);
+app.use('/api', trabajadoresRoutes); // expone /api/trabajadores
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({
