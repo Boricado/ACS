@@ -1,224 +1,230 @@
+// src/pages/SeguimientoUTVPage.jsx
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import Collapse from 'bootstrap/js/dist/collapse'
+import Collapse from 'bootstrap/js/dist/collapse';
+import { generarPDF_UTV } from '../utils/generarPDF_UTV';
 
 const formatearFecha = (fechaISO) => {
   if (!fechaISO) return '';
   const fecha = new Date(fechaISO);
-  fecha.setHours(fecha.getHours() + 4); // Sumar 4 horas (corrige UTC-4)
+  fecha.setHours(fecha.getHours() + 4); // corrige UTC-4
   const dia = String(fecha.getDate()).padStart(2, '0');
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
   const anio = fecha.getFullYear();
   return `${dia}-${mes}-${anio}`;
 };
-
-const obtenerFechaHoy = () => {
-  return new Date().toISOString().split('T')[0];
-};
+const obtenerFechaHoy = () => new Date().toISOString().split('T')[0];
 
 const SeguimientoUTVPage = () => {
   const API = import.meta.env.VITE_API_URL;
-  const [fechaActual] = useState(obtenerFechaHoy());
   const refUTVAccordion = useRef(null);
-  const [termoData, setTermoData] = useState([]);
 
-  const totalM2Termo = termoData.reduce((acum, item) => {
-  const ancho = parseFloat(item.ancho_mm) || 0;
-  const alto = parseFloat(item.alto_mm) || 0;
-  const cantidad = parseInt(item.cantidad) || 1;
-  const m2 = (ancho * alto * cantidad) / 1000000;
-  return acum + m2;
-    }, 0);
-
-const totalValorTermo = termoData.reduce((acum, item) => {
-  const valorM2 = parseFloat(item.valor_m2) || 0;
-  const ancho = parseFloat(item.ancho_mm) || 0;
-  const alto = parseFloat(item.alto_mm) || 0;
-  const cantidad = parseInt(item.cantidad) || 1;
-  const m2 = (ancho * alto * cantidad) / 1000000;
-  return acum + (m2 * valorM2);
-    }, 0);
-
-
-  const [utv, setUTV] = useState({
-    fecha: obtenerFechaHoy(), nombre_pauta: '', numero_pauta: '', tipo: 'PVC',
-    doble_corredera: 0, proyectante: 0, fijo: 0, oscilobatiente: 0,
-    doble_corredera_fijo: 0, marco_puerta: 0, marco_adicionales: 0, otro: 0,
-    observacion_marcos: '', observacion_otro: '', valor_m2: 3000
-  });
+  // ---------- Estados ----------
+  const formularioVacio = {
+    fecha: obtenerFechaHoy(),
+    nombre_pauta: '',
+    numero_pauta: '',
+    tipo: 'PVC',
+    fijo: 0,
+    doble_corredera_fijo: 0,
+    proyectante: 0,
+    oscilobatiente: 0,
+    doble_corredera: 0,
+    marco_puerta: 0,
+    marcos_adicionales: 0,
+    comentario_marcos: '',
+    otro: 0,
+    comentario_otro: '',
+    valor_m2: 3000,
+    m2_instalador: 0,
+    instalador: ''
+  };
+  const [utv, setUTV] = useState({ ...formularioVacio });
 
   const [termopanel, setTermopanel] = useState({
-    fecha: obtenerFechaHoy(), nombre_cliente: '', cantidad: 0, ancho: 0, alto: 0,
-    m2: 0, observacion: '', valor_m2: 1500
+    fecha: obtenerFechaHoy(),
+    nombre_cliente: '',
+    cantidad: 0,
+    ancho: 0,
+    alto: 0,
+    m2: 0,
+    observacion: '',
+    valor_m2: 1500
+  });
+
+  const [instalacion, setInstalacion] = useState({
+    fecha: obtenerFechaHoy(),
+    nombre_cliente: '',
+    m2_rectificacion: 0,
+    observacion: '',
+    valor_m2: 3000
   });
 
   const [utvData, setUtvData] = useState([]);
   const [termopanelData, setTermopanelData] = useState([]);
   const [instalacionData, setInstalacionData] = useState([]);
 
-  const [mes, setMes] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
-  const [anio, setAnio] = useState(new Date().getFullYear().toString());
-  const [mesFiltro, setMesFiltro] = useState(mes);
-  const [anioFiltro, setAnioFiltro] = useState(anio);
+  const [mesFiltro, setMesFiltro] = useState(String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [anioFiltro, setAnioFiltro] = useState(String(new Date().getFullYear()));
 
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [idEditando, setIdEditando] = useState(null);
 
+  // Controles PDF
+  const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [utvAcum, setUtvAcum] = useState(0);
+  const [valorUTV, setValorUTV] = useState(3000);
+  const [cargando, setCargando] = useState(false);
+
+  // ---------- Helpers ----------
   const handleChange = (e, setter) => {
     const { name, value } = e.target;
     setter(prev => ({ ...prev, [name]: value }));
   };
 
-  const mapUTVtoBackend = () => ({
-    fecha: utv.fecha,
-    nombre_pauta: utv.nombre_pauta,
-    numero_pauta: utv.numero_pauta,
-    tipo: utv.tipo,
-    doble_corredera: utv.doble_corredera,
-    proyectante: utv.proyectante,
-    fijo: utv.fijo,
-    oscilobatiente: utv.oscilobatiente,
-    doble_corredera_fijo: utv.doble_corredera_fijo,
-    marco_puerta: utv.marco_puerta,
-    marcos_adicionales: utv.marco_adicionales,
-    comentario_marcos: utv.observacion_marcos,
-    otro: utv.otro,
-    comentario_otro: utv.observacion_otro,
-    valor_m2: utv.valor_m2
-  });
+  const calcularUTV = (item) => {
+    const fijo = parseFloat(item.fijo || 0) * 0.5;
+    const fijoCorredera = parseFloat(item.doble_corredera_fijo || 0) * 1.5;
+    const proyectante = parseFloat(item.proyectante || 0) * 1;     // 1 UTV
+    const oscilobatiente = parseFloat(item.oscilobatiente || 0) * 1;
+    const dobleCorredera = parseFloat(item.doble_corredera || 0) * 2;
+    const marcoPuerta = parseFloat(item.marco_puerta || 0) * 2.5;
+    const marcoAdicional = parseFloat(item.marcos_adicionales || 0) * 0.5;
+    const otro = parseFloat(item.otro || 0) * 0.25;
+    return fijo + fijoCorredera + proyectante + oscilobatiente + dobleCorredera + marcoPuerta + marcoAdicional + otro;
+  };
 
-  const mapTermopanelToBackend = () => ({
-    fecha: termopanel.fecha,
-    cliente: termopanel.nombre_cliente,
-    cantidad: termopanel.cantidad,
-    ancho_mm: termopanel.ancho,
-    alto_mm: termopanel.alto,
-    m2: termopanel.m2,
-    observaciones: termopanel.observacion,
-    valor_m2: termopanel.valor_m2
-  });
-
-  const mapInstalacionToBackend = () => ({
-    fecha: instalacion.fecha,
-    cliente: instalacion.nombre_cliente,
-    m2: instalacion.m2_rectificacion,
-    observaciones: instalacion.observacion,
-    valor_m2: instalacion.valor_m2
-  });
-
-    const registrarUTV = async () => {
-        try {
-            if (modoEdicion && idEditando) {
-            await axios.put(`${API}api/taller/utv/${idEditando}`, utv);
-            } else {
-            await axios.post(`${API}api/taller/utv`, utv);
-            }
-
-            await cargarRegistros(); // recarga la tabla
-            setUTV({ ...formularioVacio }); // limpia el formulario
-            setModoEdicion(false);
-            setIdEditando(null);
-        } catch (error) {
-            console.error('Error al guardar UTV:', error);
-        }
-        };
-
-        const editarRegistro = (item) => {
-        setUTV({
-            fecha: item.fecha ? item.fecha.split('T')[0] : '', // ✅ importante
-            // los demás campos igual que antes...
-            nombre_pauta: item.nombre_pauta,
-            numero_pauta: item.numero_pauta,
-            tipo: item.tipo,
-            fijo: item.fijo,
-            doble_corredera_fijo: item.doble_corredera_fijo,
-            proyectante: item.proyectante,
-            oscilobatiente: item.oscilobatiente,
-            doble_corredera: item.doble_corredera,
-            marco_puerta: item.marco_puerta,
-            marcos_adicionales: item.marcos_adicionales,
-            comentario_marcos: item.comentario_marcos,
-            otro: item.otro,
-            comentario_otro: item.comentario_otro,
-            valor_m2: item.valor_m2,
-            m2_instalador: item.m2_instalador || 0,
-        });
-
-        setModoEdicion(true);
-        setIdEditando(item.id);
-
-        // Mostrar el acordeón
-        const collapseEl = document.getElementById('collapseUTV');
-        if (collapseEl && !collapseEl.classList.contains('show')) {
-            const collapse = new Collapse(collapseEl, { toggle: true });
-            collapse.show();
-        }
-
-        // 📜 Hacer scroll hacia la sección
-        setTimeout(() => {
-            refUTVAccordion.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300); // espera a que el acordeón se despliegue
-        };
-
-
-
-    const eliminarRegistro = async (id) => {
-    if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
-
+  // ---------- CRUD UTV ----------
+  const cargarRegistros = async () => {
     try {
-        await axios.delete(`${API}api/taller/utv/${id}`);
-        await cargarRegistros(); // recarga tabla después de eliminar
+      const res = await axios.get(`${API}api/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
+      setUtvData(res.data || []);
     } catch (error) {
-        console.error('Error al eliminar UTV:', error);
-        alert('No se pudo eliminar el registro.');
+      console.error('Error al cargar registros UTV:', error);
     }
-    };
+  };
 
+  const registrarUTV = async () => {
+    try {
+      if (modoEdicion && idEditando) {
+        await axios.put(`${API}api/taller/utv/${idEditando}`, utv);
+      } else {
+        await axios.post(`${API}api/taller/utv`, utv);
+      }
+      await cargarRegistros();
+      setUTV({ ...formularioVacio });
+      setModoEdicion(false);
+      setIdEditando(null);
+    } catch (error) {
+      console.error('Error al guardar UTV:', error);
+      throw error;
+    }
+  };
 
+  const editarRegistro = (item) => {
+    setUTV({
+      fecha: item.fecha ? item.fecha.split('T')[0] : obtenerFechaHoy(),
+      nombre_pauta: item.nombre_pauta || '',
+      numero_pauta: item.numero_pauta || '',
+      tipo: item.tipo || 'PVC',
+      fijo: item.fijo || 0,
+      doble_corredera_fijo: item.doble_corredera_fijo || 0,
+      proyectante: item.proyectante || 0,
+      oscilobatiente: item.oscilobatiente || 0,
+      doble_corredera: item.doble_corredera || 0,
+      marco_puerta: item.marco_puerta || 0,
+      marcos_adicionales: item.marcos_adicionales || 0,
+      comentario_marcos: item.comentario_marcos || '',
+      otro: item.otro || 0,
+      comentario_otro: item.comentario_otro || '',
+      valor_m2: item.valor_m2 || 3000,
+      m2_instalador: item.m2_instalador || 0,
+      instalador: item.instalador || ''
+    });
+    setModoEdicion(true);
+    setIdEditando(item.id);
+    const collapseEl = document.getElementById('collapseUTV');
+    if (collapseEl && !collapseEl.classList.contains('show')) {
+      const collapse = new Collapse(collapseEl, { toggle: true });
+      collapse.show();
+    }
+    setTimeout(() => {
+      refUTVAccordion.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  };
 
+  const eliminarRegistro = async (id) => {
+    if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
+    try {
+      await axios.delete(`${API}api/taller/utv/${id}`);
+      await cargarRegistros();
+    } catch (error) {
+      console.error('Error al eliminar UTV:', error);
+      alert('No se pudo eliminar el registro.');
+    }
+  };
+
+  // ---------- Termopanel ----------
   const registrarTermopanel = async () => {
     try {
-      await axios.post(`${API}api/taller/termopanel`, mapTermopanelToBackend());
+      await axios.post(`${API}api/taller/termopanel`, {
+        fecha: termopanel.fecha,
+        cliente: termopanel.nombre_cliente,
+        cantidad: termopanel.cantidad,
+        ancho_mm: termopanel.ancho,
+        alto_mm: termopanel.alto,
+        m2: termopanel.m2,
+        observaciones: termopanel.observacion,
+        valor_m2: termopanel.valor_m2
+      });
+      await obtenerDatos();
       alert('Termopanel registrado correctamente');
-      obtenerDatos();
     } catch (error) {
       console.error('Error al registrar termopanel:', error);
       alert('Error al guardar termopanel.');
     }
   };
 
-    const cargarTermos = async () => {
+  const cargarTermos = async () => {
     try {
-        const res = await axios.get(`${API}api/taller/termopanel?mes=${mesFiltro}&anio=${anioFiltro}`);
-        setTermoData(res.data);
+      const res = await axios.get(`${API}api/taller/termopanel?mes=${mesFiltro}&anio=${anioFiltro}`);
+      setTermopanelData(res.data || []);
     } catch (error) {
-        console.error('Error al cargar datos de termopanel:', error);
+      console.error('Error al cargar termopanel:', error);
     }
-    };
+  };
 
-    const editarTermo = (item) => {
-    setModoEdicionTermo(true);
-    setTermoEditando(item);
-    // Opcional: despliegue acordeón de edición
-    };
+  const editarTermo = (item) => {
+    // si quieres abrir acordeón de edición, agrégalo aquí
+    console.log('editarTermo', item);
+  };
 
-    const eliminarTermo = async (id) => {
+  const eliminarTermo = async (id) => {
     if (window.confirm('¿Deseas eliminar este registro termo?')) {
-        await axios.delete(`${API}api/taller/termopanel/${id}`);
-        await cargarTermos(); // vuelve a cargar
+      await axios.delete(`${API}api/taller/termopanel/${id}`);
+      await cargarTermos();
     }
-    };
+  };
 
-
+  // ---------- Instalaciones ----------
   const registrarInstalacion = async () => {
     try {
-      await axios.post(`${API}api/taller/instalaciones`, mapInstalacionToBackend());
+      await axios.post(`${API}api/taller/instalaciones`, {
+        fecha: instalacion.fecha,
+        cliente: instalacion.nombre_cliente,
+        m2: instalacion.m2_rectificacion,
+        observaciones: instalacion.observacion,
+        valor_m2: instalacion.valor_m2
+      });
+      await obtenerDatos();
       alert('Instalación registrada correctamente');
-      obtenerDatos();
     } catch (error) {
       console.error('Error al registrar instalación:', error);
       alert('Error al guardar instalación.');
     }
   };
 
+  // ---------- Carga general ----------
   const obtenerDatos = async () => {
     const params = { mes: mesFiltro, anio: anioFiltro };
     try {
@@ -227,99 +233,145 @@ const totalValorTermo = termoData.reduce((acum, item) => {
         axios.get(`${API}api/taller/termopanel`, { params }),
         axios.get(`${API}api/taller/instalaciones`, { params })
       ]);
-      setUtvData(utvRes.data);
-      setTermopanelData(termoRes.data);
-      setInstalacionData(instRes.data);
+      setUtvData(utvRes.data || []);
+      setTermopanelData(termoRes.data || []);
+      setInstalacionData(instRes.data || []);
     } catch (error) {
       console.error('Error al cargar datos:', error);
       alert('Error al cargar datos del taller.');
     }
   };
 
-    const cargarRegistros = async () => {
-      try {
-        const res = await axios.get(`${API}api/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
-        setUtvData(res.data);
-      } catch (error) {
-        console.error('Error al cargar registros UTV:', error);
-        // Manejar el error, por ejemplo, mostrando un mensaje al usuario
-      }
-    };
-
   useEffect(() => {
     obtenerDatos();
     cargarTermos();
-    }, [mesFiltro, anioFiltro]);
+  }, [mesFiltro, anioFiltro]);
 
-const calcularUTV = (item) => {
-    const fijo = parseFloat(item.fijo || 0) * 0.5;
-    const fijoCorredera = parseFloat(item.doble_corredera_fijo || 0) * 1.5;
-    const proyectante = parseFloat(item.proyectante || 0) * 1;
-    const oscilobatiente = parseFloat(item.oscilobatiente || 0) * 1;
-    const dobleCorredera = parseFloat(item.doble_corredera || 0) * 2;
-    const marcoPuerta = parseFloat(item.marco_puerta || 0) * 2.5;
-    const marcoAdicional = parseFloat(item.marcos_adicionales || 0) * 0.5;
-    const otro = parseFloat(item.otro || 0) * 0.25;
-
-    return fijo + fijoCorredera + proyectante + oscilobatiente + dobleCorredera + marcoPuerta + marcoAdicional + otro;
-};
-
-const sumaUTV = utvData.reduce((acc, item) => acc + calcularUTV(item), 0);
-const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
-const totalTermopanel = termoData.reduce((sum, t) => sum + Number(t.m2), 0);
-const totalInstalacion = instalacionData.reduce((acc, item) => acc + parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0), 0);
-
-const [modoEdicion, setModoEdicion] = useState(false);
-const [idEditando, setIdEditando] = useState(null);
-
-// Instalaciones (normales)
-const totalM2Instalaciones = instalacionData.reduce((acum, item) => {
-  return acum + (parseFloat(item.m2_rectificacion) || 0);
-}, 0);
-
-const valorAcumuladoInstalaciones = instalacionData.reduce((acum, item) => {
-  const m2 = parseFloat(item.m2_rectificacion) || 0;
-  const valorM2 = parseFloat(item.valor_m2) || 0;
-  return acum + (valorM2 * m2);
-}, 0);
-
-// Filtrar UTV donde instalador sea "Alumce"
-const utvAlumce = utvData.filter(item => item.instalador === "Alumce");
-
-// Calcular m² totales de Alumce
-const totalM2Alumce = utvAlumce.reduce((acum, item) => {
-  return acum + (parseFloat(item.m2_instalador) || 0);
-}, 0);
-
-// Calcular valor acumulado de Alumce
-const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
-  const valorM2 = parseFloat(item.valor_m2) || 0;
-  const m2 = parseFloat(item.m2_instalador) || 0;
-  return acum + (valorM2 * m2);
-}, 0);
-
-// Suma total para mostrar en "Instalación"
-const totalM2InstalacionesConAlumce = totalM2Instalaciones + totalM2Alumce;
-const valorAcumuladoInstalacionesConAlumce = valorAcumuladoInstalaciones + valorAcumuladoAlumce;
-
-
-useEffect(() => {
+  // Recalcular m2 de termopanel cuando cambia ancho/alto
+  useEffect(() => {
     const ancho = parseFloat(termopanel.ancho) || 0;
     const alto = parseFloat(termopanel.alto) || 0;
-    const m2 = ((ancho / 1000) * (alto / 1000)).toFixed(2); // convierte de mm a m y calcula m2
-
+    const m2 = ((ancho / 1000) * (alto / 1000)).toFixed(2);
     setTermopanel(prev => ({ ...prev, m2 }));
-}, [termopanel.ancho, termopanel.alto]);
+  }, [termopanel.ancho, termopanel.alto]);
 
+  // ---------- Totales ----------
+  const totalUTV = utvData.reduce((acc, item) => acc + calcularUTV(item) * parseFloat(item.valor_m2 || 0), 0);
 
-return (
-  <div className="container">
-    <h2 className="mt-4">Seguimiento de UTV - Ingreso de Datos</h2>
+  const totalM2Termo = termopanelData.reduce((acum, item) => {
+    const ancho = parseFloat(item.ancho_mm) || 0;
+    const alto = parseFloat(item.alto_mm) || 0;
+    const cantidad = parseInt(item.cantidad) || 1;
+    const m2 = (ancho * alto * cantidad) / 1_000_000;
+    return acum + m2;
+  }, 0);
+  const totalValorTermo = termopanelData.reduce((acum, item) => {
+    const ancho = parseFloat(item.ancho_mm) || 0;
+    const alto = parseFloat(item.alto_mm) || 0;
+    const cantidad = parseInt(item.cantidad) || 1;
+    const m2 = (ancho * alto * cantidad) / 1_000_000;
+    const valorM2 = parseFloat(item.valor_m2) || 0;
+    return acum + m2 * valorM2;
+  }, 0);
 
-    <h4 className="mt-4">Registrar Datos</h4>
-    <div className="row">
+  // Instalaciones normales
+  const totalM2Instalaciones = instalacionData.reduce((acum, item) => acum + (parseFloat(item.m2_rectificacion) || 0), 0);
+  const valorAcumuladoInstalaciones = instalacionData.reduce((acum, item) => {
+    const m2 = parseFloat(item.m2_rectificacion) || 0;
+    const valorM2 = parseFloat(item.valor_m2) || 0;
+    return acum + (valorM2 * m2);
+  }, 0);
 
-      {/* Formulario UTV */}
+  // UTV marcadas como "Alumce"
+  const utvAlumce = utvData.filter(item => item.instalador === 'Alumce');
+  const totalM2Alumce = utvAlumce.reduce((acum, item) => acum + (parseFloat(item.m2_instalador) || 0), 0);
+  const valorAcumuladoAlumce = utvAlumce.reduce((acum, item) => {
+    const valorM2 = parseFloat(item.valor_m2) || 0;
+    const m2 = parseFloat(item.m2_instalador) || 0;
+    return acum + (valorM2 * m2);
+  }, 0);
+
+  const totalM2InstalacionesConAlumce = totalM2Instalaciones + totalM2Alumce;
+  const valorAcumuladoInstalacionesConAlumce = valorAcumuladoInstalaciones + valorAcumuladoAlumce;
+
+  const totalInstalacion = instalacionData.reduce(
+    (acc, item) => acc + (parseFloat(item.m2_rectificacion || 0) * parseFloat(item.valor_m2 || 0)),
+    0
+  );
+
+  // ---------- PDF ----------
+  const generar = async () => {
+    try {
+      setCargando(true);
+      const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
+      const trabajadores = res.data || [];
+      if (trabajadores.length === 0) {
+        alert('No hay trabajadores para ese mes.');
+        return;
+      }
+      generarPDF_UTV({
+        periodo,
+        trabajadores,
+        utvAcum: Number(utvAcum) || 0,
+        valorUTV: Number(valorUTV) || 0
+      });
+    } catch (e) {
+      console.error(e);
+      alert('No se pudo generar el PDF.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // ---------- Render ----------
+  return (
+    <div className="container">
+      <h2 className="mt-4">Seguimiento de UTV - Ingreso de Datos</h2>
+
+      {/* Controles PDF */}
+      <div className="row g-2 align-items-end mt-3">
+        <div className="col-auto">
+          <label className="form-label">Periodo</label>
+          <input type="month" className="form-control" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <label className="form-label">UTV acumuladas</label>
+          <input type="number" step="0.1" className="form-control" value={utvAcum} onChange={(e) => setUtvAcum(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <label className="form-label">Valor UTV ($)</label>
+          <input type="number" className="form-control" value={valorUTV} onChange={(e) => setValorUTV(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <button className="btn btn-primary" onClick={generar} disabled={cargando}>
+            {cargando ? 'Generando…' : 'Generar PDF UTV'}
+          </button>
+        </div>
+      </div>
+
+      {/* Filtros de tabla */}
+      <div className="row my-3">
+        <div className="col-md-2">
+          <label>Mes</label>
+          <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
+            {[...Array(12)].map((_, i) => (
+              <option key={i} value={(i + 1).toString().padStart(2, '0')}>
+                {(i + 1).toString().padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label>Año</label>
+          <select className="form-select" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)}>
+            {[2024, 2025, 2026].map(a => (
+              <option key={a} value={a.toString()}>{a}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Acordeón UTV */}
       <div className="accordion my-3" id="accordionUTV">
         <div className="accordion-item">
           <h2 className="accordion-header" id="headingUTV">
@@ -327,13 +379,7 @@ return (
               Registrar UTV
             </button>
           </h2>
-          <div
-            id="collapseUTV"
-            className="accordion-collapse collapse"
-            aria-labelledby="headingUTV"
-            data-bs-parent="#accordionUTV"
-            ref={refUTVAccordion}
-            >
+          <div id="collapseUTV" className="accordion-collapse collapse" aria-labelledby="headingUTV" data-bs-parent="#accordionUTV" ref={refUTVAccordion}>
             <div className="accordion-body">
               <div className="row g-2">
                 {/* Cabecera */}
@@ -361,12 +407,12 @@ return (
                 {/* Lista de ventanas */}
                 <div className="col-md-6">
                   {[
-                    { name: "fijo", label: "Fijo (0.5 UTV)" },
-                    { name: "doble_corredera_fijo", label: "Fijo + corredera (1.5 UTV)" },
-                    { name: "proyectante", label: "Proyectante (0.5 UTV)" },
-                    { name: "oscilobatiente", label: "Oscilobatiente (1 UTV)" },
-                    { name: "doble_corredera", label: "Doble Corredera (2 UTV)" },
-                    { name: "marco_puerta", label: "Marco Puerta (2.5 UTV)" }
+                    { name: 'fijo', label: 'Fijo (0.5 UTV)' },
+                    { name: 'doble_corredera_fijo', label: 'Fijo + corredera (1.5 UTV)' },
+                    { name: 'proyectante', label: 'Proyectante (1 UTV)' },
+                    { name: 'oscilobatiente', label: 'Oscilobatiente (1 UTV)' },
+                    { name: 'doble_corredera', label: 'Doble Corredera (2 UTV)' },
+                    { name: 'marco_puerta', label: 'Marco Puerta (2.5 UTV)' }
                   ].map((item, idx) => (
                     <div className="d-flex mb-2 align-items-center" key={idx}>
                       <input
@@ -381,7 +427,7 @@ return (
                     </div>
                   ))}
 
-                  {/* Marco Adicionales con observación */}
+                  {/* Marcos adicionales */}
                   <div className="d-flex mb-2 align-items-center">
                     <input
                       type="number"
@@ -391,7 +437,7 @@ return (
                       value={utv.marcos_adicionales || 0}
                       onChange={e => handleChange(e, setUTV)}
                     />
-                    <span className="me-2">Marco Adicionales (0.5 UTV)</span>
+                    <span className="me-2">Marcos Adicionales (0.5 UTV)</span>
                     <input
                       type="text"
                       className="form-control"
@@ -402,7 +448,7 @@ return (
                     />
                   </div>
 
-                  {/* Otro con observación */}
+                  {/* Otro */}
                   <div className="d-flex mb-2 align-items-center">
                     <input
                       type="number"
@@ -424,27 +470,15 @@ return (
                   </div>
                 </div>
 
-                {/* Valor m2 */}
+                {/* Valor y m² */}
                 <div className="col-md-6">
                   <div className="mb-2">
                     <label>Valor m²</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="valor_m2"
-                      value={utv.valor_m2}
-                      onChange={e => handleChange(e, setUTV)}
-                    />
+                    <input type="number" className="form-control" name="valor_m2" value={utv.valor_m2} onChange={e => handleChange(e, setUTV)} />
                   </div>
                   <div className="mb-2">
                     <label>M² Totales</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="m2_instalador"
-                      value={utv.m2_instalador}
-                      onChange={e => handleChange(e, setUTV)}
-                    />
+                    <input type="number" className="form-control" name="m2_instalador" value={utv.m2_instalador} onChange={e => handleChange(e, setUTV)} />
                   </div>
                 </div>
 
@@ -452,62 +486,20 @@ return (
                   <button
                     className="btn btn-secondary me-2"
                     onClick={() => {
-                    setUTV({
-                        fecha: obtenerFechaHoy(),
-                        nombre_pauta: '',
-                        numero_pauta: '',
-                        tipo: 'PVC',
-                        doble_corredera: 0,
-                        proyectante: 0,
-                        fijo: 0,
-                        oscilobatiente: 0,
-                        doble_corredera_fijo: 0,
-                        marco_puerta: 0,
-                        marcos_adicionales: 0,
-                        comentario_marcos: '',
-                        otro: 0,
-                        comentario_otro: '',
-                        valor_m2: 3000,
-                        m2_instalador: 0,
-                    });
-                    setModoEdicion(false);
-                    setIdEditando(null);
-                    cargarRegistros(); // 🔄 opcional: refrescar tabla
+                      setUTV({ ...formularioVacio });
+                      setModoEdicion(false);
+                      setIdEditando(null);
                     }}
-                >
+                  >
                     Limpiar
-                </button>
+                  </button>
                   <button
                     className="btn btn-success"
                     onClick={async () => {
-                        try {
-                            await registrarUTV(); // Esta maneja tanto creación como actualización
-
-                            alert(modoEdicion ? 'UTV actualizado con éxito' : 'UTV guardado con éxito');
-                            await cargarRegistros();
-                            setModoEdicion(false);
-                        // Limpiar el formulario si deseas:
-                        setUTV({
-                          fecha: obtenerFechaHoy(),
-                          nombre_pauta: '',
-                          numero_pauta: '',
-                          tipo: 'PVC',
-                          doble_corredera: 0,
-                          proyectante: 0,
-                          fijo: 0,
-                          oscilobatiente: 0,
-                          doble_corredera_fijo: 0,
-                          marco_puerta: 0,
-                          marco_adicionales: 0,
-                          otro: 0,
-                          observacion_marcos: '',
-                          observacion_otro: '',
-                          valor_m2: 3000,
-                          m2_instalador: 0,
-                        });
-
-                      } catch (error) {
-                        console.error('Error al guardar/actualizar UTV:', error);
+                      try {
+                        await registrarUTV();
+                        alert(modoEdicion ? 'UTV actualizado con éxito' : 'UTV guardado con éxito');
+                      } catch {
                         alert('Error al guardar/actualizar UTV');
                       }
                     }}
@@ -521,81 +513,7 @@ return (
         </div>
       </div>
 
-      {/* Termopanel */}
-      <div className="accordion my-3" id="accordionTermopanel">
-        <div className="accordion-item">
-          <h2 className="accordion-header" id="headingTermopanel">
-            <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTermopanel" aria-expanded="false" aria-controls="collapseTermopanel">
-              Registrar Termopanel
-            </button>
-          </h2>
-          <div id="collapseTermopanel" className="accordion-collapse collapse" aria-labelledby="headingTermopanel" data-bs-parent="#accordionTermopanel">
-            <div className="accordion-body">
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <label>Fecha</label>
-                  <input type="date" name="fecha" className="form-control" value={termopanel.fecha} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-4">
-                  <label>Cliente</label>
-                  <input type="text" name="nombre_cliente" className="form-control" value={termopanel.nombre_cliente} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-4">
-                  <label>Cantidad</label>
-                  <input type="number" name="cantidad" className="form-control" value={termopanel.cantidad} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-3">
-                  <label>Ancho (mm)</label>
-                  <input type="number" name="ancho" className="form-control" value={termopanel.ancho} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-3">
-                  <label>Alto (mm)</label>
-                  <input type="number" name="alto" className="form-control" value={termopanel.alto} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-3">
-                  <label>M²</label>
-                  <input type="number" name="m2" className="form-control" value={termopanel.m2} readOnly />
-                </div>
-                <div className="col-md-3">
-                  <label>Valor m²</label>
-                  <input type="number" name="valor_m2" className="form-control" value={termopanel.valor_m2} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-12">
-                  <label>Observación</label>
-                  <input type="text" name="observacion" className="form-control" value={termopanel.observacion} onChange={(e) => handleChange(e, setTermopanel)} />
-                </div>
-                <div className="col-md-12 text-end mt-3">
-                  <button className="btn btn-success" onClick={registrarTermopanel}>Guardar Termopanel</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="row my-3">
-        <div className="col-md-2">
-          <label>Mes</label>
-          <select className="form-select" value={mesFiltro} onChange={e => setMesFiltro(e.target.value)}>
-            {[...Array(12)].map((_, i) => (
-              <option key={i} value={(i + 1).toString().padStart(2, '0')}>
-                {(i + 1).toString().padStart(2, '0')}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <label>Año</label>
-          <select className="form-select" value={anioFiltro} onChange={e => setAnioFiltro(e.target.value)}>
-            {[2024, 2025, 2026].map(a => (
-              <option key={a} value={a.toString()}>{a}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Tabla */}
+      {/* Tabla UTV */}
       {utvData.length > 0 ? (
         <>
           <h4 className="mt-4">Registros UTV</h4>
@@ -629,11 +547,8 @@ return (
                       value={item.instalador || ''}
                       onChange={async (e) => {
                         try {
-                          const nuevoInstalador = e.target.value;
-                          await axios.put(`${API}api/taller/utv/${item.id}/instalador`, {
-                            instalador: nuevoInstalador,
-                        });
-                          await cargarRegistros(); // Recarga la tabla
+                          await axios.put(`${API}api/taller/utv/${item.id}/instalador`, { instalador: e.target.value });
+                          await cargarRegistros();
                         } catch (err) {
                           console.error('Error al actualizar instalador:', err);
                           alert('No se pudo actualizar el instalador.');
@@ -658,13 +573,13 @@ return (
         <p>No hay registros para este mes/año.</p>
       )}
 
-        {/* Tabla de Registro Termo */}
-        {termoData.length > 0 ? (
+      {/* Tabla Termopanel */}
+      {termopanelData.length > 0 ? (
         <>
-            <h4 className="mt-4">Registro Termo</h4>
-            <table className="table table-sm table-bordered">
+          <h4 className="mt-4">Registro Termo</h4>
+          <table className="table table-sm table-bordered">
             <thead className="table-light">
-                <tr>
+              <tr>
                 <th>Fecha</th>
                 <th>Cliente</th>
                 <th>Cantidad</th>
@@ -672,40 +587,37 @@ return (
                 <th>Alto (mm)</th>
                 <th>M²</th>
                 <th>Acciones</th>
-                </tr>
+              </tr>
             </thead>
             <tbody>
-                {termoData.map(item => {
-                    const ancho = parseFloat(item.ancho_mm) || 0;
-                    const alto = parseFloat(item.alto_mm) || 0;
-                    const cantidad = parseInt(item.cantidad) || 1;
-                    const m2 = (ancho * alto * cantidad) / 1000000;
-
-                    return (
-                    <tr key={item.id}>
-                        <td>{formatearFecha(item.fecha)}</td>
-                        <td>{item.cliente || '-'}</td>
-                        <td>{cantidad}</td>
-                        <td>{ancho > 0 ? ancho : '-'}</td>
-                        <td>{alto > 0 ? alto : '-'}</td>
-                        <td>{m2 > 0 ? m2.toFixed(2) : '-'}</td>
-                        <td>
-                        <button className="btn btn-warning btn-sm me-2" onClick={() => editarTermo(item)}>✏️ Editar</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => eliminarTermo(item.id)}>🗑️ Eliminar</button>
-                        </td>
-                    </tr>
-                    );
-                })}
-                </tbody>
-
-            </table>
+              {termopanelData.map(item => {
+                const ancho = parseFloat(item.ancho_mm) || 0;
+                const alto = parseFloat(item.alto_mm) || 0;
+                const cantidad = parseInt(item.cantidad) || 1;
+                const m2 = (ancho * alto * cantidad) / 1_000_000;
+                return (
+                  <tr key={item.id}>
+                    <td>{formatearFecha(item.fecha)}</td>
+                    <td>{item.cliente || '-'}</td>
+                    <td>{cantidad}</td>
+                    <td>{ancho > 0 ? ancho : '-'}</td>
+                    <td>{alto > 0 ? alto : '-'}</td>
+                    <td>{m2 > 0 ? m2.toFixed(2) : '-'}</td>
+                    <td>
+                      <button className="btn btn-warning btn-sm me-2" onClick={() => editarTermo(item)}>✏️ Editar</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => eliminarTermo(item.id)}>🗑️ Eliminar</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </>
-        ) : (
+      ) : (
         <p>No hay registros termo para este mes/año.</p>
-        )}
+      )}
 
-
-
+      {/* Resumen */}
       <h4 className="mt-4">Resumen</h4>
       <table className="table table-bordered mt-3">
         <thead className="table-light">
@@ -720,23 +632,21 @@ return (
           <tr>
             <td>UTV</td>
             <td>-</td>
-            <td>
-              {utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}
-            </td>
+            <td>{utvData.reduce((acc, item) => acc + calcularUTV(item), 0)}</td>
             <td>${totalUTV.toLocaleString('es-CL')}</td>
           </tr>
-            <tr>
+          <tr>
             <td>Termopanel</td>
             <td>{totalM2Termo.toFixed(2)}</td>
             <td>-</td>
             <td>${totalValorTermo.toLocaleString('es-CL')}</td>
-            </tr>
-            <tr>
+          </tr>
+          <tr>
             <td>Instalación</td>
             <td>{totalM2InstalacionesConAlumce.toFixed(2)}</td>
             <td>-</td>
             <td>${valorAcumuladoInstalacionesConAlumce.toLocaleString('es-CL')}</td>
-            </tr>
+          </tr>
           <tr className="fw-bold">
             <td>Total a Pagar</td>
             <td colSpan={2}>-</td>
@@ -745,8 +655,7 @@ return (
         </tbody>
       </table>
     </div>
-  </div>
-);
+  );
 };
 
 export default SeguimientoUTVPage;
