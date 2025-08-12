@@ -174,7 +174,7 @@ const pctAsistencia = (t) => {
   };
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4" style={{ overflowX: 'hidden' }}>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3 className="mb-0">Trabajadores</h3>
         <div className="d-flex align-items-center gap-2">
@@ -201,7 +201,10 @@ const pctAsistencia = (t) => {
         </div>
       )}
 
-      <div className="table-responsive">
+      <div
+        className="table-responsive"
+        style={{ overflowX: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}
+        >
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-dark">
             <tr>
