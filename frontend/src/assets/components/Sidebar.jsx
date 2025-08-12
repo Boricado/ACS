@@ -7,7 +7,7 @@ import welcomeImage from '../img/AlumceLogo.jpg';
 
 const Sidebar = ({ total }) => {
   const { usuario, logout } = useAuth();
-  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático', 'Ventas', 'Oficina Técnica', 'Adquisiciones', 'Operaciones', 'Fábrica'].includes(usuario?.rol);
+  const accesoTotal = ['Gerencia', 'Contabilidad', 'Informático', 'Ventas', 'Oficina Técnica', 'Adquisiciones', 'Operaciones', 'Fábrica', 'Secretaría'].includes(usuario?.rol);
 
   return (
     <nav id="sidebar" className="bg-dark text-white">

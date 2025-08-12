@@ -205,22 +205,22 @@ const pctAsistencia = (t) => {
         className="table-responsive"
         style={{ overflowX: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}
         >
-        <table className="table table-bordered table-hover align-middle">
-          <thead className="table-dark">
+        <table className="table table-bordered table-hover align-middle table-compact">
+        <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
             <tr>
-              <th style={{ minWidth: 70 }}>ID</th>
-              <th style={{ minWidth: 150 }}>MES</th>
-              <th style={{ minWidth: 180 }}>NOMBRE</th>
-              <th style={{ minWidth: 120 }}>DIAS TRAB</th>
-              <th style={{ minWidth: 140 }}>HORAS TRAB</th>
-              <th style={{ minWidth: 140 }}>HORAS EXTRAS</th>
-              <th style={{ minWidth: 190 }}>HORAS RETRASO / PERMISO</th>
-              <th style={{ minWidth: 220 }}>OBSERVACIÓN</th>
-              <th style={{ minWidth: 170 }}>HORAS ACUM. TRAB</th>
-              <th style={{ minWidth: 140 }}>% HORA ASIST</th>
-              <th style={{ minWidth: 170 }}>ACCIONES</th>
+            <th style={{ minWidth: 70 }}>ID</th>
+            <th style={{ minWidth: 150 }}>MES</th>
+            <th style={{ minWidth: 180 }}>NOMBRE</th>
+            <th>DIAS<br/>TRAB</th>
+            <th>HORAS<br/>TRAB</th>
+            <th>HORAS<br/>EXTRAS</th>
+            <th>HORAS RETRASO<br/>/ PERMISO</th>
+            <th>OBSERVACIÓN</th>
+            <th>HORAS ACUM.<br/>TRAB</th>
+            <th>% HORA<br/>ASIST</th>
+            <th>ACCIONES</th>
             </tr>
-          </thead>
+        </thead>
           <tbody>
             {trabajadores.map((t, idx) => (
               <tr key={t.id ?? `nuevo-${idx}`}>
