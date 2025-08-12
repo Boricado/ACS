@@ -138,13 +138,18 @@ const TrabajadoresPage = () => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-  // % HORA ASIST = (HORAS ACUM. TRAB / HORAS TRAB) * 100
-  const pctAsistencia = (t) => {
-    const horasAcum = Number(t.horas_acum_trab) || 0;
-    const horasTrab = Number(t.horas_trab) || 0;
-    if (horasTrab <= 0) return 0;
-    return (horasAcum / horasTrab) * 100;
-  };
+// % HORA ASIST = (HORAS TRAB - HORAS RETRASO) / HORAS TRAB * 100
+const pctAsistencia = (t) => {
+  const horasBase =
+    Number(t.horas_trab) || (Number(t.dias_trab) || 0) * JORNADA_DIARIA;
+
+  const horasRetraso = Number(t.horas_retraso) || 0;
+  if (horasBase <= 0) return 0;
+
+  const horasEfectivas = Math.max(0, horasBase - horasRetraso);
+  const pct = (horasEfectivas / horasBase) * 100;
+  return Math.min(100, Math.max(0, pct));
+};
 
   const copiarMesAnterior = async () => {
     const de = prevMonth(periodo);
