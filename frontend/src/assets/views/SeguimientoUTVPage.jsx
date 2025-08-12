@@ -323,28 +323,62 @@ const SeguimientoUTVPage = () => {
     setUtvAcum(Number(suma.toFixed(2)));
   }, [utvData]);
 
-  const generar = async () => {
+    const generar = async () => {
     try {
-      setCargando(true);
-      const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
-      const trabajadores = res.data || [];
-      if (trabajadores.length === 0) {
-        alert('No hay trabajadores para ese mes.');
-        return;
-      }
-      generarPDF_UTV({
-        periodo,
-        trabajadores,
-        utvAcum: Number(utvAcum) || 0,
-        valorUTV: Number(valorUTV) || 0,
-      });
+        setCargando(true);
+
+        // 1) Armamos el resumen desde lo que ya tienes en la página
+        const resumen = {
+        utv: { sumaUTV, valor: totalUTV },
+        termopanel: { m2: totalM2Termo, valor: totalValorTermo },
+        instalacion: {
+            m2: totalM2InstalacionesConAlumce,
+            valor: valorAcumuladoInstalacionesConAlumce,
+        },
+        };
+        resumen.total = (resumen.utv.valor || 0)
+        + (resumen.termopanel.valor || 0)
+        + (resumen.instalacion.valor || 0);
+
+        // 2) Traemos asistencia del mes
+        const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
+        const base = res.data || [];
+
+        // 3) Recalculamos horas y distribuimos proporcional a horas_acum_trab
+        const enriquecidos = base.map((t) => {
+        const dias = Number(t.dias_trab) || 0;
+        const horasTrab = dias * 9; // auto
+        const horasExtras = Number(t.horas_extras) || 0;
+        const horasRetraso = Number(t.horas_retraso) || 0;
+        const horasAcum = horasTrab + horasExtras - horasRetraso;
+        const pctAsist = horasTrab > 0 ? (horasAcum / horasTrab) : 0;
+        return {
+            ...t,
+            horas_trab: horasTrab,
+            horas_extras: horasExtras,
+            horas_retraso: horasRetraso,
+            horas_acum_trab: horasAcum,
+            pct_asist: pctAsist,
+        };
+        });
+
+        const sumHorasAcum = enriquecidos.reduce((s, t) => s + Math.max(0, t.horas_acum_trab || 0), 0);
+        const conPago = enriquecidos.map((t) => {
+        const factor = Math.max(0, t.horas_acum_trab || 0);
+        const pago = sumHorasAcum > 0 ? (resumen.total * (factor / sumHorasAcum)) : 0;
+        return { ...t, pago };
+        });
+
+        // 4) Generar PDF
+        generarPDF_UTV({ periodo, resumen, trabajadores: conPago });
     } catch (e) {
-      console.error(e);
-      alert('No se pudo generar el PDF.');
+        console.error(e);
+        alert("No se pudo generar el PDF.");
     } finally {
-      setCargando(false);
+        setCargando(false);
     }
-  };
+    };
+
 
   const totalInstalacion = valorAcumuladoInstalacionesConAlumce;
 
@@ -361,25 +395,6 @@ const SeguimientoUTVPage = () => {
             className="form-control"
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <label>UTV totales (auto)</label>
-          <input
-            type="number"
-            className="form-control"
-            value={utvAcum}
-            onChange={(e) => setUtvAcum(Number(e.target.value) || 0)}
-          />
-          <small className="text-muted">Se calcula desde los registros del mes.</small>
-        </div>
-        <div className="col-md-3">
-          <label>Valor por UTV ($)</label>
-          <input
-            type="number"
-            className="form-control"
-            value={valorUTV}
-            onChange={(e) => setValorUTV(Number(e.target.value) || 0)}
           />
         </div>
         <div className="col-md-3">
