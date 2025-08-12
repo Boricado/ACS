@@ -5,8 +5,8 @@ import pool from '../db.js';
 const router = express.Router();
 
 /**
- * Parser seguro: acepta date nativo o string en varios formatos.
- * Devuelve date o NULL (nunca explota).
+ * Parser seguro de fechas en SQL (acepta varios formatos comunes).
+ * Devuelve DATE o NULL (nunca lanza error por formatos vacíos/raros).
  */
 const safeDateSql = (col) => `
 CASE
@@ -36,12 +36,13 @@ router.get('/', async (req, res) => {
 
   if (proveedor && proveedor.trim()) {
     params.push(proveedor.trim());
+    // compara por nombre normalizado (minúsculas sin espacios/puntuación)
     where.push(
-      `REGEXP_REPLACE(LOWER(d.proveedor),'[\\s.\\-_/,&]+','','g')
-       = REGEXP_REPLACE(LOWER($${params.length}),'[\\s.\\-_/,&]+','','g')`
+      `d.norm_proveedor = REGEXP_REPLACE(LOWER($${params.length}),'[\\s.\\-_/,&]+','','g')`
     );
   }
 
+  // permite filtrar tanto por el estado original como por el calculado
   if (estado_pago && estado_pago.trim()) {
     params.push(estado_pago.trim());
     where.push(`(j.estado_calculado = $${params.length} OR d.estado_pago = $${params.length})`);
@@ -53,7 +54,7 @@ router.get('/', async (req, res) => {
         f.id,
         ${safeDateSql('f.fecha')}        AS fecha,
         f.proveedor,
-        f.proveedor_id,
+        REGEXP_REPLACE(LOWER(f.proveedor),'[\\s.\\-_/,&]+','','g') AS norm_proveedor,
         f.numero_guia,
         f.numero_factura,
         f.monto_neto,
@@ -74,31 +75,27 @@ router.get('/', async (req, res) => {
     j AS (
       SELECT
         d.*,
-        COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) AS dias_credito,
+        COALESCE(p_nm.dias_credito, 0) AS dias_credito,
         CASE
-          WHEN COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) = 0 OR d.fecha IS NULL THEN NULL
-          ELSE (d.fecha + (COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) * INTERVAL '1 day'))::date
+          WHEN COALESCE(p_nm.dias_credito, 0) = 0 OR d.fecha IS NULL THEN NULL
+          ELSE (d.fecha + (COALESCE(p_nm.dias_credito, 0) * INTERVAL '1 day'))::date
         END AS vencimiento,
         CASE
-          WHEN COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) = 0 THEN 'Contado'
+          WHEN COALESCE(p_nm.dias_credito, 0) = 0 THEN 'Contado'
           WHEN d.estado_pago = 'Pagado' THEN 'Pagada'
           WHEN d.fecha IS NULL THEN 'Vigente'
-          WHEN (d.fecha + (COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) * INTERVAL '1 day'))::date < CURRENT_DATE
+          WHEN (d.fecha + (COALESCE(p_nm.dias_credito, 0) * INTERVAL '1 day'))::date < CURRENT_DATE
                THEN 'Vencida'
           ELSE 'Vigente'
         END AS estado_calculado
       FROM d
-      LEFT JOIN p p_id
-        ON d.proveedor_id IS NOT NULL AND p_id.id = d.proveedor_id
       LEFT JOIN p p_nm
-        ON d.proveedor_id IS NULL
-       AND REGEXP_REPLACE(LOWER(d.proveedor),'[\\s.\\-_/,&]+','','g') = p_nm.norm_nombre
+        ON d.norm_proveedor = p_nm.norm_nombre
     )
     SELECT
       j.id,
       to_char(j.fecha, 'YYYY-MM-DD')         AS fecha,
       j.proveedor,
-      j.proveedor_id,
       j.numero_guia,
       j.numero_factura,
       j.monto_neto,
