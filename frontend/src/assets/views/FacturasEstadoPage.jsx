@@ -8,12 +8,12 @@ const FacturasEstadoPage = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
-  // ========= Helpers =========
   const formatearFecha = (fecha) => {
     if (!fecha) return '-';
     const d = new Date(fecha);
+    if (isNaN(d.getTime())) return '-';
     const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).toString().padStart(2, '0');
     const anio = d.getFullYear();
     return `${dia}-${mes}-${anio}`;
   };
@@ -23,90 +23,48 @@ const FacturasEstadoPage = () => {
       style: 'currency',
       currency: 'CLP',
       minimumFractionDigits: 0,
-    }).format(valor || 0);
+    }).format(Number(valor) || 0);
 
-  const isoDate = (d) => (new Date(d)).toISOString().split('T')[0];
-
-  const addDaysISO = (fechaISO, dias) => {
-    const d = new Date(fechaISO);
-    d.setDate(d.getDate() + (Number(dias) || 0));
-    return isoDate(d);
-  };
-
-  // normaliza strings (quita tildes, espacios, signos, etc.)
+  // 🔧 Normaliza nombres para que macheen aunque cambie guiones/tildes/espacios
   const norm = (s) =>
-    (s ?? '')
-      .toString()
+    (s || '')
       .normalize('NFD')
       .replace(/\p{Diacritic}/gu, '')
-      .replace(/[\s.\-_/,&]+/g, '')
       .toLowerCase()
-      .trim();
+      .replace(/[^a-z0-9]/g, ''); // borra espacios, guiones, puntos, etc.
 
-  const getNombreProveedor = (p) => (p?.nombre ?? p?.proveedor ?? '').toString();
+  useEffect(() => {
+    cargarProveedores();
+  }, []);
 
-  // Obtiene días de crédito del proveedor de una factura:
-  // 1) si viene proveedor_id, mach por id
-  // 2) si no, intenta por nombre robusto
-  const getDiasCredito = (factura) => {
-    // por ID si viene
-    if (factura?.proveedor_id != null) {
-      const pById = proveedores.find(
-        (x) => String(x.id) === String(factura.proveedor_id)
-      );
-      if (pById) return Number(pById.dias_credito) || 0;
-    }
-    // por nombre
-    const fNorm = norm(factura?.proveedor);
-    if (!fNorm) return 0;
-
-    const provs = proveedores.map((p) => {
-      const nombre = getNombreProveedor(p);
-      return { ...p, _nombre: nombre, _norm: norm(nombre) };
-    });
-
-    // match exacto
-    let p = provs.find((x) => x._norm === fNorm);
-    if (p) return Number(p.dias_credito) || 0;
-
-    // contiene / incluido (por si hay variantes)
-    p = provs.find((x) => x._norm.includes(fNorm) || fNorm.includes(x._norm));
-    return p ? (Number(p.dias_credito) || 0) : 0;
-  };
-
-  const calcularVencimiento = (factura) => {
-    const dias = getDiasCredito(factura);
-    return addDaysISO(factura.fecha, dias);
-  };
-
-  // ========= Data =========
   useEffect(() => {
     cargarFacturas();
-    cargarProveedores();
   }, [filtro]);
 
-const cargarFacturas = async () => {
-  try {
-    const res = await axios.get(`${API}api/facturas_estado`, { params: filtro });
-    setFacturas(res.data);
-  } catch (err) {
-    console.error('Error al cargar facturas/guías:', err);
-  }
-};
-
+  const cargarFacturas = async () => {
+    try {
+      const res = await axios.get(`${API}api/facturas_guias`, { params: filtro });
+      setFacturas(res.data || []);
+    } catch (err) {
+      console.error('Error al cargar facturas/guías:', err);
+      setFacturas([]);
+    }
+  };
 
   const cargarProveedores = async () => {
     try {
       const res = await axios.get(`${API}api/proveedores`);
-      setProveedores(res.data);
+      // Esperamos campos: id, proveedor, dias_credito
+      setProveedores(res.data || []);
     } catch (err) {
       console.error('Error al cargar proveedores:', err);
+      setProveedores([]);
     }
   };
 
   const handleTogglePago = async (id, estadoActual) => {
     const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
-    const fechaPago = nuevoEstado === 'Pagado' ? isoDate(new Date()) : null;
+    const fechaPago = nuevoEstado === 'Pagado' ? new Date().toISOString().split('T')[0] : null;
 
     try {
       await axios.put(`${API}api/facturas_guias/${id}`, {
@@ -119,17 +77,24 @@ const cargarFacturas = async () => {
     }
   };
 
-  const handleObservacionChange = async (id, texto) => {
-    try {
-      await axios.put(`${API}api/facturas_guias/${id}`, {
-        observaciones_internas: texto,
-      });
-    } catch (err) {
-      console.error('Error al guardar observación interna:', err);
-    }
+  // 👉 Devuelve días de crédito del proveedor de la factura, macheando por nombre normalizado
+  const diasCreditoDe = (factura) => {
+    const prov = proveedores.find(
+      (p) => norm(p.proveedor) === norm(factura.proveedor)
+    );
+    return Number(prov?.dias_credito) || 0;
   };
 
-  // ========= Render =========
+  const calcularVencimiento = (factura) => {
+    if (!factura?.fecha) return null;
+    const d = new Date(factura.fecha);
+    if (isNaN(d.getTime())) return null;
+    const dias = diasCreditoDe(factura);
+    // si es contado (0 días), el vencimiento = fecha misma (o podrías retornar null)
+    d.setDate(d.getDate() + dias);
+    return d;
+  };
+
   return (
     <div className="container py-4">
       <h2 className="mb-4">Control de Estado de Facturas / Guías</h2>
@@ -143,14 +108,11 @@ const cargarFacturas = async () => {
             onChange={(e) => setFiltro({ ...filtro, proveedor: e.target.value })}
           >
             <option value="">Todos</option>
-            {proveedores.map((p) => {
-              const nombre = getNombreProveedor(p);
-              return (
-                <option key={p.id} value={nombre}>
-                  {nombre}
-                </option>
-              );
-            })}
+            {proveedores.map((p) => (
+              <option key={p.id} value={p.proveedor}>
+                {p.proveedor}
+              </option>
+            ))}
           </select>
         </div>
         <div className="col">
@@ -186,61 +148,63 @@ const cargarFacturas = async () => {
         </thead>
         <tbody>
           {facturas.map((f, i) => {
-            const diasCredito = getDiasCredito(f);
-            const vencimiento = calcularVencimiento(f);
-            const hoy = isoDate(new Date());
-            const esContado = diasCredito === 0;
-            const vencida = !esContado && f.estado_pago !== 'Pagado' && vencimiento < hoy;
+            const dias = diasCreditoDe(f); // 👈 ya detecta bien
+            const venc = calcularVencimiento(f);
+            const hoyISO = new Date().toISOString().split('T')[0];
+            const vencISO = venc ? venc.toISOString().split('T')[0] : null;
+
+            const vencido = f.estado_pago !== 'Pagado' && vencISO && vencISO < hoyISO;
 
             return (
-              <tr key={i} className={vencida ? 'table-danger' : ''}>
+              <tr key={i} className={vencido ? 'table-danger' : ''}>
                 <td className="align-middle text-nowrap">{formatearFecha(f.fecha)}</td>
-                <td className="align-middle">{f.proveedor}</td>
+                <td className="align-middle">
+                  {f.proveedor}
+                  <div className="small text-muted">
+                    {dias === 0 ? 'Contado' : `Crédito ${dias} días`}
+                  </div>
+                </td>
                 <td className="align-middle">{f.numero_guia}</td>
                 <td className="align-middle">{f.numero_factura}</td>
                 <td className="align-middle">{formatoCLP(f.monto_neto)}</td>
                 <td className="align-middle">{formatoCLP(f.iva)}</td>
                 <td className="align-middle">{formatoCLP(f.monto_total)}</td>
                 <td className="align-middle text-nowrap">
-                  {esContado ? '—' : formatearFecha(vencimiento)}
+                  {venc ? formatearFecha(venc) : '-'}
                 </td>
-
-                <td className="align-middle">
-                  {esContado ? (
-                    <span className="badge text-bg-success">Contado (pagada)</span>
-                  ) : (
-                    <button
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={() => handleTogglePago(f.id, f.estado_pago)}
-                      title={`Estado actual: ${f.estado_pago}`}
-                    >
-                      {f.estado_pago === 'Pagado' && (
-                        <span className="text-success fw-bold">🟢 Pagada</span>
-                      )}
-                      {f.estado_pago !== 'Pagado' && vencida && (
-                        <span className="text-danger fw-bold">🔴 Vencida</span>
-                      )}
-                      {f.estado_pago !== 'Pagado' && !vencida && (
-                        <span className="text-warning fw-bold">🟡 Vigente</span>
-                      )}
-                    </button>
-                  )}
+                <td>
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => handleTogglePago(f.id, f.estado_pago)}
+                    title={`Estado: ${f.estado_pago}`}
+                  >
+                    {f.estado_pago === 'Pagado' && (
+                      <span className="text-success fw-bold">🟢 Pagado</span>
+                    )}
+                    {f.estado_pago === 'Vigente' && (
+                      <span className="text-warning fw-bold">🟡 Vigente</span>
+                    )}
+                    {f.estado_pago === 'Pendiente' && (
+                      <span className="text-danger fw-bold">🔴 Pendiente</span>
+                    )}
+                  </button>
                 </td>
 
                 <td
                   className={`align-middle text-nowrap ${
                     f.fecha_pago
-                      ? isoDate(f.fecha_pago) === hoy
+                      ? new Date(f.fecha_pago).toISOString().split('T')[0] ===
+                        new Date().toISOString().split('T')[0]
                         ? 'table-success'
-                        : new Date(f.fecha_pago) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                        : new Date(f.fecha_pago) <
+                          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                         ? 'text-muted'
                         : ''
                       : 'text-secondary'
                   }`}
                 >
-                  {f.fecha_pago ? formatearFecha(f.fecha_pago) : esContado ? '—' : '-'}
+                  {f.fecha_pago ? formatearFecha(f.fecha_pago) : '-'}
                 </td>
-
                 <td>
                   <input
                     type="text"
