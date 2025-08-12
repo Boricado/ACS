@@ -18,7 +18,7 @@ const Sidebar = ({ total }) => {
           className="img-fluid mt-4 shadow rounded"
           style={{ maxWidth: '170px' }}
         />
-        <h6 className="text-white">Control System v0.5b</h6>
+        <h6 className="text-white">Control System v0.6b</h6>
         <ul className="list-unstyled components mb-5">
           <li><NavLink to="/" className={({ isActive }) => isActive ? 'active-link' : ''}>Inicio</NavLink></li>
 
