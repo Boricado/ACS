@@ -4,51 +4,64 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-/**
- * Parser seguro de fechas en SQL (acepta varios formatos comunes).
- * Devuelve DATE o NULL (nunca lanza error por formatos vacíos/raros).
- */
+/** Fechas seguras (evita reventar con vacíos o formatos raros) */
 const safeDateSql = (col) => `
 CASE
   WHEN ${col} IS NULL THEN NULL
   WHEN btrim((${col})::text) = '' THEN NULL
-  -- YYYY-MM-DD
   WHEN btrim((${col})::text) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
     THEN ((${col})::text)::date
-  -- YYYY-M-D (mes/día 1 o 2 dígitos)
   WHEN btrim((${col})::text) ~ '^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$'
     THEN to_date(btrim((${col})::text), 'YYYY-FMMM-FMDD')
-  -- YYYY/MM/DD
   WHEN btrim((${col})::text) ~ '^[0-9]{4}/[0-9]{2}/[0-9]{2}$'
     THEN to_date(btrim((${col})::text), 'YYYY/MM/DD')
-  -- YYYY/M/D
   WHEN btrim((${col})::text) ~ '^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$'
     THEN to_date(btrim((${col})::text), 'YYYY/FMMM/FMDD')
   ELSE NULL
 END
 `;
 
+/** 
+ * Normalizador robusto:
+ * - quita sufijos legales (sa, ltda, limitada, spa, eirl)
+ * - pasa a minúscula, quita tildes
+ * - elimina todo lo no alfanumérico
+ */
+const normNameSql = (col) => `
+REGEXP_REPLACE(
+  REGEXP_REPLACE(
+    LOWER(
+      translate(
+        -- quitamos sufijos legales antes de normalizar
+        regexp_replace(trim(${col}),
+          '(?i)\\m(s\\.?a\\.?|ltda\\.?|limitada|spa|e\\.i\\.r\\.l\\.|eirl)\\M', '', 'g'
+        ),
+        'ÁÀÂÄÃÅáàâäãåÉÈÊËéèêëÍÌÎÏíìîïÓÒÔÖÕóòôöõÚÙÛÜúùûüÇçÑñ',
+        'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCcNn'
+      )
+    ),
+    '[^a-z0-9]+', '', 'g'   -- quitar todo lo no alfanumérico
+  ),
+  '(\\s+)', '', 'g'
+)
+`;
+
 router.get('/', async (req, res) => {
   const { proveedor, estado_pago } = req.query;
-
   const where = [];
   const params = [];
 
-  // Filtro por proveedor (normalizado)
   if (proveedor && proveedor.trim()) {
     params.push(proveedor.trim());
-    where.push(
-      `d.norm_proveedor = REGEXP_REPLACE(LOWER($${params.length}),'[\\s.\\-_/,&]+','','g')`
-    );
+    where.push(`${normNameSql('d.proveedor')} = ${normNameSql(`$${params.length}`)}`);
   }
 
-  // Filtro por estado (acepta tanto el calculado como el almacenado)
   if (estado_pago && estado_pago.trim()) {
-    params.push(estado_pago.trim());
-    // Si filtran por "Contado", es realmente "dias_credito = 0"
-    if (estado_pago.trim().toLowerCase() === 'contado') {
+    const est = estado_pago.trim();
+    if (est.toLowerCase() === 'contado') {
       where.push(`j.dias_credito = 0`);
     } else {
+      params.push(est);
       where.push(`(j.estado_calculado = $${params.length} OR d.estado_pago = $${params.length})`);
     }
   }
@@ -58,8 +71,7 @@ router.get('/', async (req, res) => {
       SELECT
         f.id,
         ${safeDateSql('f.fecha')}      AS fecha,
-        TRIM(f.proveedor)              AS proveedor,
-        REGEXP_REPLACE(LOWER(TRIM(f.proveedor)),'[\\s.\\-_/,&]+','','g') AS norm_proveedor,
+        trim(f.proveedor)              AS proveedor,
         f.numero_guia,
         f.numero_factura,
         f.monto_neto,
@@ -69,43 +81,35 @@ router.get('/', async (req, res) => {
         ${safeDateSql('f.fecha_pago')} AS fecha_pago
       FROM facturas_guias f
     ),
-    -- Deduplicamos proveedores por nombre normalizado, por si hay variantes
     p_norm AS (
-      SELECT DISTINCT ON (norm_proveedor)
-        id,
-        proveedor,
-        dias_credito,
-        norm_proveedor
-      FROM (
-        SELECT
-          p.id,
-          TRIM(p.proveedor) AS proveedor,
-          COALESCE(p.dias_credito, 0) AS dias_credito,
-          REGEXP_REPLACE(LOWER(TRIM(p.proveedor)),'[\\s.\\-_/,&]+','','g') AS norm_proveedor
-        FROM proveedores p
-      ) q
-      ORDER BY norm_proveedor, id DESC
+      SELECT DISTINCT ON (${normNameSql('p.proveedor')})
+        p.id,
+        trim(p.proveedor)              AS proveedor,
+        COALESCE(p.dias_credito,0)::int AS dias_credito,
+        ${normNameSql('p.proveedor')}  AS norm_nombre
+      FROM proveedores p
+      ORDER BY ${normNameSql('p.proveedor')}, p.id DESC
     ),
     j AS (
       SELECT
         d.*,
-        COALESCE(p_norm.dias_credito, 0) AS dias_credito,
+        COALESCE(p_norm.dias_credito,0)::int AS dias_credito,
         CASE
-          WHEN COALESCE(p_norm.dias_credito, 0) = 0 OR d.fecha IS NULL
+          WHEN COALESCE(p_norm.dias_credito,0) = 0 OR d.fecha IS NULL
             THEN NULL
-          ELSE (d.fecha + (COALESCE(p_norm.dias_credito, 0) * INTERVAL '1 day'))::date
+          ELSE (d.fecha + make_interval(days => COALESCE(p_norm.dias_credito,0)::int))::date
         END AS vencimiento,
         CASE
-          WHEN COALESCE(p_norm.dias_credito, 0) = 0 THEN 'Contado'
+          WHEN COALESCE(p_norm.dias_credito,0) = 0 THEN 'Contado'
           WHEN d.estado_pago = 'Pagado' THEN 'Pagado'
           WHEN d.fecha IS NULL THEN 'Vigente'
-          WHEN (d.fecha + (COALESCE(p_norm.dias_credito, 0) * INTERVAL '1 day'))::date < CURRENT_DATE
-               THEN 'Vencida'
+          WHEN (d.fecha + make_interval(days => COALESCE(p_norm.dias_credito,0)::int))::date < CURRENT_DATE
+            THEN 'Vencida'
           ELSE 'Vigente'
         END AS estado_calculado
       FROM d
       LEFT JOIN p_norm
-        ON d.norm_proveedor = p_norm.norm_proveedor
+        ON ${normNameSql('d.proveedor')} = p_norm.norm_nombre
     )
     SELECT
       j.id,
@@ -116,7 +120,7 @@ router.get('/', async (req, res) => {
       j.monto_neto,
       j.iva,
       j.monto_total,
-      j.estado_pago,                       -- estado almacenado (si lo usas)
+      j.estado_pago,
       to_char(j.fecha_pago, 'YYYY-MM-DD')  AS fecha_pago,
       j.dias_credito,
       to_char(j.vencimiento, 'YYYY-MM-DD') AS vencimiento,
