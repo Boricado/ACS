@@ -16,6 +16,7 @@ import facturasGuiasRouter from './routes/facturasGuias.js';
 import proveedoresCreditoRoutes from './routes/proveedores_credito.js';
 import tallerRoutes from './routes/taller.js';
 import trabajadoresRoutes from './routes/trabajadores.js';
+import facturasEstadoRoutes from './routes/facturas_estado.js';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use('/api/facturas_guias', facturasGuiasRouter);
 app.use('/api/proveedores_credito', proveedoresCreditoRoutes);
 app.use('/api/taller', tallerRoutes);
 app.use('/api', trabajadoresRoutes); // expone /api/trabajadores
+app.use('/api/facturas_estado', facturasEstadoRoutes);
 
 // Configuración de conexión a PostgreSQL
 const pool = new pg.Pool({

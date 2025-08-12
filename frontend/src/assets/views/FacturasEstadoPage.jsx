@@ -85,14 +85,15 @@ const FacturasEstadoPage = () => {
     cargarProveedores();
   }, [filtro]);
 
-  const cargarFacturas = async () => {
-    try {
-      const res = await axios.get(`${API}api/facturas_guias`, { params: filtro });
-      setFacturas(res.data);
-    } catch (err) {
-      console.error('Error al cargar facturas/guías:', err);
-    }
-  };
+const cargarFacturas = async () => {
+  try {
+    const res = await axios.get(`${API}api/facturas_estado`, { params: filtro });
+    setFacturas(res.data);
+  } catch (err) {
+    console.error('Error al cargar facturas/guías:', err);
+  }
+};
+
 
   const cargarProveedores = async () => {
     try {
