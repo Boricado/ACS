@@ -347,34 +347,41 @@ const generar = async () => {
     const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
     const base = res.data || [];
 
-    // 3) Recalcular horas y distribuir proporcional al total a pagar
+    // 3) Recalcular horas y distribuir (extras NO cuentan para el %)
     const enriquecidos = base.map((t) => {
-      const dias = Number(t.dias_trab) || 0;
-      const horasTrab = dias * 9;
-      const horasExtras = Number(t.horas_extras) || 0;
-      const horasRetraso = Number(t.horas_retraso) || 0;
-      const horasAcum = horasTrab + horasExtras - horasRetraso;
-      const pctAsist = horasTrab > 0 ? horasAcum / horasTrab : 0;
-      return {
+    const dias = Number(t.dias_trab) || 0;
+
+    // horas planificadas: DIAS * 9 (y las guardamos también por si vienen distintas)
+    const horasBase = dias * 9;
+
+    const horasExtras   = Number(t.horas_extras)  || 0;
+    const horasRetraso  = Number(t.horas_retraso) || 0;
+
+    // para % asistencia NO contamos extras
+    const horasEfectivas = Math.max(0, horasBase - horasRetraso);
+
+    // HORAS ACUM. TRAB (como en la tabla): base + extras - retraso
+    const horasAcum = Math.max(0, horasBase + horasExtras - horasRetraso);
+
+    const pctAsist = horasBase > 0 ? (horasEfectivas / horasBase) : 0;
+
+    return {
         ...t,
-        horas_trab: horasTrab,
-        horas_extras: horasExtras,
-        horas_retraso: horasRetraso,
-        horas_acum_trab: horasAcum,
-        pct_asist: pctAsist,
-      };
+        horas_trab: horasBase,          // normalizamos por si viene distinto
+        horas_acum_trab: horasAcum,     // coincide con la tabla del front
+        pct_asist: pctAsist,            // % sin extras (solo resta retraso)
+    };
     });
 
-    const sumHorasAcum = enriquecidos.reduce(
-      (s, t) => s + Math.max(0, t.horas_acum_trab || 0),
-      0
-    );
-
+    // si quieres que el pago también ignore extras, usa "horasEfectivas" como factor.
+    // ahora mismo pagamos proporcional a horas_acum_trab (extras sí suman al pago):
+    const sumHoras = enriquecidos.reduce((s, t) => s + Math.max(0, t.horas_acum_trab || 0), 0);
     const conPago = enriquecidos.map((t) => {
-      const factor = Math.max(0, t.horas_acum_trab || 0);
-      const pago = sumHorasAcum > 0 ? resumen.total * (factor / sumHorasAcum) : 0;
-      return { ...t, pago };
+    const factor = Math.max(0, t.horas_acum_trab || 0); // <- cambia a "t.horas_trab - t.horas_retraso" si NO quieres pagar extras
+    const pago = sumHoras > 0 ? (resumen.total * (factor / sumHoras)) : 0;
+    return { ...t, pago };
     });
+
 
     // 4) Generar PDF
     generarPDF_UTV({ periodo, resumen, trabajadores: conPago });
