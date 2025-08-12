@@ -4,7 +4,7 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-/** Fechas seguras (evita reventar con vacíos o formatos raros) */
+/** Fecha segura: nunca lanza error si viene vacía o con formato raro */
 const safeDateSql = (col) => `
 CASE
   WHEN ${col} IS NULL THEN NULL
@@ -21,18 +21,12 @@ CASE
 END
 `;
 
-/** 
- * Normalizador robusto:
- * - quita sufijos legales (sa, ltda, limitada, spa, eirl)
- * - pasa a minúscula, quita tildes
- * - elimina todo lo no alfanumérico
- */
+/** Normalizador robusto (quita sufijos legales, tildes y no-alfanumérico) */
 const normNameSql = (col) => `
 REGEXP_REPLACE(
   REGEXP_REPLACE(
     LOWER(
       translate(
-        -- quitamos sufijos legales antes de normalizar
         regexp_replace(trim(${col}),
           '(?i)\\m(s\\.?a\\.?|ltda\\.?|limitada|spa|e\\.i\\.r\\.l\\.|eirl)\\M', '', 'g'
         ),
@@ -40,7 +34,7 @@ REGEXP_REPLACE(
         'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCcNn'
       )
     ),
-    '[^a-z0-9]+', '', 'g'   -- quitar todo lo no alfanumérico
+    '[^a-z0-9]+', '', 'g'
   ),
   '(\\s+)', '', 'g'
 )
@@ -51,18 +45,20 @@ router.get('/', async (req, res) => {
   const where = [];
   const params = [];
 
+  // Filtro por proveedor (acepta el mismo texto que ves en UI)
   if (proveedor && proveedor.trim()) {
     params.push(proveedor.trim());
-    where.push(`${normNameSql('d.proveedor')} = ${normNameSql(`$${params.length}`)}`);
+    where.push(`${normNameSql('j.proveedor')} = ${normNameSql(`$${params.length}`)}`);
   }
 
+  // Filtro por estado (acepta calculado o el original en la tabla)
   if (estado_pago && estado_pago.trim()) {
     const est = estado_pago.trim();
     if (est.toLowerCase() === 'contado') {
       where.push(`j.dias_credito = 0`);
     } else {
       params.push(est);
-      where.push(`(j.estado_calculado = $${params.length} OR d.estado_pago = $${params.length})`);
+      where.push(`(j.estado_calculado = $${params.length} OR j.estado_pago = $${params.length})`);
     }
   }
 
@@ -84,32 +80,44 @@ router.get('/', async (req, res) => {
     p_norm AS (
       SELECT DISTINCT ON (${normNameSql('p.proveedor')})
         p.id,
-        trim(p.proveedor)              AS proveedor,
+        trim(p.proveedor)                AS proveedor,
         COALESCE(p.dias_credito,0)::int AS dias_credito,
-        ${normNameSql('p.proveedor')}  AS norm_nombre
+        ${normNameSql('p.proveedor')}    AS norm_nombre
       FROM proveedores p
       ORDER BY ${normNameSql('p.proveedor')}, p.id DESC
     ),
     j AS (
       SELECT
         d.*,
-        COALESCE(p_norm.dias_credito,0)::int AS dias_credito,
+        pn.dias_credito,
+        -- depuración para ver cómo emparejó:
+        ${normNameSql('d.proveedor')}    AS src_norm,
+        pn.norm_nombre                   AS join_norm,
         CASE
-          WHEN COALESCE(p_norm.dias_credito,0) = 0 OR d.fecha IS NULL
+          WHEN trim(d.proveedor) = trim(pn.proveedor) THEN 'raw'
+          WHEN ${normNameSql('d.proveedor')} = pn.norm_nombre THEN 'norm'
+          ELSE NULL
+        END AS match_tipo,
+        -- vencimiento calculado sólo si hay crédito y fecha válida
+        CASE
+          WHEN COALESCE(pn.dias_credito,0) = 0 OR d.fecha IS NULL
             THEN NULL
-          ELSE (d.fecha + make_interval(days => COALESCE(p_norm.dias_credito,0)::int))::date
+          ELSE (d.fecha + make_interval(days => COALESCE(pn.dias_credito,0)::int))::date
         END AS vencimiento,
         CASE
-          WHEN COALESCE(p_norm.dias_credito,0) = 0 THEN 'Contado'
-          WHEN d.estado_pago = 'Pagado' THEN 'Pagado'
-          WHEN d.fecha IS NULL THEN 'Vigente'
-          WHEN (d.fecha + make_interval(days => COALESCE(p_norm.dias_credito,0)::int))::date < CURRENT_DATE
+          WHEN COALESCE(pn.dias_credito,0) = 0 THEN 'Contado'
+          WHEN d.estado_pago = 'Pagado'  THEN 'Pagado'
+          WHEN d.fecha IS NULL           THEN 'Vigente'
+          WHEN (d.fecha + make_interval(days => COALESCE(pn.dias_credito,0)::int))::date < CURRENT_DATE
             THEN 'Vencida'
           ELSE 'Vigente'
         END AS estado_calculado
       FROM d
-      LEFT JOIN p_norm
-        ON ${normNameSql('d.proveedor')} = p_norm.norm_nombre
+      LEFT JOIN p_norm pn
+        ON (
+          trim(d.proveedor) = trim(pn.proveedor)                                -- igualdad exacta
+          OR ${normNameSql('d.proveedor')} = pn.norm_nombre                     -- o igualdad normalizada
+        )
     )
     SELECT
       j.id,
@@ -124,7 +132,11 @@ router.get('/', async (req, res) => {
       to_char(j.fecha_pago, 'YYYY-MM-DD')  AS fecha_pago,
       j.dias_credito,
       to_char(j.vencimiento, 'YYYY-MM-DD') AS vencimiento,
-      j.estado_calculado
+      j.estado_calculado,
+      -- columnas de depuración (no usadas en el front, pero útiles para chequear)
+      j.match_tipo,
+      j.src_norm,
+      j.join_norm
     FROM j
     ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
     ORDER BY j.fecha DESC NULLS LAST, j.id DESC;
