@@ -1,123 +1,151 @@
-// frontend/src/utils/generarPDF_UTV.js
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+// frontend/src/assets/utils/generarPDF_UTV.js
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const fmtCLP = (n) =>
-  new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
-    .format(Math.round(Number(n) || 0));
+  new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(Math.round(Number(n) || 0));
 
-const fmtNum = (n) =>
-  new Intl.NumberFormat("es-CL", { maximumFractionDigits: 1 }).format(Number(n) || 0);
+const pct = (x) => `${Math.round((Number(x) || 0) * 100)}%`;
 
-const mesNombre = (periodo /* YYYY-MM */) => {
-  const [y, m] = periodo.split("-").map(Number);
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString("es-CL", { month: "long", year: "numeric" }).toUpperCase();
-};
-
-export const generarPDF_UTV = ({ periodo, resumen, trabajadores }) => {
-  // Carta vertical
-  const doc = new jsPDF({ unit: "pt", format: "letter", orientation: "portrait" }); // 612x792
-  const margin = 28;
-
-  // Título
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text(`PAGO UTV ${mesNombre(periodo)}`, margin, 48);
-
-  // === Resumen compacto arriba a la derecha ===
-  const resumenRows = [
-    ["UTV", "-", fmtNum(resumen?.utv?.sumaUTV || 0), fmtCLP(resumen?.utv?.valor || 0)],
-    [
-      "Termopanel",
-      fmtNum(resumen?.termopanel?.m2 || 0),
-      "-",
-      fmtCLP(resumen?.termopanel?.valor || 0),
-    ],
-    [
-      "Instalación",
-      fmtNum(resumen?.instalacion?.m2 || 0),
-      "-",
-      fmtCLP(resumen?.instalacion?.valor || 0),
-    ],
-    [
-      { content: "TOTAL A PAGAR", styles: { fontStyle: "bold" } },
-      { content: "-", styles: { fontStyle: "bold" } },
-      { content: "-", styles: { fontStyle: "bold" } },
-      { content: fmtCLP(resumen?.total || 0), styles: { fontStyle: "bold" } },
-    ],
-  ];
-
-  doc.autoTable({
-    head: [["Sección", "Cantidad / m²", "Suma UTV", "Valor Acumulado"]],
-    body: resumenRows,
-    styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: [33, 37, 41], textColor: 255 },
-    startY: 24,
-    tableWidth: 340,
-    margin: { left: 612 - 340 - margin }, // pegado a la derecha
+/**
+ * @param {{
+ *   periodo: string,
+ *   resumen: {
+ *     utv: { suma: number, valor: number },
+ *     termopanel: { m2: number, valor: number },
+ *     instalacion: { m2: number, valor: number },
+ *     total: number
+ *   },
+ *   trabajadores: Array<{
+ *     nombre:string, dias_trab:number, horas_trab:number, horas_extras:number,
+ *     horas_retraso:number, observacion?:string, horas_acum_trab:number,
+ *     pct_asist:number, pago:number
+ *   }>
+ * }} opts
+ */
+export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
+  const doc = new jsPDF({
+    orientation: 'landscape',   // 👈 horizontal
+    unit: 'pt',
+    format: 'letter',           // 👈 tamaño carta
   });
 
-  // Posición de inicio para la tabla grande
-  const startY = Math.max(110, doc.lastAutoTable.finalY + 10);
+  const pageW = doc.internal.pageSize.getWidth();
 
-  // === Tabla principal por trabajador ===
-  const head = [
+  // Título
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.text(`PAGO UTV ${periodo?.toUpperCase?.() || periodo}`, 40, 40);
+
+  // ---------- Resumen (arriba a la derecha)
+  const sumRows = [
+    ['UTV', '-', Number(resumen?.utv?.suma || 0), fmtCLP(resumen?.utv?.valor)],
     [
-      "#",
-      "NOMBRE",
-      "DÍAS\nTRAB",
-      "HORAS\nTRAB",
-      "HORAS\nEXTRAS",
-      "HORAS\nRETRASO / PERMISO",
-      "OBSERVACIÓN",
-      "HORAS\nACUM. TRAB",
-      "% HORA\nASIST",
-      "PAGO",
+      'Termopanel',
+      Number(resumen?.termopanel?.m2 || 0),
+      '-',
+      fmtCLP(resumen?.termopanel?.valor),
     ],
+    [
+      'Instalación',
+      Number(resumen?.instalacion?.m2 || 0),
+      '-',
+      fmtCLP(resumen?.instalacion?.valor),
+    ],
+    ['TOTAL A PAGAR', '-', '-', fmtCLP(resumen?.total)],
   ];
 
-  const body = trabajadores.map((t, idx) => [
-    idx + 1,
-    t.nombre || "",
-    fmtNum(t.dias_trab || 0),
-    fmtNum(t.horas_trab || 0),
-    fmtNum(t.horas_extras || 0),
-    fmtNum(t.horas_retraso || 0),
-    t.observacion || "",
-    fmtNum(t.horas_acum_trab || 0),
-    `${fmtNum(((t.pct_asist || 0) * 100))}%`,
-    fmtCLP(t.pago || 0),
-  ]);
-
-  const totHorasAcum = trabajadores.reduce((s, t) => s + (Number(t.horas_acum_trab) || 0), 0);
-  const totHorasTrab = trabajadores.reduce((s, t) => s + (Number(t.horas_trab) || 0), 0);
-  const totPago = trabajadores.reduce((s, t) => s + (Number(t.pago) || 0), 0);
-
-  body.push([
-    { content: "TOTALES", colSpan: 2, styles: { fontStyle: "bold" } },
-    "",
-    fmtNum(totHorasTrab),
-    "",
-    "",
-    "",
-    fmtNum(totHorasAcum),
-    "",
-    fmtCLP(totPago),
-  ]);
-
   doc.autoTable({
-    head,
-    body,
-    startY,
-    styles: { fontSize: 9, cellPadding: 4, lineColor: [220, 220, 220], lineWidth: 0.5 },
-    headStyles: { fillColor: [33, 37, 41], textColor: 255 },
-    theme: "grid",
-    margin: { left: margin, right: margin },
-    didParseCell: (data) => {
-      if (data.row.index === body.length - 1) data.cell.styles.fontStyle = "bold";
+    startY: 60,
+    head: [['Sección', 'Cantidad / m²', 'Suma UTV', 'Valor Acumulado']],
+    body: sumRows.map((r) => [r[0], String(r[1]), String(r[2]), r[3]]),
+    tableWidth: 520,
+    margin: { left: pageW - 40 - 520, right: 40 },
+    styles: { fontSize: 9, halign: 'right' },
+    headStyles: { fillColor: [33, 37, 41], halign: 'center' },
+    columnStyles: {
+      0: { halign: 'left' },
+      1: { halign: 'center' },
+      2: { halign: 'center' },
+      3: { halign: 'right' },
     },
   });
 
-  doc.save(`pago_utv_${periodo}.pdf`);
-};
+  // ---------- Tabla de trabajadores
+  const head = [
+    [
+      '#',
+      'NOMBRE',
+      'DÍAS TRAB',
+      'HORAS TRAB',
+      'HORAS EXTRAS',
+      'HORAS RETRASO / PERMISO',
+      'OBSERVACIÓN',
+      'HORAS ACUM. TRAB',
+      '% HORA ASIST',
+      'PAGO',
+    ],
+  ];
+
+  const body = (trabajadores || []).map((t, i) => [
+    i + 1,
+    t.nombre || '',
+    Number(t.dias_trab) || 0,
+    Number(t.horas_trab) || 0,
+    Number(t.horas_extras) || 0,
+    Number(t.horas_retraso) || 0,
+    t.observacion || '',
+    Number(t.horas_acum_trab) || 0,
+    pct(t.pct_asist),
+    fmtCLP(t.pago),
+  ]);
+
+  const totHorasTrab = (trabajadores || []).reduce(
+    (s, t) => s + (Number(t.horas_trab) || 0),
+    0
+  );
+  const totHorasAcum = (trabajadores || []).reduce(
+    (s, t) => s + (Number(t.horas_acum_trab) || 0),
+    0
+  );
+  const totPago = (trabajadores || []).reduce((s, t) => s + (Number(t.pago) || 0), 0);
+
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 20,
+    head,
+    body,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [33, 37, 41], halign: 'center' },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 22 },
+      1: { halign: 'left', cellWidth: 160 },
+      2: { halign: 'center' },
+      3: { halign: 'center' },
+      4: { halign: 'center' },
+      5: { halign: 'center' },
+      6: { halign: 'left', cellWidth: 160 },
+      7: { halign: 'center' },
+      8: { halign: 'center' },
+      9: { halign: 'right' },
+    },
+    foot: [
+      [
+        { content: 'TOTALES', colSpan: 3 },
+        String(totHorasTrab),
+        '', // extras
+        '', // retraso
+        '', // observación
+        String(totHorasAcum),
+        '', // %
+        fmtCLP(totPago),
+      ],
+    ],
+    footStyles: { fillColor: [245, 245, 245], halign: 'right', fontStyle: 'bold' },
+  });
+
+  doc.save(`Pago_UTV_${periodo}.pdf`);
+}

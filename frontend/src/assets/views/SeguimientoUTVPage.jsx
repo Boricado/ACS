@@ -327,26 +327,27 @@ const generar = async () => {
   try {
     setCargando(true);
 
-    // 1) Calcular los totales del resumen desde el estado actual
-    const sumaUTVCalc = utvData.reduce((acc, it) => acc + calcularUTV(it), 0);
+    // 1) Resumen desde lo visible en pantalla (asegurando números)
+    const sumaUTVMes = utvData.reduce((acc, it) => acc + calcularUTV(it), 0);
+
     const resumen = {
-      utv: { sumaUTV: sumaUTVCalc, valor: totalUTV },
-      termopanel: { m2: totalM2Termo, valor: totalValorTermo },
+      utv: { suma: Number(sumaUTVMes || 0), valor: Number(totalUTV || 0) },
+      termopanel: { m2: Number(totalM2Termo || 0), valor: Number(totalValorTermo || 0) },
       instalacion: {
-        m2: totalM2InstalacionesConAlumce,
-        valor: valorAcumuladoInstalacionesConAlumce,
+        m2: Number(totalM2InstalacionesConAlumce || 0),
+        valor: Number(valorAcumuladoInstalacionesConAlumce || 0),
       },
     };
     resumen.total =
-      (resumen.utv.valor || 0) +
-      (resumen.termopanel.valor || 0) +
-      (resumen.instalacion.valor || 0);
+      Number(resumen.utv.valor) +
+      Number(resumen.termopanel.valor) +
+      Number(resumen.instalacion.valor);
 
-    // 2) Traer asistencia del mes
+    // 2) Asistencia del mes
     const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
     const base = res.data || [];
 
-    // 3) Recalcular horas y repartir proporcional al total de horas acumuladas
+    // 3) Recalcular horas y distribuir proporcional al total a pagar
     const enriquecidos = base.map((t) => {
       const dias = Number(t.dias_trab) || 0;
       const horasTrab = dias * 9;
