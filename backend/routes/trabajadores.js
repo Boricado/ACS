@@ -54,4 +54,59 @@ router.delete('/trabajadores/:id', async (req, res) => {
   res.json({ message: 'Trabajador eliminado' });
 });
 
+// POST /api/trabajadores/copiar?de=YYYY-MM&a=YYYY-MM
+// Copia NOMBRES del mes "de" hacia el mes "a", con horas/días en 0.
+router.post('/trabajadores/copiar', async (req, res) => {
+  const { de, a } = req.query;
+  if (!de || !a) {
+    return res.status(400).json({ error: 'Parámetros requeridos: de=YYYY-MM & a=YYYY-MM' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const src = await client.query(
+      `SELECT DISTINCT nombre
+       FROM trabajadores
+       WHERE periodo = $1
+       ORDER BY nombre`,
+      [de]
+    );
+
+    if (src.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: `No hay registros en ${de}` });
+    }
+
+    const inserted = [];
+    for (const row of src.rows) {
+      // si ya existe en destino, saltar (evita duplicar)
+      const exists = await client.query(
+        `SELECT id FROM trabajadores WHERE periodo = $1 AND nombre = $2 LIMIT 1`,
+        [a, row.nombre]
+      );
+      if (exists.rowCount > 0) continue;
+
+      const ins = await client.query(
+        `INSERT INTO trabajadores
+          (periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab)
+         VALUES ($1,$2,0,0,0,0,'',0)
+         RETURNING id, periodo, nombre, dias_trab, horas_trab, horas_extras, horas_retraso, observacion, horas_acum_trab`,
+        [a, row.nombre]
+      );
+      inserted.push(ins.rows[0]);
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ copiados: inserted.length, registros: inserted });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('❌ POST /api/trabajadores/copiar', err.message);
+    res.status(500).json({ error: 'Error al copiar planilla' });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const JORNADA_DIARIA = 9; // ← DIAS TRAB * 9
+const JORNADA_DIARIA = 9; // DIAS TRAB × 9
 
 const inputStyle = {
   minWidth: 110,
@@ -19,11 +19,19 @@ const TrabajadoresPage = () => {
 
   const [trabajadores, setTrabajadores] = useState([]);
   const [mensaje, setMensaje] = useState(null);
+  const [copiando, setCopiando] = useState(false);
+
+  const prevMonth = (ym) => {
+    const [y, m] = (ym || '').split('-').map(Number);
+    if (!y || !m) return '';
+    const nm = m === 1 ? 12 : m - 1;
+    const ny = m === 1 ? y - 1 : y;
+    return `${ny}-${String(nm).padStart(2, '0')}`;
+  };
 
   const cargarTrabajadores = async () => {
     try {
       const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
-      // Aseguramos que los derivados estén coherentes al cargar
       const recalculados = (res.data || []).map(recalcDerivados);
       setTrabajadores(recalculados);
     } catch (e) {
@@ -37,7 +45,6 @@ const TrabajadoresPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo]);
 
-  // Recalcular campos derivados a partir de una fila
   const recalcDerivados = (t) => {
     const dias = Number(t.dias_trab) || 0;
     const extras = Number(t.horas_extras) || 0;
@@ -49,19 +56,13 @@ const TrabajadoresPage = () => {
 
   const handleChange = (idx, field, value) => {
     const next = [...trabajadores];
-
-    // Normaliza numéricos
     const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
     if (numericFields.includes(field)) {
       const v = value === '' ? '' : Number(value);
       next[idx][field] = isNaN(v) ? '' : v;
-    } else if (field === 'periodo' || field === 'nombre' || field === 'observacion') {
-      next[idx][field] = value;
     } else {
       next[idx][field] = value;
     }
-
-    // Recalcula derivados
     next[idx] = recalcDerivados(next[idx]);
     setTrabajadores(next);
   };
@@ -80,7 +81,7 @@ const TrabajadoresPage = () => {
   };
 
   const guardarFila = async (idx) => {
-    const t = recalcDerivados(trabajadores[idx]); // asegurar consistencia antes de guardar
+    const t = recalcDerivados(trabajadores[idx]);
 
     if (!t.nombre?.trim()) {
       setMensaje({ tipo: 'danger', texto: 'El nombre es obligatorio.' });
@@ -91,11 +92,11 @@ const TrabajadoresPage = () => {
       periodo: t.periodo || periodo,
       nombre: t.nombre?.trim(),
       dias_trab: parseInt(t.dias_trab || 0, 10),
-      horas_trab: Number(t.horas_trab || 0),               // derivado
+      horas_trab: Number(t.horas_trab || 0),
       horas_extras: Number(t.horas_extras || 0),
       horas_retraso: Number(t.horas_retraso || 0),
       observacion: t.observacion || '',
-      horas_acum_trab: Number(t.horas_acum_trab || 0)      // derivado
+      horas_acum_trab: Number(t.horas_acum_trab || 0)
     };
 
     try {
@@ -142,7 +143,29 @@ const TrabajadoresPage = () => {
     const horasAcum = Number(t.horas_acum_trab) || 0;
     const horasTrab = Number(t.horas_trab) || 0;
     if (horasTrab <= 0) return 0;
-    return (horasAcum / horasTrab) * 100; // si quieres, limita a 0..100 con Math.min/Math.max
+    return (horasAcum / horasTrab) * 100;
+  };
+
+  const copiarMesAnterior = async () => {
+    const de = prevMonth(periodo);
+    if (!de) {
+      setMensaje({ tipo: 'danger', texto: 'Periodo inválido.' });
+      return;
+    }
+    const ok = confirm(`¿Copiar planilla desde ${de} a ${periodo}?\nSe crearán trabajadores con horas en 0.`);
+    if (!ok) return;
+
+    try {
+      setCopiando(true);
+      await axios.post(`${API}api/trabajadores/copiar`, null, { params: { de, a: periodo } });
+      await cargarTrabajadores();
+      setMensaje({ tipo: 'success', texto: `Planilla copiada desde ${de}.` });
+    } catch (e) {
+      console.error(e);
+      setMensaje({ tipo: 'danger', texto: 'No se pudo copiar la planilla del mes anterior.' });
+    } finally {
+      setCopiando(false);
+    }
   };
 
   return (
@@ -158,6 +181,9 @@ const TrabajadoresPage = () => {
             onChange={(e) => setPeriodo(e.target.value)}
             style={{ width: 170, minHeight: 38, fontSize: '0.95rem' }}
           />
+          <button className="btn btn-outline-secondary" onClick={copiarMesAnterior} disabled={copiando}>
+            {copiando ? 'Copiando…' : 'Repetir mes anterior'}
+          </button>
           <button className="btn btn-primary" onClick={agregarFila}>
             Nuevo trabajador
           </button>
@@ -302,7 +328,7 @@ const TrabajadoresPage = () => {
             {trabajadores.length === 0 && (
               <tr>
                 <td colSpan="11" className="text-center text-muted py-4">
-                  No hay registros para {periodo}. Crea uno con “Nuevo trabajador”.
+                  No hay registros para {periodo}. Crea uno con “Nuevo trabajador” o “Repetir mes anterior”.
                 </td>
               </tr>
             )}
