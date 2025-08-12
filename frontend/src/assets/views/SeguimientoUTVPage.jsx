@@ -323,61 +323,68 @@ const SeguimientoUTVPage = () => {
     setUtvAcum(Number(suma.toFixed(2)));
   }, [utvData]);
 
-    const generar = async () => {
-    try {
-        setCargando(true);
+const generar = async () => {
+  try {
+    setCargando(true);
 
-        // 1) Armamos el resumen desde lo que ya tienes en la página
-        const resumen = {
-        utv: { sumaUTV, valor: totalUTV },
-        termopanel: { m2: totalM2Termo, valor: totalValorTermo },
-        instalacion: {
-            m2: totalM2InstalacionesConAlumce,
-            valor: valorAcumuladoInstalacionesConAlumce,
-        },
-        };
-        resumen.total = (resumen.utv.valor || 0)
-        + (resumen.termopanel.valor || 0)
-        + (resumen.instalacion.valor || 0);
-
-        // 2) Traemos asistencia del mes
-        const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
-        const base = res.data || [];
-
-        // 3) Recalculamos horas y distribuimos proporcional a horas_acum_trab
-        const enriquecidos = base.map((t) => {
-        const dias = Number(t.dias_trab) || 0;
-        const horasTrab = dias * 9; // auto
-        const horasExtras = Number(t.horas_extras) || 0;
-        const horasRetraso = Number(t.horas_retraso) || 0;
-        const horasAcum = horasTrab + horasExtras - horasRetraso;
-        const pctAsist = horasTrab > 0 ? (horasAcum / horasTrab) : 0;
-        return {
-            ...t,
-            horas_trab: horasTrab,
-            horas_extras: horasExtras,
-            horas_retraso: horasRetraso,
-            horas_acum_trab: horasAcum,
-            pct_asist: pctAsist,
-        };
-        });
-
-        const sumHorasAcum = enriquecidos.reduce((s, t) => s + Math.max(0, t.horas_acum_trab || 0), 0);
-        const conPago = enriquecidos.map((t) => {
-        const factor = Math.max(0, t.horas_acum_trab || 0);
-        const pago = sumHorasAcum > 0 ? (resumen.total * (factor / sumHorasAcum)) : 0;
-        return { ...t, pago };
-        });
-
-        // 4) Generar PDF
-        generarPDF_UTV({ periodo, resumen, trabajadores: conPago });
-    } catch (e) {
-        console.error(e);
-        alert("No se pudo generar el PDF.");
-    } finally {
-        setCargando(false);
-    }
+    // 1) Calcular los totales del resumen desde el estado actual
+    const sumaUTVCalc = utvData.reduce((acc, it) => acc + calcularUTV(it), 0);
+    const resumen = {
+      utv: { sumaUTV: sumaUTVCalc, valor: totalUTV },
+      termopanel: { m2: totalM2Termo, valor: totalValorTermo },
+      instalacion: {
+        m2: totalM2InstalacionesConAlumce,
+        valor: valorAcumuladoInstalacionesConAlumce,
+      },
     };
+    resumen.total =
+      (resumen.utv.valor || 0) +
+      (resumen.termopanel.valor || 0) +
+      (resumen.instalacion.valor || 0);
+
+    // 2) Traer asistencia del mes
+    const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
+    const base = res.data || [];
+
+    // 3) Recalcular horas y repartir proporcional al total de horas acumuladas
+    const enriquecidos = base.map((t) => {
+      const dias = Number(t.dias_trab) || 0;
+      const horasTrab = dias * 9;
+      const horasExtras = Number(t.horas_extras) || 0;
+      const horasRetraso = Number(t.horas_retraso) || 0;
+      const horasAcum = horasTrab + horasExtras - horasRetraso;
+      const pctAsist = horasTrab > 0 ? horasAcum / horasTrab : 0;
+      return {
+        ...t,
+        horas_trab: horasTrab,
+        horas_extras: horasExtras,
+        horas_retraso: horasRetraso,
+        horas_acum_trab: horasAcum,
+        pct_asist: pctAsist,
+      };
+    });
+
+    const sumHorasAcum = enriquecidos.reduce(
+      (s, t) => s + Math.max(0, t.horas_acum_trab || 0),
+      0
+    );
+
+    const conPago = enriquecidos.map((t) => {
+      const factor = Math.max(0, t.horas_acum_trab || 0);
+      const pago = sumHorasAcum > 0 ? resumen.total * (factor / sumHorasAcum) : 0;
+      return { ...t, pago };
+    });
+
+    // 4) Generar PDF
+    generarPDF_UTV({ periodo, resumen, trabajadores: conPago });
+  } catch (e) {
+    console.error(e);
+    alert('No se pudo generar el PDF.');
+  } finally {
+    setCargando(false);
+  }
+};
+
 
 
   const totalInstalacion = valorAcumuladoInstalacionesConAlumce;
