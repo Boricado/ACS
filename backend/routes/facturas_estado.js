@@ -1,21 +1,39 @@
+// backend/routes/facturas_estado.js
 import express from 'express';
 import pool from '../db.js';
 
 const router = express.Router();
 
 /**
- * GET /api/facturas_estado
- * Params opcionales:
- *   - proveedor: string (filtra por nombre de proveedor, normalizado)
- *   - estado_pago: string (filtra por estado_calculado o por estado_pago real)
+ * Parser seguro: acepta date nativo o string en varios formatos.
+ * Devuelve date o NULL (nunca explota).
  */
+const safeDateSql = (col) => `
+CASE
+  WHEN ${col} IS NULL THEN NULL
+  WHEN btrim((${col})::text) = '' THEN NULL
+  -- YYYY-MM-DD
+  WHEN btrim((${col})::text) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+    THEN ((${col})::text)::date
+  -- YYYY-M-D  (mes/día 1 o 2 dígitos)
+  WHEN btrim((${col})::text) ~ '^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$'
+    THEN to_date(btrim((${col})::text), 'YYYY-FMMM-FMDD')
+  -- YYYY/MM/DD
+  WHEN btrim((${col})::text) ~ '^[0-9]{4}/[0-9]{2}/[0-9]{2}$'
+    THEN to_date(btrim((${col})::text), 'YYYY/MM/DD')
+  -- YYYY/M/D
+  WHEN btrim((${col})::text) ~ '^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$'
+    THEN to_date(btrim((${col})::text), 'YYYY/FMMM/FMDD')
+  ELSE NULL
+END
+`;
+
 router.get('/', async (req, res) => {
   const { proveedor, estado_pago } = req.query;
 
   const where = [];
   const params = [];
 
-  // Filtro por proveedor (por nombre normalizado contra el campo de la factura)
   if (proveedor && proveedor.trim()) {
     params.push(proveedor.trim());
     where.push(
@@ -24,19 +42,16 @@ router.get('/', async (req, res) => {
     );
   }
 
-  // Filtro por estado: aceptamos tanto el "estado_pago" de BD como el "estado_calculado"
   if (estado_pago && estado_pago.trim()) {
     params.push(estado_pago.trim());
     where.push(`(j.estado_calculado = $${params.length} OR d.estado_pago = $${params.length})`);
   }
 
-  // Nota: usamos dos LEFT JOIN separados (por id y por nombre) para evitar el ON con OR
   const sql = `
     WITH d AS (
       SELECT
         f.id,
-        -- maneja columnas fecha/fecha_pago que puedan ser texto o NULL
-        NULLIF(f.fecha, '')::date        AS fecha,
+        ${safeDateSql('f.fecha')}        AS fecha,
         f.proveedor,
         f.proveedor_id,
         f.numero_guia,
@@ -45,7 +60,7 @@ router.get('/', async (req, res) => {
         f.iva,
         f.monto_total,
         f.estado_pago,
-        NULLIF(f.fecha_pago, '')::date   AS fecha_pago
+        ${safeDateSql('f.fecha_pago')}   AS fecha_pago
       FROM facturas_guias f
     ),
     p AS (
@@ -61,12 +76,13 @@ router.get('/', async (req, res) => {
         d.*,
         COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) AS dias_credito,
         CASE
-          WHEN COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) = 0 THEN NULL
+          WHEN COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) = 0 OR d.fecha IS NULL THEN NULL
           ELSE (d.fecha + (COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) * INTERVAL '1 day'))::date
         END AS vencimiento,
         CASE
           WHEN COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) = 0 THEN 'Contado'
           WHEN d.estado_pago = 'Pagado' THEN 'Pagada'
+          WHEN d.fecha IS NULL THEN 'Vigente'
           WHEN (d.fecha + (COALESCE(p_id.dias_credito, p_nm.dias_credito, 0) * INTERVAL '1 day'))::date < CURRENT_DATE
                THEN 'Vencida'
           ELSE 'Vigente'
@@ -102,7 +118,7 @@ router.get('/', async (req, res) => {
     const r = await pool.query(sql, params);
     res.json(r.rows);
   } catch (err) {
-    console.error('❌ GET /api/facturas_estado', err);
+    console.error('GET /api/facturas_estado error:', err);
     res.status(500).json({ error: 'Error al obtener facturas con estado' });
   }
 });
