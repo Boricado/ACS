@@ -2,75 +2,53 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const FacturasEstadoPage = () => {
-  // ================== ESTADO ==================
+  // Estado
   const [facturas, setFacturas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+  // Si quieres partir mostrando pendientes, cambia '' por 'Pendiente'
   const [filtro, setFiltro] = useState({ proveedor: '', estado_pago: '' });
 
   const API = import.meta.env.VITE_API_URL;
 
-  // ================== DEBUG / LOGS ==================
-  const DEBUG_FACTURAS = true; // ← pon en false para apagar logs
-  const dlog = (...a) => DEBUG_FACTURAS && console.log(...a);
-  const dwarn = (...a) => DEBUG_FACTURAS && console.warn(...a);
-  const dgroup = (label) => DEBUG_FACTURAS && console.groupCollapsed(label);
-  const dgroupEnd = () => DEBUG_FACTURAS && console.groupEnd();
-
-  // ================== HELPERS FECHA (diagnóstico) ==================
+  // ===== Helpers de fecha y formato (blindados UTC) =====
   const pad2 = (n) => String(n).padStart(2, '0');
 
-  // Devuelve {y,m,d} o null; loguea qué detectó
-  const parseToYMD = (value) => {
-    if (!value) {
-      dwarn('[parseToYMD] valor vacío');
-      return null;
-    }
+  // Devuelve 'YYYY-MM-DD' desde Date | 'YYYY-MM-DD' | 'DD-MM-YYYY' | ISO con hora
+  const asISODate = (value) => {
+    if (!value) return null;
     const s = String(value).slice(0, 10);
-
-    // YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-      const [y, m, d] = s.split('-').map(Number);
-      dlog('[parseToYMD] detectado YYYY-MM-DD:', s);
-      return { y, m, d };
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;        // YYYY-MM-DD
+    if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {                // DD-MM-YYYY
+      const [d, m, y] = s.split('-');
+      return `${y}-${m}-${d}`;
     }
-
-    // DD-MM-YYYY
-    if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
-      const [d, m, y] = s.split('-').map(Number);
-      dlog('[parseToYMD] detectado DD-MM-YYYY:', s, '→', `${y}-${pad2(m)}-${pad2(d)}`);
-      return { y, m, d };
-    }
-
-    // Fallback: confiar en Date()
-    const tmp = new Date(s);
-    if (!isNaN(tmp)) {
-      const y = tmp.getFullYear();
-      const m = tmp.getMonth() + 1;
-      const d = tmp.getDate();
-      dlog('[parseToYMD] parse con Date():', s, '→', `${y}-${pad2(m)}-${pad2(d)}`);
-      return { y, m, d };
-    }
-
-    dwarn('[parseToYMD] formato no reconocido/Invalid Date:', value);
-    return null;
+    const d = new Date(s);
+    if (isNaN(d)) return null;
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   };
 
   // Suma días en UTC y devuelve 'YYYY-MM-DD'
-  const addDaysUTC_ISO = (isoY, isoM, isoD, days) => {
-    const t = Date.UTC(isoY, isoM - 1, isoD) + (Number(days) || 0) * 86400000;
+  const addDaysUTC_ISO = (y, m, d, days) => {
+    const t = Date.UTC(Number(y), Number(m) - 1, Number(d)) + (Number(days) || 0) * 86400000;
     const dt = new Date(t);
     return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
   };
 
-  // ================== FORMATEOS ==================
-  const formatearFecha = (fecha) => {
-    if (!fecha) return '-';
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return '-';
-    const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).toString().padStart(2, '0');
-    const anio = d.getFullYear();
-    return `${dia}-${mes}-${anio}`;
+  const isoToUTCDate = (iso) => {
+    if (!iso) return null;
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d));
+  };
+
+  const todayISO = () => {
+    const t = new Date();
+    return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+  };
+
+  const formatearFechaISO = (iso) => {
+    if (!iso) return '-';
+    const [y, m, d] = iso.split('-');
+    return `${d}-${m}-${y}`;
   };
 
   const formatoCLP = (valor) =>
@@ -80,7 +58,15 @@ const FacturasEstadoPage = () => {
       minimumFractionDigits: 0,
     }).format(Number(valor) || 0);
 
-  // ================== DATA ==================
+  // ===== Normalización de proveedor =====
+  const norm = (s) =>
+    (s || '')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+  // ===== Data =====
   useEffect(() => {
     cargarProveedores();
   }, []);
@@ -92,16 +78,7 @@ const FacturasEstadoPage = () => {
   const cargarFacturas = async () => {
     try {
       const res = await axios.get(`${API}api/facturas_guias`, { params: filtro });
-      const data = res.data || [];
-      setFacturas(data);
-      dlog('[FACTURAS] total:', data.length);
-      dlog('[FACTURAS] muestra:', data.slice(0, 5).map((f) => ({
-        id: f.id,
-        proveedor: f.proveedor,
-        fecha: f.fecha,
-        estado: f.estado_pago,
-        dias_credito: '(se calcula por match en proveedores)'
-      })));
+      setFacturas(res.data || []);
     } catch (err) {
       console.error('Error al cargar facturas/guías:', err);
       setFacturas([]);
@@ -111,23 +88,56 @@ const FacturasEstadoPage = () => {
   const cargarProveedores = async () => {
     try {
       const res = await axios.get(`${API}api/proveedores`);
-      const data = res.data || [];
-      setProveedores(data);
-      dlog('[PROVEEDORES] total:', data.length);
-      dlog('[PROVEEDORES] muestra:', data.slice(0, 5));
+      setProveedores(res.data || []);
     } catch (err) {
       console.error('Error al cargar proveedores:', err);
       setProveedores([]);
     }
   };
 
-  const handleTogglePago = async (id, estadoActual) => {
-    const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
-    const fechaPago = nuevoEstado === 'Pagado' ? new Date().toISOString().split('T')[0] : null;
+  // ===== Días de crédito por proveedor (con fallback por "includes") =====
+  const diasCreditoDe = (factura) => {
+    const clave = norm(factura?.proveedor);
+    let prov = proveedores.find((p) => norm(p.proveedor) === clave);
+    if (!prov) {
+      prov = proveedores.find((p) => {
+        const np = norm(p.proveedor);
+        return np.includes(clave) || clave.includes(np);
+      });
+    }
+    const dias = Number(prov?.dias_credito);
+    return Number.isFinite(dias) ? dias : 0;
+  };
+
+  // ===== Vencimiento blindado (ISO string) =====
+  const calcularVencimientoISO = (factura) => {
+    const base = asISODate(factura?.fecha);  // ej: '2025-07-29'
+    if (!base) return null;
+    const dias = diasCreditoDe(factura);     // ej: 30
+    const [y, m, d] = base.split('-').map(Number);
+    const iso = addDaysUTC_ISO(y, m, d, dias); // ej: '2025-08-28'
+    // console.log('[VENCIMIENTO-FINAL]', { base, dias, iso });
+    return iso;
+  };
+
+  // Determina estado no pagado según fechas (Vigente/Pendiente)
+  const estadoNoPagadoSegunFechas = (factura) => {
+    const hoy = todayISO();
+    const venc = calcularVencimientoISO(factura);
+    if (!venc) return 'Pendiente';
+    return hoy <= venc ? 'Vigente' : 'Pendiente';
+  };
+
+  // Toggle: si no está pagado → Pagado (fecha_pago = hoy).
+  // Si está pagado → vuelve a Vigente/Pendiente según vencimiento.
+  const handleTogglePago = async (factura) => {
+    const hoy = todayISO();
+    const pagado = factura.estado_pago === 'Pagado';
+    const nuevoEstado = pagado ? estadoNoPagadoSegunFechas(factura) : 'Pagado';
+    const fechaPago = nuevoEstado === 'Pagado' ? hoy : null;
 
     try {
-      dlog('[TOGGLE] id=', id, 'estadoActual=', estadoActual, '→ nuevoEstado=', nuevoEstado, 'fechaPago=', fechaPago);
-      await axios.put(`${API}api/facturas_guias/${id}`, {
+      await axios.put(`${API}api/facturas_guias/${factura.id}`, {
         estado_pago: nuevoEstado,
         fecha_pago: fechaPago,
       });
@@ -137,91 +147,9 @@ const FacturasEstadoPage = () => {
     }
   };
 
-  // ================== DIAS CREDITO (con logs) ==================
-  const diasCreditoDe = (factura) => {
-    const norm = (s) =>
-      (s || '')
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '');
-
-    const clave = norm(factura?.proveedor);
-    dgroup(`diasCreditoDe → factura.proveedor="${factura?.proveedor}" (→ "${clave}")`);
-
-    let provExact = proveedores.find((p) => norm(p.proveedor) === clave);
-    dlog('matchExact?', !!provExact, provExact?.proveedor, 'dias_credito=', provExact?.dias_credito);
-
-    let prov = provExact;
-    if (!prov) {
-      const provInc = proveedores.find((p) => {
-        const np = norm(p.proveedor);
-        return np.includes(clave) || clave.includes(np);
-      });
-      dlog('matchIncludes?', !!provInc, provInc?.proveedor, 'dias_credito=', provInc?.dias_credito);
-      prov = provInc;
-    }
-
-    const diasRaw = prov?.dias_credito;
-    const dias = Number(diasRaw);
-    if (!prov) dwarn('⚠️ No se encontró proveedor coincidente.');
-    if (!Number.isFinite(dias)) dwarn('⚠️ dias_credito no numérico:', diasRaw);
-
-    dlog('⇒ dias_credito usado:', Number.isFinite(dias) ? dias : 0);
-    dgroupEnd();
-    return Number.isFinite(dias) ? dias : 0;
-  };
-
-  // ================== VENCIMIENTO (con logs) ==================
-  const calcularVencimiento = (factura) => {
-    const raw = factura?.fecha;
-    dgroup(`calcularVencimiento → factura.id=${factura?.id} fecha_raw="${raw}"`);
-
-    if (!raw) {
-      dwarn('⚠️ factura sin fecha');
-      dgroupEnd();
-      return null;
-    }
-
-    // 1) Parse local (como venías haciendo)
-    const dLocalBase = new Date(raw);
-    dlog('parse local (new Date(raw)):', dLocalBase, 'isNaN?', isNaN(dLocalBase.getTime()));
-
-    const dias = diasCreditoDe(factura);
-    dlog('dias_credito=', dias);
-
-    if (!isNaN(dLocalBase.getTime())) {
-      const dLocal = new Date(dLocalBase);
-      dLocal.setDate(dLocal.getDate() + dias); // suma local (puede drift)
-      dlog('vencimiento local (setDate):', dLocal, 'ISO:', dLocal.toISOString());
-    } else {
-      dwarn('⚠️ fecha inválida (local):', raw);
-    }
-
-    // 2) Parse robusto → Y-M-D + suma UTC (sin drift)
-    const ymd = parseToYMD(raw);
-    if (ymd) {
-      const isoUTC = addDaysUTC_ISO(ymd.y, ymd.m, ymd.d, dias);
-      dlog('vencimiento UTC (robusto) →', isoUTC);
-    } else {
-      dwarn('⚠️ no se pudo parsear a Y-M-D:', raw);
-    }
-
-    // Mantener retorno original (Date local) para no romper UI actual
-    if (!isNaN(dLocalBase.getTime())) {
-      const out = new Date(dLocalBase);
-      out.setDate(out.getDate() + dias);
-      dgroupEnd();
-      return out;
-    }
-    dgroupEnd();
-    return null;
-  };
-
-  // ================== OBSERVACIÓN INTERNA ==================
+  // Observación interna
   const handleObservacionChange = async (id, texto) => {
     try {
-      dlog('[OBS] update id=', id, 'texto=', texto);
       await axios.put(`${API}api/facturas_guias/${id}`, {
         observaciones_internas: texto,
       });
@@ -231,7 +159,7 @@ const FacturasEstadoPage = () => {
     }
   };
 
-  // ================== RENDER ==================
+  // ===== Render =====
   return (
     <div className="container py-4">
       <h2 className="mb-4">Control de Estado de Facturas / Guías</h2>
@@ -285,20 +213,24 @@ const FacturasEstadoPage = () => {
         </thead>
         <tbody>
           {facturas.map((f, i) => {
-            dgroup(`FILA #${i} | id=${f.id} | proveedor="${f.proveedor}" | fecha="${f.fecha}" | estado="${f.estado_pago}"`);
-
             const dias = diasCreditoDe(f);
-            const venc = calcularVencimiento(f);
-            const hoyISO = new Date().toISOString().split('T')[0];
-            const vencISO = venc ? venc.toISOString().split('T')[0] : null;
+            const fechaISO = asISODate(f.fecha);            // 'YYYY-MM-DD'
+            const vencISO = calcularVencimientoISO(f);      // 'YYYY-MM-DD'
+            const hoyISO = todayISO();
+
             const vencido = f.estado_pago !== 'Pagado' && vencISO && vencISO < hoyISO;
 
-            dlog('RESUMEN → dias_credito=', dias, '| vencISO(local)=', vencISO, '| hoyISO=', hoyISO, '| vencido?', vencido);
-            dgroupEnd();
+            const pagoISO = asISODate(f.fecha_pago);
+            const pagoIsHoy = pagoISO === hoyISO;
+            const pagoEsViejo =
+              pagoISO &&
+              isoToUTCDate(hoyISO) - isoToUTCDate(pagoISO) > 7 * 24 * 60 * 60 * 1000;
 
             return (
               <tr key={i} className={vencido ? 'table-danger' : ''}>
-                <td className="align-middle text-nowrap">{formatearFecha(f.fecha)}</td>
+                <td className="align-middle text-nowrap">
+                  {fechaISO ? formatearFechaISO(fechaISO) : '-'}
+                </td>
                 <td className="align-middle">
                   {f.proveedor}
                   <div className="small text-muted">
@@ -311,12 +243,12 @@ const FacturasEstadoPage = () => {
                 <td className="align-middle">{formatoCLP(f.iva)}</td>
                 <td className="align-middle">{formatoCLP(f.monto_total)}</td>
                 <td className="align-middle text-nowrap">
-                  {venc ? formatearFecha(venc) : '-'}
+                  {vencISO ? formatearFechaISO(vencISO) : '-'}
                 </td>
                 <td>
                   <button
                     className="btn btn-outline-secondary btn-sm"
-                    onClick={() => handleTogglePago(f.id, f.estado_pago)}
+                    onClick={() => handleTogglePago(f)}
                     title={`Estado: ${f.estado_pago}`}
                   >
                     {f.estado_pago === 'Pagado' && (
@@ -330,21 +262,18 @@ const FacturasEstadoPage = () => {
                     )}
                   </button>
                 </td>
-
                 <td
                   className={`align-middle text-nowrap ${
-                    f.fecha_pago
-                      ? new Date(f.fecha_pago).toISOString().split('T')[0] ===
-                        new Date().toISOString().split('T')[0]
+                    pagoISO
+                      ? pagoIsHoy
                         ? 'table-success'
-                        : new Date(f.fecha_pago) <
-                          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                        : pagoEsViejo
                         ? 'text-muted'
                         : ''
                       : 'text-secondary'
                   }`}
                 >
-                  {f.fecha_pago ? formatearFecha(f.fecha_pago) : '-'}
+                  {pagoISO ? formatearFechaISO(pagoISO) : '-'}
                 </td>
                 <td>
                   <input
