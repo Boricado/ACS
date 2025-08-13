@@ -2,43 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const FacturasEstadoPage = () => {
-  // Estado
   const [facturas, setFacturas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-  // Si quieres partir mostrando pendientes, cambia '' por 'Pendiente'
+  // si quieres partir en "Pendiente" cambia '' por 'Pendiente' (lo mapeamos a 'Vencida' para el back)
   const [filtro, setFiltro] = useState({ proveedor: '', estado_pago: '' });
 
   const API = import.meta.env.VITE_API_URL;
 
-  // ===== Helpers de fecha y formato (blindados UTC) =====
+  // ===== Helpers de fecha/moneda (sin Date, solo strings día) =====
   const pad2 = (n) => String(n).padStart(2, '0');
-
-  // Devuelve 'YYYY-MM-DD' desde Date | 'YYYY-MM-DD' | 'DD-MM-YYYY' | ISO con hora
-  const asISODate = (value) => {
-    if (!value) return null;
-    const s = String(value).slice(0, 10);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;        // YYYY-MM-DD
-    if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {                // DD-MM-YYYY
-      const [d, m, y] = s.split('-');
-      return `${y}-${m}-${d}`;
-    }
-    const d = new Date(s);
-    if (isNaN(d)) return null;
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-  };
-
-  // Suma días en UTC y devuelve 'YYYY-MM-DD'
-  const addDaysUTC_ISO = (y, m, d, days) => {
-    const t = Date.UTC(Number(y), Number(m) - 1, Number(d)) + (Number(days) || 0) * 86400000;
-    const dt = new Date(t);
-    return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
-  };
-
-  const isoToUTCDate = (iso) => {
-    if (!iso) return null;
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(Date.UTC(y, m - 1, d));
-  };
 
   const todayISO = () => {
     const t = new Date();
@@ -47,8 +19,11 @@ const FacturasEstadoPage = () => {
 
   const formatearFechaISO = (iso) => {
     if (!iso) return '-';
-    const [y, m, d] = iso.split('-');
-    return `${d}-${m}-${y}`;
+    const s = String(iso).slice(0, 10); // 'YYYY-MM-DD'
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '-';
+    const [, y, mm, d] = m;
+    return `${d}-${mm}-${y}`;
   };
 
   const formatoCLP = (valor) =>
@@ -58,15 +33,7 @@ const FacturasEstadoPage = () => {
       minimumFractionDigits: 0,
     }).format(Number(valor) || 0);
 
-  // ===== Normalización de proveedor =====
-  const norm = (s) =>
-    (s || '')
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '');
-
-  // ===== Data =====
+  // ===== Carga de datos =====
   useEffect(() => {
     cargarProveedores();
   }, []);
@@ -75,10 +42,26 @@ const FacturasEstadoPage = () => {
     cargarFacturas();
   }, [filtro]);
 
+  const mapEstadoFiltro = (e) => {
+    // el back usa 'Vencida' (no 'Pendiente'); también acepta 'Pagado', 'Vigente', 'Contado'
+    if (e === 'Pendiente') return 'Vencida';
+    return e || '';
+  };
+
   const cargarFacturas = async () => {
     try {
-      const res = await axios.get(`${API}api/facturas_guias`, { params: filtro });
+      const res = await axios.get(`${API}api/facturas_estado`, {
+        params: {
+          proveedor: filtro.proveedor,
+          estado_pago: mapEstadoFiltro(filtro.estado_pago),
+        },
+      });
       setFacturas(res.data || []);
+      // DEBUG: mira campos devueltos por el back (vencimiento, dias_credito, estado_calculado, match_tipo)
+      // console.table((res.data || []).map(x => ({
+      //   id: x.id, prov: x.proveedor, fecha: x.fecha, dias: x.dias_credito,
+      //   venc: x.vencimiento, est_calc: x.estado_calculado, match: x.match_tipo
+      // })));
     } catch (err) {
       console.error('Error al cargar facturas/guías:', err);
       setFacturas([]);
@@ -95,59 +78,29 @@ const FacturasEstadoPage = () => {
     }
   };
 
-  // ===== Días de crédito por proveedor (con fallback por "includes") =====
-  const diasCreditoDe = (factura) => {
-    const clave = norm(factura?.proveedor);
-    let prov = proveedores.find((p) => norm(p.proveedor) === clave);
-    if (!prov) {
-      prov = proveedores.find((p) => {
-        const np = norm(p.proveedor);
-        return np.includes(clave) || clave.includes(np);
-      });
-    }
-    const dias = Number(prov?.dias_credito);
-    return Number.isFinite(dias) ? dias : 0;
-  };
-
-  // ===== Vencimiento blindado (ISO string) =====
-  const calcularVencimientoISO = (factura) => {
-    const base = asISODate(factura?.fecha);  // ej: '2025-07-29'
-    if (!base) return null;
-    const dias = diasCreditoDe(factura);     // ej: 30
-    const [y, m, d] = base.split('-').map(Number);
-    const iso = addDaysUTC_ISO(y, m, d, dias); // ej: '2025-08-28'
-    // console.log('[VENCIMIENTO-FINAL]', { base, dias, iso });
-    return iso;
-  };
-
-  // Determina estado no pagado según fechas (Vigente/Pendiente)
-  const estadoNoPagadoSegunFechas = (factura) => {
-    const hoy = todayISO();
-    const venc = calcularVencimientoISO(factura);
-    if (!venc) return 'Pendiente';
-    return hoy <= venc ? 'Vigente' : 'Pendiente';
-  };
-
-  // Toggle: si no está pagado → Pagado (fecha_pago = hoy).
-  // Si está pagado → vuelve a Vigente/Pendiente según vencimiento.
-  const handleTogglePago = async (factura) => {
-    const hoy = todayISO();
-    const pagado = factura.estado_pago === 'Pagado';
-    const nuevoEstado = pagado ? estadoNoPagadoSegunFechas(factura) : 'Pagado';
-    const fechaPago = nuevoEstado === 'Pagado' ? hoy : null;
-
+  // ===== Toggle de pago =====
+  // Si está Pagado → lo volvemos a "no pagado" (estado_pago = null, fecha_pago = null) para que el back recalcule Vigente/Vencida.
+  // Si NO está Pagado → lo marcamos Pagado con fecha de hoy.
+  const handleTogglePago = async (f) => {
     try {
-      await axios.put(`${API}api/facturas_guias/${factura.id}`, {
-        estado_pago: nuevoEstado,
-        fecha_pago: fechaPago,
-      });
+      if (f.estado_pago === 'Pagado') {
+        await axios.put(`${API}api/facturas_guias/${f.id}`, {
+          estado_pago: null,
+          fecha_pago: null,
+        });
+      } else {
+        await axios.put(`${API}api/facturas_guias/${f.id}`, {
+          estado_pago: 'Pagado',
+          fecha_pago: todayISO(),
+        });
+      }
       cargarFacturas();
     } catch (err) {
       console.error('Error al actualizar estado:', err);
     }
   };
 
-  // Observación interna
+  // ===== Observación interna =====
   const handleObservacionChange = async (id, texto) => {
     try {
       await axios.put(`${API}api/facturas_guias/${id}`, {
@@ -159,7 +112,6 @@ const FacturasEstadoPage = () => {
     }
   };
 
-  // ===== Render =====
   return (
     <div className="container py-4">
       <h2 className="mb-4">Control de Estado de Facturas / Guías</h2>
@@ -189,8 +141,9 @@ const FacturasEstadoPage = () => {
           >
             <option value="">Todos</option>
             <option value="Pagado">Pagado</option>
-            <option value="Pendiente">Pendiente</option>
             <option value="Vigente">Vigente</option>
+            <option value="Pendiente">Pendiente</option> {/* se mapea a 'Vencida' */}
+            <option value="Contado">Contado</option>
           </select>
         </div>
       </div>
@@ -213,18 +166,32 @@ const FacturasEstadoPage = () => {
         </thead>
         <tbody>
           {facturas.map((f, i) => {
-            const dias = diasCreditoDe(f);
-            const fechaISO = asISODate(f.fecha);            // 'YYYY-MM-DD'
-            const vencISO = calcularVencimientoISO(f);      // 'YYYY-MM-DD'
+            const dias = Number(f.dias_credito) || 0;
+            const fechaISO = f.fecha || null;           // 'YYYY-MM-DD'
+            const vencISO = f.vencimiento || null;      // 'YYYY-MM-DD' (calculado en el back)
             const hoyISO = todayISO();
 
             const vencido = f.estado_pago !== 'Pagado' && vencISO && vencISO < hoyISO;
 
-            const pagoISO = asISODate(f.fecha_pago);
-            const pagoIsHoy = pagoISO === hoyISO;
+            // Mostrar estado: si está pagado, mostramos Pagado; si no, usamos el calculado (Vigente/Vencida/Contado)
+            const estadoMostrar =
+              f.estado_pago === 'Pagado' ? 'Pagado' : (f.estado_calculado || 'Vigente');
+
+            // color del botón según estadoMostrar
+            const estadoBtn =
+              estadoMostrar === 'Pagado'
+                ? 'success'
+                : estadoMostrar === 'Vigente'
+                ? 'warning'
+                : estadoMostrar === 'Vencida'
+                ? 'danger'
+                : 'secondary';
+
+            const pagoISO = f.fecha_pago || null;
+            const pagoIsHoy = pagoISO && pagoISO === hoyISO;
             const pagoEsViejo =
               pagoISO &&
-              isoToUTCDate(hoyISO) - isoToUTCDate(pagoISO) > 7 * 24 * 60 * 60 * 1000;
+              new Date(hoyISO) - new Date(pagoISO) > 7 * 24 * 60 * 60 * 1000;
 
             return (
               <tr key={i} className={vencido ? 'table-danger' : ''}>
@@ -247,18 +214,21 @@ const FacturasEstadoPage = () => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-outline-secondary btn-sm"
+                    className={`btn btn-outline-${estadoBtn} btn-sm`}
                     onClick={() => handleTogglePago(f)}
-                    title={`Estado: ${f.estado_pago}`}
+                    title={`Estado actual: ${estadoMostrar}`}
                   >
-                    {f.estado_pago === 'Pagado' && (
+                    {estadoMostrar === 'Pagado' && (
                       <span className="text-success fw-bold">🟢 Pagado</span>
                     )}
-                    {f.estado_pago === 'Vigente' && (
+                    {estadoMostrar === 'Vigente' && (
                       <span className="text-warning fw-bold">🟡 Vigente</span>
                     )}
-                    {f.estado_pago === 'Pendiente' && (
-                      <span className="text-danger fw-bold">🔴 Pendiente</span>
+                    {estadoMostrar === 'Vencida' && (
+                      <span className="text-danger fw-bold">🔴 Vencida</span>
+                    )}
+                    {estadoMostrar === 'Contado' && (
+                      <span className="text-secondary fw-bold">⚪ Contado</span>
                     )}
                   </button>
                 </td>
