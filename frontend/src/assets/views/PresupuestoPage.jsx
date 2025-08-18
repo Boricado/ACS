@@ -6,6 +6,9 @@ const PresupuestoPage = () => {
   const [mensaje, setMensaje] = useState(null);
   const API = import.meta.env.VITE_API_URL;
 
+  // NUEVO: texto visible en el input
+  const [clienteTexto, setClienteTexto] = useState('');
+
   const [presupuesto, setPresupuesto] = useState({
     numero: '',
     cliente_id: '',
@@ -16,7 +19,6 @@ const PresupuestoPage = () => {
     total_neto_presupuestado: ''
   });
 
-  // Cargar clientes al iniciar
   useEffect(() => {
     axios.get(`${API}api/clientes`)
       .then(res => setClientes(res.data))
@@ -28,10 +30,7 @@ const PresupuestoPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPresupuesto(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setPresupuesto(prev => ({ ...prev, [name]: value }));
   };
 
   const guardarPresupuesto = async () => {
@@ -43,17 +42,14 @@ const PresupuestoPage = () => {
     }
 
     try {
-      // Validar duplicado
       const resValidacion = await axios.get(`${API}api/presupuestos/cliente/${cliente_id}`);
       const yaExiste = resValidacion.data.some(p => p.numero === numero);
-
       if (yaExiste) {
         setMensaje({ tipo: 'error', texto: 'Ya existe un presupuesto con ese número para este cliente' });
         return;
       }
 
-      // Guardar presupuesto
-      const res = await axios.post(`${API}api/presupuestos`, {
+      await axios.post(`${API}api/presupuestos`, {
         numero,
         cliente_id,
         nombre_obra,
@@ -63,12 +59,9 @@ const PresupuestoPage = () => {
         total_neto_presupuestado: Number(total_neto_presupuestado) || 0
       });
 
-      // Obtener nombre del cliente
-      const clienteEncontrado = clientes.find(c => c.id.toString() === cliente_id);
-      const cliente_nombre = clienteEncontrado?.nombre || 'Sin nombre';
-
       setMensaje({ tipo: 'success', texto: 'Presupuesto y seguimiento guardados correctamente' });
 
+      // reset
       setPresupuesto({
         numero: '',
         cliente_id: '',
@@ -78,7 +71,7 @@ const PresupuestoPage = () => {
         fecha: '',
         total_neto_presupuestado: ''
       });
-
+      setClienteTexto('');
     } catch (err) {
       console.error('Error al guardar:', err.message);
       setMensaje({ tipo: 'error', texto: 'Error al guardar presupuesto o seguimiento' });
@@ -97,26 +90,44 @@ const PresupuestoPage = () => {
 
       <div className="row">
         <div className="col-md-6 mb-3">
-            <input
-              className="form-control"
-              list="lista_clientes"
-              value={
-                clientes.find(c => c.id.toString() === presupuesto.cliente_id)?.nombre || ''
+          <input
+            type="text"
+            className="form-control"
+            list="lista_clientes"
+            placeholder="Escriba nombre del cliente"
+            value={clienteTexto}
+            onChange={(e) => {
+              const txt = e.target.value;
+              setClienteTexto(txt);
+
+              // match exacto, case-insensitive
+              const match = clientes.find(
+                (c) => c.nombre.toLowerCase() === txt.trim().toLowerCase()
+              );
+
+              setPresupuesto(prev => ({
+                ...prev,
+                cliente_id: match ? String(match.id) : ''
+              }));
+            }}
+            onBlur={() => {
+              // opcional: si no hay match exacto, intenta parcial al salir del input
+              if (!presupuesto.cliente_id && clienteTexto.trim()) {
+                const parcial = clientes.find(
+                  (c) => c.nombre.toLowerCase().includes(clienteTexto.trim().toLowerCase())
+                );
+                if (parcial) {
+                  setClienteTexto(parcial.nombre);
+                  setPresupuesto(prev => ({ ...prev, cliente_id: String(parcial.id) }));
+                }
               }
-              onChange={(e) => {
-                const cliente = clientes.find(c => c.nombre === e.target.value);
-                setPresupuesto(prev => ({
-                  ...prev,
-                  cliente_id: cliente?.id?.toString() || ''
-                }));
-              }}
-              placeholder="Escriba nombre del cliente"
-            />
-            <datalist id="lista_clientes">
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.nombre} />
-              ))}
-            </datalist>
+            }}
+          />
+          <datalist id="lista_clientes">
+            {clientes.map((cliente) => (
+              <option key={cliente.id} value={cliente.nombre} />
+            ))}
+          </datalist>
         </div>
 
         <div className="col-md-6 mb-3">
