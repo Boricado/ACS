@@ -260,7 +260,7 @@ const SeguimientoUTVPage = () => {
   const calcularUTV = (item) => {
     const fijo = parseFloat(item.fijo || 0) * 0.5;
     const fijoCorredera = parseFloat(item.doble_corredera_fijo || 0) * 1.5;
-    const proyectante = parseFloat(item.proyectante || 0) * 1; // tu lógica original
+    const proyectante = parseFloat(item.proyectante || 0) * 1; 
     const oscilobatiente = parseFloat(item.oscilobatiente || 0) * 1;
     const dobleCorredera = parseFloat(item.doble_corredera || 0) * 2;
     const marcoPuerta = parseFloat(item.marco_puerta || 0) * 2.5;
@@ -499,7 +499,7 @@ const generar = async () => {
                     {[
                       { name: 'fijo', label: 'Fijo (0.5 UTV)' },
                       { name: 'doble_corredera_fijo', label: 'Fijo + corredera (1.5 UTV)' },
-                      { name: 'proyectante', label: 'Proyectante (0.5 UTV)' },
+                      { name: 'proyectante', label: 'Proyectante (1 UTV)' },
                       { name: 'oscilobatiente', label: 'Oscilobatiente (1 UTV)' },
                       { name: 'doble_corredera', label: 'Doble Corredera (2 UTV)' },
                       { name: 'marco_puerta', label: 'Marco Puerta (2.5 UTV)' },
