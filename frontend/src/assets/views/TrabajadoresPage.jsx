@@ -54,18 +54,22 @@ const TrabajadoresPage = () => {
     return { ...t, horas_trab, horas_acum_trab };
   };
 
-  const handleChange = (idx, field, value) => {
-    const next = [...trabajadores];
-    const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
-    if (numericFields.includes(field)) {
-      const v = value === '' ? '' : Number(value);
-      next[idx][field] = isNaN(v) ? '' : v;
-    } else {
-      next[idx][field] = value;
-    }
-    next[idx] = recalcDerivados(next[idx]);
-    setTrabajadores(next);
-  };
+const handleChange = (idx, field, value) => {
+  const next = [...trabajadores];
+  const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
+
+  if (numericFields.includes(field)) {
+    // normaliza "3,5" -> "3.5"
+    const norm = value === '' ? '' : String(value).replace(',', '.');
+    const v = norm === '' ? '' : Number(norm);
+    next[idx][field] = isNaN(v) ? '' : v;
+  } else {
+    next[idx][field] = value;
+  }
+
+  next[idx] = recalcDerivados(next[idx]);
+  setTrabajadores(next);
+};
 
   const agregarFila = () => {
     const base = recalcDerivados({
@@ -139,13 +143,12 @@ const TrabajadoresPage = () => {
   };
 
 // % HORA ASIST = (HORAS TRAB - HORAS RETRASO) / HORAS TRAB * 100
+const toNum = (x) => Number(String(x ?? 0).toString().replace(',', '.')) || 0;
+
 const pctAsistencia = (t) => {
-  const horasBase =
-    Number(t.horas_trab) || (Number(t.dias_trab) || 0) * JORNADA_DIARIA;
-
-  const horasRetraso = Number(t.horas_retraso) || 0;
+  const horasBase = toNum(t.horas_trab) || toNum(t.dias_trab) * JORNADA_DIARIA;
+  const horasRetraso = toNum(t.horas_retraso);
   if (horasBase <= 0) return 0;
-
   const horasEfectivas = Math.max(0, horasBase - horasRetraso);
   const pct = (horasEfectivas / horasBase) * 100;
   return Math.min(100, Math.max(0, pct));
