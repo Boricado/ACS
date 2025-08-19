@@ -225,37 +225,55 @@ const SeguimientoUTVPage = () => {
   };
 
   // --- Carga inicial / por filtros ---
-  const obtenerDatos = async () => {
-    const params = { mes: mesFiltro, anio: anioFiltro };
-    try {
-      const [utvRes, termoRes, instRes] = await Promise.all([
-        axios.get(`${API}api/taller/utv`, { params }),
-        axios.get(`${API}api/taller/termopanel`, { params }),
-        axios.get(`${API}api/taller/instalaciones`, { params }),
-      ]);
-      setUtvData(utvRes.data || []);
-      setTermopanelData(termoRes.data || []);
-      setInstalacionData(instRes.data || []);
-    } catch (error) {
-      console.error('Error al cargar datos:', error);
-      alert('Error al cargar datos del taller.');
-    }
-  };
+// en obtenerDatos()
+const obtenerDatos = async () => {
+  const params = { mes: mesFiltro, anio: anioFiltro };
+  try {
+    const [utvRes, termoRes, instRes] = await Promise.all([
+      axios.get(`${API}api/taller/utv`, { params }),
+      axios.get(`${API}api/taller/termopanel`, { params }),
+      axios.get(`${API}api/taller/instalaciones`, { params }),
+    ]);
+
+    // 👇 aquí el orden:
+    setUtvData(ordenarPorFechaAsc(utvRes.data));
+    setTermopanelData(ordenarPorFechaAsc(termoRes.data));     // opcional, por consistencia
+    setInstalacionData(ordenarPorFechaAsc(instRes.data));     // opcional
+
+  } catch (error) {
+    console.error('Error al cargar datos:', error);
+    alert('Error al cargar datos del taller.');
+  }
+};
+
+
+
+// --- helpers de fecha/orden ---
+const tsFecha = (f) => {
+  if (!f) return 0;
+  // misma corrección que usas para mostrar (+4h por UTC-4)
+  const t = new Date(f).getTime();
+  return Number.isFinite(t) ? t + 4 * 60 * 60 * 1000 : 0;
+};
+
+const ordenarPorFechaAsc = (arr) =>
+  [...(arr || [])].sort((a, b) => tsFecha(a.fecha) - tsFecha(b.fecha));
+
+const ordenarPorFechaDesc = (arr) =>
+  [...(arr || [])].sort((a, b) => tsFecha(b.fecha) - tsFecha(a.fecha));
+
 
 const cargarRegistros = async () => {
   try {
     const res = await axios.get(`${API}api/taller/utv`, {
-      params: { mes, anio }
+      params: { mes: mesFiltro, anio: anioFiltro }
     });
-
-    // ordenar por fecha ascendente (más antiguo primero)
-    const ordenados = res.data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-
-    setUtvData(ordenados);
-  } catch (err) {
-    console.error("Error cargando UTV:", err);
+    setUtvData(ordenarPorFechaAsc(res.data));  // 👈 ordena aquí también
+  } catch (error) {
+    console.error('Error al cargar registros UTV:', error);
   }
 };
+
 
   useEffect(() => {
     obtenerDatos();
