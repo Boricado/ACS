@@ -242,14 +242,20 @@ const SeguimientoUTVPage = () => {
     }
   };
 
-  const cargarRegistros = async () => {
-    try {
-      const res = await axios.get(`${API}api/taller/utv?mes=${mesFiltro}&anio=${anioFiltro}`);
-      setUtvData(res.data || []);
-    } catch (error) {
-      console.error('Error al cargar registros UTV:', error);
-    }
-  };
+const cargarRegistros = async () => {
+  try {
+    const res = await axios.get(`${API}api/taller/utv`, {
+      params: { mes, anio }
+    });
+
+    // ordenar por fecha ascendente (más antiguo primero)
+    const ordenados = res.data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    setUtvData(ordenados);
+  } catch (err) {
+    console.error("Error cargando UTV:", err);
+  }
+};
 
   useEffect(() => {
     obtenerDatos();
@@ -323,6 +329,13 @@ const SeguimientoUTVPage = () => {
     setUtvAcum(Number(suma.toFixed(2)));
   }, [utvData]);
 
+// Pon este helper cerca de arriba del archivo (si no lo tienes ya)
+const num = (x) => {
+  const n = Number(String(x ?? '').replace(',', '.').trim());
+  return Number.isFinite(n) ? n : 0;
+};
+
+// Reemplaza COMPLETO tu función `generar` por esta:
 const generar = async () => {
   try {
     setCargando(true);
@@ -343,48 +356,61 @@ const generar = async () => {
       Number(resumen.termopanel.valor) +
       Number(resumen.instalacion.valor);
 
-    // 2) Asistencia del mes
+    // 2) Traer planilla de trabajadores del periodo seleccionado
     const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
-    const base = res.data || [];
+    const base = (res.data || []).map((t) => ({
+      ...t,
+      dias_trab: num(t.dias_trab),
+      horas_extras: num(t.horas_extras),
+      horas_retraso: num(t.horas_retraso),
+    }));
 
-    // 3) Recalcular horas y distribuir (extras NO cuentan para el %)
+    // 3) diasPlan = MÁXIMO dias_trab del mes (como en la vista de asistencia)
+    const diasPlan = base.reduce((max, t) => (t.dias_trab > max ? t.dias_trab : max), 0);
+    const horasPlanMes = diasPlan * 9; // jornada diaria = 9
+
+    // 4) Recalcular métricas por trabajador
     const enriquecidos = base.map((t) => {
-    const dias = Number(t.dias_trab) || 0;
+      const horasBasePers  = t.dias_trab * 9;                 // 9 × días trabajados del trabajador
+      const horasRetraso   = t.horas_retraso;
+      const horasExtras    = t.horas_extras;
 
-    // horas planificadas: DIAS * 9 (y las guardamos también por si vienen distintas)
-    const horasBase = dias * 9;
+      // Asistencia (%): NO cuenta extras, se calcula vs horas plan del MES (máximas)
+      const horasEfectivas = Math.max(0, horasBasePers - horasRetraso);
+      const pctAsist = horasPlanMes > 0 ? (horasEfectivas / horasPlanMes) : 0; // 0..1
 
-    const horasExtras   = Number(t.horas_extras)  || 0;
-    const horasRetraso  = Number(t.horas_retraso) || 0;
+      // Horas acumuladas (para pago si quieres incluir extras)
+      const horasAcum = Math.max(0, horasBasePers + horasExtras - horasRetraso);
 
-    // para % asistencia NO contamos extras
-    const horasEfectivas = Math.max(0, horasBase - horasRetraso);
-
-    // HORAS ACUM. TRAB (como en la tabla): base + extras - retraso
-    const horasAcum = Math.max(0, horasBase + horasExtras - horasRetraso);
-
-    const pctAsist = horasBase > 0 ? (horasEfectivas / horasBase) : 0;
-
-    return {
+      return {
         ...t,
-        horas_trab: horasBase,          // normalizamos por si viene distinto
-        horas_acum_trab: horasAcum,     // coincide con la tabla del front
-        pct_asist: pctAsist,            // % sin extras (solo resta retraso)
-    };
+        horas_trab: horasBasePers,     // normalizado por si venía distinto
+        horas_acum_trab: horasAcum,    // como en la tabla (trab + extras − retraso)
+        pct_asist: pctAsist,           // % asistencia contra el plan del mes (sin extras)
+      };
     });
 
-    // si quieres que el pago también ignore extras, usa "horasEfectivas" como factor.
-    // ahora mismo pagamos proporcional a horas_acum_trab (extras sí suman al pago):
+    // 5) Distribución de pago:
+    //    - Si quieres que LAS EXTRAS SÍ CUENTEN en el pago, usamos horas_acum_trab (como hasta ahora).
+    //    - Si NO quieres pagar extras en esta liquidación, usa factor = horas_trab − horas_retraso.
     const sumHoras = enriquecidos.reduce((s, t) => s + Math.max(0, t.horas_acum_trab || 0), 0);
+
     const conPago = enriquecidos.map((t) => {
-    const factor = Math.max(0, t.horas_acum_trab || 0); // <- cambia a "t.horas_trab - t.horas_retraso" si NO quieres pagar extras
-    const pago = sumHoras > 0 ? (resumen.total * (factor / sumHoras)) : 0;
-    return { ...t, pago };
+      // ⇩⇩ Cambia esta línea si NO quieres pagar extras (usa: t.horas_trab - t.horas_retraso)
+      const factor = Math.max(0, t.horas_acum_trab || 0);
+
+      const pago = sumHoras > 0 ? (resumen.total * (factor / sumHoras)) : 0;
+      return { ...t, pago };
     });
 
-
-    // 4) Generar PDF
-    generarPDF_UTV({ periodo, resumen, trabajadores: conPago });
+    // 6) Generar PDF con datos consistentes
+    generarPDF_UTV({
+      periodo,
+      resumen,
+      trabajadores: conPago,
+      // opcional: por si quieres mostrar la base y el máximo del mes en el PDF:
+      meta: { diasPlan, horasPlanMes }
+    });
   } catch (e) {
     console.error(e);
     alert('No se pudo generar el PDF.');
