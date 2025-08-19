@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 
-const JORNADA_DIARIA = 9; // DIAS TRAB × 9
+const JORNADA_DIARIA = 9; // horas/día
 
 const inputStyle = {
   minWidth: 110,
@@ -156,13 +156,27 @@ const TrabajadoresPage = () => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-  // % HORA ASIST = (HORAS ACUM TRAB) / (HORAS TRAB) * 100
-  // (capado 0–100; HORAS ACUM TRAB = TRAB + EXTRAS − RETRASO)
+  // === NUEVO: diasPlan = máximo dias_trab del mes, recalculado siempre ===
+  const diasPlan = useMemo(
+    () => trabajadores.reduce((max, t) => {
+      const d = toNum(t.dias_trab);
+      return d > max ? d : max;
+    }, 0),
+    [trabajadores]
+  );
+
+  // % HORA ASIST = (DIAS_TRAB × 9 − HORAS_RETRASO) / (DIAS_PLAN × 9) * 100
+  // Ignoramos extras; capado 0–100.
   const pctAsistencia = (t) => {
-    const base = toNum(t.horas_trab);
+    const base = toNum(diasPlan) * JORNADA_DIARIA;
     if (base <= 0) return 0;
-    const efectivas = Math.max(0, toNum(t.horas_acum_trab));
-    const pct = (efectivas / base) * 100;
+
+    const horasEfectivas = Math.max(
+      0,
+      toNum(t.dias_trab) * JORNADA_DIARIA - toNum(t.horas_retraso)
+    );
+
+    const pct = (horasEfectivas / base) * 100;
     return Math.min(100, Math.max(0, pct));
   };
 
@@ -201,6 +215,9 @@ const TrabajadoresPage = () => {
             onChange={(e) => setPeriodo(e.target.value)}
             style={{ width: 170, minHeight: 38, fontSize: '0.95rem' }}
           />
+          <span className="badge bg-secondary" title="Base del % asistencia">
+            Días plan (máx. del mes): {diasPlan}
+          </span>
           <button className="btn btn-outline-secondary" onClick={copiarMesAnterior} disabled={copiando}>
             {copiando ? 'Copiando…' : 'Repetir mes anterior'}
           </button>
