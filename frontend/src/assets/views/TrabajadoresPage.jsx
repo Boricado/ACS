@@ -11,6 +11,15 @@ const inputStyle = {
 };
 const inputWide = { ...inputStyle, minWidth: 220 };
 
+const fixNum = (v) => {
+  const n = Number(String(v ?? '').replace(',', '.').trim());
+  return Number.isFinite(n) ? n : 0;
+};
+const toNum = (x) => {
+  const n = Number(String(x ?? '').replace(',', '.').trim());
+  return Number.isFinite(n) ? n : 0;
+};
+
 const TrabajadoresPage = () => {
   const API = import.meta.env.VITE_API_URL;
 
@@ -29,10 +38,25 @@ const TrabajadoresPage = () => {
     return `${ny}-${String(nm).padStart(2, '0')}`;
   };
 
+  const recalcDerivados = (t) => {
+    const dias = fixNum(t.dias_trab);
+    const extras = fixNum(t.horas_extras);
+    const retraso = fixNum(t.horas_retraso);
+    const horas_trab = Math.max(0, dias * JORNADA_DIARIA);
+    const horas_acum_trab = Math.max(0, horas_trab + extras - retraso);
+    return { ...t, dias_trab: dias, horas_extras: extras, horas_retraso: retraso, horas_trab, horas_acum_trab };
+  };
+
   const cargarTrabajadores = async () => {
     try {
       const res = await axios.get(`${API}api/trabajadores`, { params: { periodo } });
-      const recalculados = (res.data || []).map(recalcDerivados);
+      const normalizados = (res.data || []).map(r => ({
+        ...r,
+        dias_trab: fixNum(r.dias_trab),
+        horas_extras: fixNum(r.horas_extras),
+        horas_retraso: fixNum(r.horas_retraso),
+      }));
+      const recalculados = normalizados.map(recalcDerivados);
       setTrabajadores(recalculados);
     } catch (e) {
       console.error(e);
@@ -45,31 +69,21 @@ const TrabajadoresPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo]);
 
-  const recalcDerivados = (t) => {
-    const dias = Number(t.dias_trab) || 0;
-    const extras = Number(t.horas_extras) || 0;
-    const retraso = Number(t.horas_retraso) || 0;
-    const horas_trab = Math.max(0, dias * JORNADA_DIARIA);
-    const horas_acum_trab = Math.max(0, horas_trab + extras - retraso);
-    return { ...t, horas_trab, horas_acum_trab };
+  const handleChange = (idx, field, value) => {
+    const next = [...trabajadores];
+    const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
+
+    if (numericFields.includes(field)) {
+      const norm = value === '' ? '' : String(value).replace(',', '.');
+      const v = norm === '' ? '' : Number(norm);
+      next[idx][field] = Number.isFinite(v) ? v : 0;
+    } else {
+      next[idx][field] = value;
+    }
+
+    next[idx] = recalcDerivados(next[idx]);
+    setTrabajadores(next);
   };
-
-const handleChange = (idx, field, value) => {
-  const next = [...trabajadores];
-  const numericFields = ['dias_trab', 'horas_extras', 'horas_retraso'];
-
-  if (numericFields.includes(field)) {
-    // normaliza "3,5" -> "3.5"
-    const norm = value === '' ? '' : String(value).replace(',', '.');
-    const v = norm === '' ? '' : Number(norm);
-    next[idx][field] = isNaN(v) ? '' : v;
-  } else {
-    next[idx][field] = value;
-  }
-
-  next[idx] = recalcDerivados(next[idx]);
-  setTrabajadores(next);
-};
 
   const agregarFila = () => {
     const base = recalcDerivados({
@@ -95,12 +109,12 @@ const handleChange = (idx, field, value) => {
     const payload = {
       periodo: t.periodo || periodo,
       nombre: t.nombre?.trim(),
-      dias_trab: parseInt(t.dias_trab || 0, 10),
-      horas_trab: Number(t.horas_trab || 0),
-      horas_extras: Number(t.horas_extras || 0),
-      horas_retraso: Number(t.horas_retraso || 0),
+      dias_trab: parseInt(fixNum(t.dias_trab) || 0, 10),
+      horas_trab: toNum(t.horas_trab || 0),
+      horas_extras: toNum(t.horas_extras || 0),
+      horas_retraso: toNum(t.horas_retraso || 0),
       observacion: t.observacion || '',
-      horas_acum_trab: Number(t.horas_acum_trab || 0)
+      horas_acum_trab: toNum(t.horas_acum_trab || 0)
     };
 
     try {
@@ -142,17 +156,15 @@ const handleChange = (idx, field, value) => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-// % HORA ASIST = (HORAS TRAB - HORAS RETRASO) / HORAS TRAB * 100
-const toNum = (x) => Number(String(x ?? 0).toString().replace(',', '.')) || 0;
-
-const pctAsistencia = (t) => {
-  const horasBase = toNum(t.horas_trab) || toNum(t.dias_trab) * JORNADA_DIARIA;
-  const horasRetraso = toNum(t.horas_retraso);
-  if (horasBase <= 0) return 0;
-  const horasEfectivas = Math.max(0, horasBase - horasRetraso);
-  const pct = (horasEfectivas / horasBase) * 100;
-  return Math.min(100, Math.max(0, pct));
-};
+  // % HORA ASIST = (HORAS ACUM TRAB) / (HORAS TRAB) * 100
+  // (capado 0–100; HORAS ACUM TRAB = TRAB + EXTRAS − RETRASO)
+  const pctAsistencia = (t) => {
+    const base = toNum(t.horas_trab);
+    if (base <= 0) return 0;
+    const efectivas = Math.max(0, toNum(t.horas_acum_trab));
+    const pct = (efectivas / base) * 100;
+    return Math.min(100, Math.max(0, pct));
+  };
 
   const copiarMesAnterior = async () => {
     const de = prevMonth(periodo);
@@ -207,23 +219,23 @@ const pctAsistencia = (t) => {
       <div
         className="table-responsive"
         style={{ overflowX: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}
-        >
+      >
         <table className="table table-bordered table-hover align-middle table-compact">
-        <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
+          <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
             <tr>
-            <th style={{ minWidth: 70 }}>ID</th>
-            <th style={{ minWidth: 150 }}>MES</th>
-            <th style={{ minWidth: 180 }}>NOMBRE</th>
-            <th>DIAS<br/>TRAB</th>
-            <th>HORAS<br/>TRAB</th>
-            <th>HORAS<br/>EXTRAS</th>
-            <th>HORAS RETRASO<br/>/ PERMISO</th>
-            <th>OBSERVACIÓN</th>
-            <th>HORAS ACUM.<br/>TRAB</th>
-            <th>% HORA<br/>ASIST</th>
-            <th>ACCIONES</th>
+              <th style={{ minWidth: 70 }}>ID</th>
+              <th style={{ minWidth: 150 }}>MES</th>
+              <th style={{ minWidth: 180 }}>NOMBRE</th>
+              <th>DIAS<br />TRAB</th>
+              <th>HORAS<br />TRAB</th>
+              <th>HORAS<br />EXTRAS</th>
+              <th>HORAS RETRASO<br />/ PERMISO</th>
+              <th>OBSERVACIÓN</th>
+              <th>HORAS ACUM.<br />TRAB</th>
+              <th>% HORA<br />ASIST</th>
+              <th>ACCIONES</th>
             </tr>
-        </thead>
+          </thead>
           <tbody>
             {trabajadores.map((t, idx) => (
               <tr key={t.id ?? `nuevo-${idx}`}>
@@ -278,6 +290,8 @@ const pctAsistencia = (t) => {
                     type="number"
                     min="0"
                     step="0.25"
+                    inputMode="decimal"
+                    lang="en"
                     className="form-control"
                     style={inputStyle}
                     value={t.horas_extras ?? 0}
@@ -290,6 +304,8 @@ const pctAsistencia = (t) => {
                     type="number"
                     min="0"
                     step="0.25"
+                    inputMode="decimal"
+                    lang="en"
                     className="form-control"
                     style={inputStyle}
                     value={t.horas_retraso ?? 0}
