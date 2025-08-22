@@ -226,6 +226,7 @@ const AjusteStock = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') guardarNombre(codigo, producto);
                           }}
+                          style={{ minWidth: "250px" }} // 👈 más espacio
                         />
                         <button
                           type="button"
