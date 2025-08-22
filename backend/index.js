@@ -801,20 +801,25 @@ app.get('/api/inventario', async (req, res) => {
     const resultado = await pool.query(`
       SELECT DISTINCT ON (i.codigo)
         i.codigo,
-        COALESCE(d.producto, '') AS producto,
+        -- 👇 PRIORIDAD: materiales.producto; si no hay, usa el de la última OC
+        COALESCE(m.producto, d.producto, '') AS producto,
         i.stock_actual,
         i.stock_minimo,
         i.unidad,
         COALESCE(d.precio_unitario, 0) AS precio_unitario
       FROM inventario i
+      -- nombre oficial desde materiales
+      LEFT JOIN materiales m ON m.codigo = i.codigo
+      -- último precio/nombre según última OC
       LEFT JOIN detalle_oc d ON i.codigo = d.codigo
       LEFT JOIN ordenes_compra oc ON d.numero_oc = oc.numero_oc
-      ORDER BY i.codigo, oc.fecha DESC
+      -- 👇 importante para que d.* sea la última compra
+      ORDER BY i.codigo, oc.fecha DESC NULLS LAST, d.id DESC NULLS LAST
     `);
 
     const inventarioBase = resultado.rows;
 
-    // Obtener stock reservado por código
+    // Stock reservado (obras activas)
     const reservadoQuery = await pool.query(`
       SELECT codigo, SUM(cantidad) AS total_reservado
       FROM (
@@ -842,29 +847,26 @@ app.get('/api/inventario', async (req, res) => {
 
     const stockReservadoMap = {};
     reservadoQuery.rows.forEach(row => {
-      stockReservadoMap[row.codigo] = parseInt(row.total_reservado);
+      stockReservadoMap[row.codigo] = parseInt(row.total_reservado) || 0;
     });
 
-// Calcular inventario final SIN descontar salidas (porque ya se reflejan en stock_actual)
-const inventarioFinal = inventarioBase.map(item => {
-  const reservado = stockReservadoMap[item.codigo] || 0;
-  const disponible = item.stock_actual - reservado;
-
-  return {
-    ...item,
-    stock_reservado: reservado,
-    stock_disponible: disponible
-  };
-});
-
+    const inventarioFinal = inventarioBase.map(item => {
+      const reservado = stockReservadoMap[item.codigo] || 0;
+      const disponible = (item.stock_actual || 0) - reservado;
+      return {
+        ...item,
+        stock_reservado: reservado,
+        stock_disponible: disponible
+      };
+    });
 
     res.json(inventarioFinal);
-
   } catch (err) {
     console.error('❌ ERROR en /api/inventario:', err.message);
     res.status(500).json({ error: 'Error al obtener inventario' });
   }
 });
+
 
 
 app.get('/api/reservas_activas/:codigo', async (req, res) => {
