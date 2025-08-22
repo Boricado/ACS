@@ -156,7 +156,7 @@ const TrabajadoresPage = () => {
     setMensaje({ tipo: 'success', texto: 'Eliminado.' });
   };
 
-  // === NUEVO: diasPlan = máximo dias_trab del mes, recalculado siempre ===
+  // Máximo de días plan del mes
   const diasPlan = useMemo(
     () => trabajadores.reduce((max, t) => {
       const d = toNum(t.dias_trab);
@@ -166,7 +166,6 @@ const TrabajadoresPage = () => {
   );
 
   // % HORA ASIST = (DIAS_TRAB × 9 − HORAS_RETRASO) / (DIAS_PLAN × 9) * 100
-  // Ignoramos extras; capado 0–100.
   const pctAsistencia = (t) => {
     const base = toNum(diasPlan) * JORNADA_DIARIA;
     if (base <= 0) return 0;
@@ -202,170 +201,186 @@ const TrabajadoresPage = () => {
     }
   };
 
-return (
-<div className="table-responsive px-3 px-lg-4" style={{ overflowX: 'auto', maxWidth: '100%' }}>
-  <table className="table table-bordered table-hover align-middle table-compact mb-0 table-fullwidth">
-    {/* Colgroup define el reparto de ancho */}
-    <colgroup>
-      <col className="table-col-id" />
-      <col className="table-col-mes" />
-      <col className="table-col-nombre" />
-      <col className="table-col-dias" />
-      <col className="table-col-htrab" />
-      <col className="table-col-hextras" />
-      <col className="table-col-retraso" />
-      <col className="table-col-observ" />
-      <col className="table-col-hacum" />
-      <col className="table-col-pct" />
-      <col className="table-col-acciones" />
-    </colgroup>
+  return (
+    <div className="container-fluid py-4" style={{ overflowX: 'hidden' }}>
+      {/* BARRA SUPERIOR CON BOTONES (RESTABLECIDA) */}
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h3 className="mb-0">Trabajadores</h3>
+        <div className="d-flex align-items-center gap-2">
+          <label className="mb-0">Mes:</label>
+          <input
+            type="month"
+            className="form-control form-control-sm"
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+            style={{ width: 170, minHeight: 38, fontSize: '0.95rem' }}
+          />
+          <span className="badge bg-secondary" title="Base del % asistencia">
+            Días plan (máx. del mes): {diasPlan}
+          </span>
+          <button className="btn btn-outline-secondary" onClick={copiarMesAnterior} disabled={copiando}>
+            {copiando ? 'Copiando…' : 'Repetir mes anterior'}
+          </button>
+          <button className="btn btn-primary" onClick={agregarFila}>
+            Nuevo trabajador
+          </button>
+        </div>
+      </div>
 
-    <thead className="table-dark" style={{ lineHeight: 1.1 }}>
-      <tr>
-        <th className="text-nowrap">ID</th>
-        <th className="text-nowrap">MES</th>
-        <th>NOMBRE</th>
-        <th className="text-nowrap">DIAS<br />TRAB</th>
-        <th className="text-nowrap">HORAS<br />TRAB</th>
-        <th className="text-nowrap">HORAS<br />EXTRAS</th>
-        <th className="text-nowrap">HORAS RETRASO<br />/ PERMISO</th>
-        <th className="text-nowrap">OBSERVACIÓN</th>
-        <th className="text-nowrap">HORAS ACUM.<br />TRAB</th>
-        <th className="text-nowrap">% HORA<br />ASIST</th>
-        <th className="text-nowrap">ACCIONES</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {trabajadores.map((t, idx) => (
-        <tr key={t.id ?? `nuevo-${idx}`}>
-          <td className="text-nowrap">{t.id ?? '—'}</td>
-
-          <td>
-            <input
-              type="month"
-              className="form-control"
-              style={inputStyle}
-              value={t.periodo || periodo}
-              onChange={(e) => handleChange(idx, 'periodo', e.target.value)}
-            />
-          </td>
-
-          <td>
-            <input
-              type="text"
-              className="form-control"
-              style={inputStyle}
-              value={t.nombre ?? ''}
-              onChange={(e) => handleChange(idx, 'nombre', e.target.value)}
-            />
-          </td>
-
-          <td>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              className="form-control"
-              style={inputStyle}
-              value={t.dias_trab ?? 0}
-              onChange={(e) => handleChange(idx, 'dias_trab', e.target.value)}
-            />
-          </td>
-
-          <td>
-            <input
-              type="number"
-              className="form-control bg-light"
-              style={inputStyle}
-              value={t.horas_trab ?? 0}
-              readOnly
-              tabIndex={-1}
-              title="Calculado automáticamente: DIAS TRAB × 9"
-            />
-          </td>
-
-          <td>
-            <input
-              type="number"
-              min="0"
-              step="0.25"
-              inputMode="decimal"
-              lang="en"
-              className="form-control"
-              style={inputStyle}
-              value={t.horas_extras ?? 0}
-              onChange={(e) => handleChange(idx, 'horas_extras', e.target.value)}
-            />
-          </td>
-
-          <td>
-            <input
-              type="number"
-              min="0"
-              step="0.25"
-              inputMode="decimal"
-              lang="en"
-              className="form-control"
-              style={inputStyle}
-              value={t.horas_retraso ?? 0}
-              onChange={(e) => handleChange(idx, 'horas_retraso', e.target.value)}
-            />
-          </td>
-
-          {/* Observación: si quieres que pueda quebrar en varias líneas, agrega col-wrap */}
-          <td className="col-wrap">
-            <input
-              type="text"
-              className="form-control"
-              style={inputWide}
-              value={t.observacion ?? ''}
-              onChange={(e) => handleChange(idx, 'observacion', e.target.value)}
-            />
-          </td>
-
-          <td>
-            <input
-              type="number"
-              className="form-control bg-light"
-              style={inputStyle}
-              value={t.horas_acum_trab ?? 0}
-              readOnly
-              tabIndex={-1}
-              title="Calculado: HORAS TRAB + HORAS EXTRAS − HORAS RETRASO / PERMISO"
-            />
-          </td>
-
-          <td className="text-center" style={{ fontWeight: 600 }}>
-            {pctAsistencia(t).toFixed(1)}%
-          </td>
-
-          <td>
-            <div className="d-flex gap-2">
-              <button className="btn btn-success btn-sm" onClick={() => guardarFila(idx)}>
-                Guardar
-              </button>
-              <button className="btn btn-outline-danger btn-sm" onClick={() => eliminarFila(idx)}>
-                Eliminar
-              </button>
-            </div>
-          </td>
-        </tr>
-      ))}
-
-      {trabajadores.length === 0 && (
-        <tr>
-          <td colSpan="11" className="text-center text-muted py-4">
-            No hay registros para {periodo}. Crea uno con “Nuevo trabajador” o “Repetir mes anterior”.
-          </td>
-        </tr>
+      {mensaje && (
+        <div className={`alert alert-${mensaje.tipo}`} role="alert">
+          {mensaje.texto}
+        </div>
       )}
-    </tbody>
-  </table>
-</div>
-);
 
+      <div
+        className="table-responsive"
+        style={{ overflowX: 'auto', maxWidth: '100%', whiteSpace: 'nowrap' }}
+      >
+        <table className="table table-bordered table-hover align-middle table-compact">
+          <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
+            <tr>
+              <th style={{ minWidth: 70 }}>ID</th>
+              <th style={{ minWidth: 150 }}>MES</th>
+              <th style={{ minWidth: 180 }}>NOMBRE</th>
+              <th>DIAS<br />TRAB</th>
+              <th>HORAS<br />TRAB</th>
+              <th>HORAS<br />EXTRAS</th>
+              <th>HORAS RETRASO<br />/ PERMISO</th>
+              <th>OBSERVACIÓN</th>
+              <th>HORAS ACUM.<br />TRAB</th>
+              <th>% HORA<br />ASIST</th>
+              <th>ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody>
+            {trabajadores.map((t, idx) => (
+              <tr key={t.id ?? `nuevo-${idx}`}>
+                <td>{t.id ?? '—'}</td>
 
+                <td>
+                  <input
+                    type="month"
+                    className="form-control"
+                    style={inputStyle}
+                    value={t.periodo || periodo}
+                    onChange={(e) => handleChange(idx, 'periodo', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="text"
+                    className="form-control"
+                    style={inputStyle}
+                    value={t.nombre ?? ''}
+                    onChange={(e) => handleChange(idx, 'nombre', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="form-control"
+                    style={inputStyle}
+                    value={t.dias_trab ?? 0}
+                    onChange={(e) => handleChange(idx, 'dias_trab', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="number"
+                    className="form-control bg-light"
+                    style={inputStyle}
+                    value={t.horas_trab ?? 0}
+                    readOnly
+                    tabIndex={-1}
+                    title="Calculado automáticamente: DIAS TRAB × 9"
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    inputMode="decimal"
+                    lang="en"
+                    className="form-control"
+                    style={inputStyle}
+                    value={t.horas_extras ?? 0}
+                    onChange={(e) => handleChange(idx, 'horas_extras', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    inputMode="decimal"
+                    lang="en"
+                    className="form-control"
+                    style={inputStyle}
+                    value={t.horas_retraso ?? 0}
+                    onChange={(e) => handleChange(idx, 'horas_retraso', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="text"
+                    className="form-control"
+                    style={inputWide}
+                    value={t.observacion ?? ''}
+                    onChange={(e) => handleChange(idx, 'observacion', e.target.value)}
+                  />
+                </td>
+
+                <td>
+                  <input
+                    type="number"
+                    className="form-control bg-light"
+                    style={inputStyle}
+                    value={t.horas_acum_trab ?? 0}
+                    readOnly
+                    tabIndex={-1}
+                    title="Calculado: HORAS TRAB + HORAS EXTRAS − HORAS RETRASO / PERMISO"
+                  />
+                </td>
+
+                <td className="text-center" style={{ fontWeight: 600 }}>
+                  {pctAsistencia(t).toFixed(1)}%
+                </td>
+
+                <td>
+                  <div className="d-flex gap-2">
+                    <button className="btn btn-success btn-sm" onClick={() => guardarFila(idx)}>
+                      Guardar
+                    </button>
+                    <button className="btn btn-outline-danger btn-sm" onClick={() => eliminarFila(idx)}>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {trabajadores.length === 0 && (
+              <tr>
+                <td colSpan="11" className="text-center text-muted py-4">
+                  No hay registros para {periodo}. Crea uno con “Nuevo trabajador” o “Repetir mes anterior”.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
 
 export default TrabajadoresPage;
