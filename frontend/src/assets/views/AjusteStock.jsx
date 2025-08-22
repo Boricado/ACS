@@ -80,8 +80,8 @@ const AjusteStock = () => {
     if (nuevoNombre === nombreOriginal) return;
 
     try {
-      await axios.put(`${API}api/materiales/${encodeURIComponent(codigo)}`, {
-        producto: nuevoNombre
+      await axios.put(`${API}api/ajuste_stock/materiales/${encodeURIComponent(codigo)}/nombre`, {
+      producto: nuevoNombre
       });
 
       setInventario((prev) =>
@@ -145,7 +145,7 @@ const AjusteStock = () => {
 
       // Recargar inventario/stock (no hace falta volver a pedir /api/ajuste_stock)
       const [invRes, salRes] = await Promise.all([
-        axios.get(`${API}api/inventario`),
+        axios.get(`${API}api/ajuste_stock/inventario_join`),
         axios.get(`${API}api/salidas_inventario2`)
       ]);
       setInventario(invRes.data || []);
