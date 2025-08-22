@@ -203,7 +203,7 @@ const TrabajadoresPage = () => {
   };
 
 return (
-  <div className="container-fluid px-0 py-4">{/* sin overflowX hidden */}
+  <div className="container-fluid px-0 py-4">
     <div className="d-flex align-items-center justify-content-between mb-3 px-3 px-lg-4">
       <h3 className="mb-0">Trabajadores</h3>
       <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -233,11 +233,9 @@ return (
       </div>
     )}
 
-    {/* wrapper con scroll horizontal propio y ancho completo */}
     <div className="table-responsive px-3 px-lg-4" style={{ overflowX: 'auto', maxWidth: '100%' }}>
       <table
         className="table table-bordered table-hover align-middle table-compact mb-0 table-fullwidth"
-        style={{ minWidth: 1200 }} // ajusta este mínimo a tu gusto
       >
         <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
           <tr>
@@ -382,6 +380,7 @@ return (
     </div>
   </div>
 );
+
 
 };
 
