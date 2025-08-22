@@ -67,73 +67,73 @@ button:focus-visible {
   }
 }
 
-/* Usa todo el ancho del viewport y quita el centrado forzado */
+/* === Forzar app a ocupar todo el ancho === */
 html, body, #root {
   height: 100%;
+  width: 100%;
 }
 
 body {
   margin: 0;
-  display: block;      /* ← quita el flex que centra todo */
+  display: block;      /* quita el flex que centraba todo */
   min-width: 320px;
   min-height: 100vh;
 }
 
 #root {
-  max-width: none;     /* ← quita el límite de 1280px */
-  width: 100%;         /* ← ocupa todo el ancho disponible */
-  margin: 0;           /* ← sin centrado automático */
-  padding: 0;          /* ← deja el padding a tus layouts */
-  text-align: initial; /* ← quita el centrar texto global */
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: initial !important;
 }
 
+/* ================== TABLAS ================== */
+
+/* Ocupa todo el ancho del viewport, reparte columnas con colgroup */
 .table-fullwidth {
   width: 100% !important;
-  min-width: 1000px;   /* ajusta a tu gusto */
-  table-layout: auto;
+  min-width: 1000px;   /* piso mínimo para pantallas pequeñas */
+  table-layout: fixed; /* fija el ancho según colgroup */
 }
 
-/* Tabla de trabajadores: ocupar ancho completo y repartir columnas */
-.table-fullwidth {
-  width: 100% !important;     /* ocupa todo el ancho disponible */
-  min-width: 1000px;          /* piso para pantallas chicas (scroll) */
-  table-layout: fixed;        /* reparte el ancho según colgroup */
-}
-
-/* Evitar que los inputs hagan overflow dentro de celdas */
+/* Inputs dentro de celdas: que usen todo el espacio */
 .table-fullwidth td .form-control {
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
-/* Columnas (ajusta porcentajes a gusto) */
-.table-col-id         { width: 5%;  }
-.table-col-mes        { width: 12%; }
-.table-col-nombre     { width: 20%; }  /* crecerá si hay espacio */
-.table-col-dias       { width: 7%;  }
-.table-col-htrab      { width: 8%;  }
-.table-col-hextras    { width: 8%;  }
-.table-col-retraso    { width: 10%; }
-.table-col-observ     { width: 18%; }  /* crecerá si hay espacio */
-.table-col-hacum      { width: 8%;  }
-.table-col-pct        { width: 6%;  }
-.table-col-acciones   { width: 8%;  }
+/* Columnas */
+.table-col-id       { width: 5%;  }
+.table-col-mes      { width: 12%; }
+.table-col-nombre   { width: 20%; }
+.table-col-dias     { width: 7%;  }
+.table-col-htrab    { width: 8%;  }
+.table-col-hextras  { width: 8%;  }
+.table-col-retraso  { width: 10%; }
+.table-col-observ   { width: 18%; }
+.table-col-hacum    { width: 8%;  }
+.table-col-pct      { width: 6%;  }
+.table-col-acciones { width: 8%;  }
 
-/* En pantallas muy grandes, deja que NOMBRE y OBSERVACIÓN se lleven el extra */
+/* En pantallas muy grandes, deja más ancho a nombre y observación */
 @media (min-width: 1400px) {
   .table-col-nombre { width: 24%; }
   .table-col-observ { width: 22%; }
 }
 
-/* Si prefieres ver todo el texto sin cortarlo en NOMBRE/OBSERVACIÓN */
+/* Estilo por defecto: celdas en una línea con truncado */
 .table-fullwidth th,
 .table-fullwidth td {
   overflow: hidden;
-  text-overflow: ellipsis; /* evitar saltos raros en celdas angostas */
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.table-fullwidth .col-wrap {
-  white-space: normal;      /* permite múltiples líneas donde lo necesites */
+
+/* Para columnas largas como Observación: usar col-wrap */
+.table-fullwidth td.col-wrap {
+  white-space: normal;
   overflow: visible;
   text-overflow: initial;
 }
