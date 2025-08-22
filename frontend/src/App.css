@@ -1,42 +1,98 @@
+/* =========================
+   RESETEO BÁSICO / GLOBAL
+   ========================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;        /* evita desbordes por padding/border */
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  display: block;                /* quita el flex que trae Vite por defecto */
+  min-width: 320px;
+  min-height: 100vh;
+  /* El color/fondos del :root de Vite puedes dejarlos en otro archivo si los usas */
+}
+
+/* #root sin encajonar ni centrado global */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: none;               /* ⟵ importantísimo: sin tope 1280px */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: initial;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* =========================
+   UTILIDADES DE LA APP
+   ========================= */
+.app-shell {                     /* layout base: sidebar + contenido */
+  display: flex;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Sidebar en desktop */
+.sidebar {
+  width: 260px;                  /* ajusta si tu Sidebar usa otro ancho */
+  flex-shrink: 0;
+}
+
+/* Contenedor de contenido: que pueda encogerse y no genere overflow */
+.content {
+  min-width: 0;                  /* clave para que flex deje encoger el main */
+}
+
+/* Inputs dentro de tablas: que no rompan el layout */
+.table input.form-control {
+  min-width: 0;
+}
+
+/* =========================
+   RESPONSIVE SIDEBAR
+   ========================= */
+/* Mobile / tablets (hasta <992px): sidebar off-canvas */
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 1040;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
   }
-  to {
-    transform: rotate(360deg);
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Backdrop cuando está abierto */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(1px);
+    z-index: 1030;
+  }
+
+  /* En móviles, deja que encabezados/celdas puedan partir líneas */
+  .table thead th,
+  .table tbody td {
+    white-space: normal;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* Desktop (>=992px): sidebar en flujo normal */
+@media (min-width: 992px) {
+  .sidebar {
+    position: relative;
+    transform: none;
+    height: auto;
+    box-shadow: none;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
