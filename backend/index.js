@@ -910,81 +910,86 @@ app.get('/api/reservas_activas/:codigo', async (req, res) => {
 /////////////////
 
 // -----------------------------
-// INGRESAR FACTURA
+// INGRESAR FACTURA  (con observacion_ingreso por ítem)
 // -----------------------------
 app.post('/api/ingresar_factura', async (req, res) => {
-  const ordenes = req.body.ordenes;
+  const { ordenes = [] } = req.body;
   const client = await pool.connect();
+
+  if (!Array.isArray(ordenes) || ordenes.length === 0) {
+    return res.status(400).json({ error: 'No se recibieron órdenes para procesar.' });
+  }
 
   try {
     await client.query('BEGIN');
 
     for (const orden of ordenes) {
       const numero_oc = orden.numero_oc;
+      if (!numero_oc) throw new Error('Falta numero_oc en la orden.');
 
-      for (const detalle of orden.detalles) {
+      // 1) Actualiza líneas de detalle (incluye observacion_ingreso)
+      for (const detalle of orden.detalles || []) {
         const {
           codigo,
-          cantidad_llegada,
-          precio_unitario,
-          observacion = ''
+          cantidad_llegada = 0,
+          precio_unitario = 0,
+          observacion_ingreso = '' // 👈 viene del front
         } = detalle;
 
-        const costo_neto = (cantidad_llegada || 0) * (precio_unitario || 0);
-//
+        if (!codigo) throw new Error(`Falta código en detalle de OC ${numero_oc}`);
+
+        const costo_neto = (Number(cantidad_llegada) || 0) * (Number(precio_unitario) || 0);
+
         await client.query(
           `UPDATE detalle_oc
-           SET cantidad_llegada = $1,
-               precio_unitario = $2,
-               costo_neto = $3,
-               observacion = $4
+             SET cantidad_llegada   = $1,
+                 precio_unitario    = $2,
+                 costo_neto         = $3,
+                 observacion_ingreso= $4   -- 👈 guarda aquí
            WHERE numero_oc = $5 AND codigo = $6`,
           [
-            cantidad_llegada,
-            precio_unitario,
-            costo_neto,
-            observacion,
+            Number(cantidad_llegada) || 0,
+            Number(precio_unitario) || 0,
+            Number(costo_neto) || 0,
+            String(observacion_ingreso || ''),
             numero_oc,
             codigo
           ]
         );
 
-          if (cantidad_llegada && cantidad_llegada > 0) {
+        // 2) Actualiza stock si hubo llegada
+        if ((Number(cantidad_llegada) || 0) > 0) {
           await client.query(
             `UPDATE inventario
-            SET stock_actual = stock_actual + $1
-            WHERE codigo = $2`,
-            [cantidad_llegada, codigo]
+                SET stock_actual = stock_actual + $1
+              WHERE codigo = $2`,
+            [Number(cantidad_llegada) || 0, codigo]
           );
         }
       }
-      
-      // Actualizar la orden de compra con la factura y fecha
-            await client.query(
+
+      // 3) Actualiza cabecera de la OC (factura y fecha)
+      await client.query(
         `UPDATE ordenes_compra
-        SET factura = $1,
-            fecha_factura = $2
-        WHERE numero_oc = $3`,
-        [
-          orden.factura || null,
-          orden.fecha_factura || null,
-          numero_oc
-        ]
+            SET factura = $1,
+                fecha_factura = $2
+          WHERE numero_oc = $3`,
+        [orden.factura || null, orden.fecha_factura || null, numero_oc]
       );
 
+      // 4) Si no quedan pendientes, marca la OC como Completa
       const result = await client.query(
         `SELECT COUNT(*) FROM detalle_oc
-         WHERE numero_oc = $1 AND (cantidad_llegada IS NULL OR cantidad_llegada < cantidad)`,
+          WHERE numero_oc = $1
+            AND (cantidad_llegada IS NULL OR cantidad_llegada < cantidad)`,
         [numero_oc]
       );
 
-      const pendientes = parseInt(result.rows[0].count);
-
-      if (pendientes === 0) {
+      if (parseInt(result.rows[0].count, 10) === 0) {
         await client.query(
           `UPDATE ordenes_compra
-           SET estado_oc = 'Completa'
-           WHERE numero_oc = $1`,
+              SET estado_oc = 'Completa'
+            WHERE numero_oc = $1`,
           [numero_oc]
         );
       }
@@ -992,7 +997,6 @@ app.post('/api/ingresar_factura', async (req, res) => {
 
     await client.query('COMMIT');
     res.status(200).json({ message: 'Factura ingresada correctamente' });
-
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Error al ingresar factura:', error);
@@ -1001,6 +1005,7 @@ app.post('/api/ingresar_factura', async (req, res) => {
     client.release();
   }
 });
+
 
 ////////////////////
 app.post('/api/salidas_stock', async (req, res) => {
