@@ -730,17 +730,23 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
     const ordenesRes = await pool.query(ordenesQuery, valores);
     const ordenes = ordenesRes.rows;
 
+    // === ÚNICO CAMBIO AQUÍ: incluir observacion_ingreso en los detalles ===
     for (const orden of ordenes) {
-      const detallesRes = await pool.query(`
+      const detallesRes = await pool.query(
+        `
         SELECT 
           codigo, 
           producto, 
           cantidad, 
           precio_unitario, 
-          cantidad_llegada
+          cantidad_llegada,
+          COALESCE(observacion_ingreso, '') AS observacion_ingreso
         FROM detalle_oc
         WHERE numero_oc = $1
-      `, [orden.numero_oc]);
+        ORDER BY id ASC
+        `,
+        [orden.numero_oc]
+      );
 
       orden.detalles = detallesRes.rows;
     }
