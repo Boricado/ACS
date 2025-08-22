@@ -87,3 +87,8 @@ body {
   text-align: initial; /* ← quita el centrar texto global */
 }
 
+.table-fullwidth {
+  width: 100% !important;
+  min-width: 1000px;   /* ajusta a tu gusto */
+  table-layout: auto;
+}

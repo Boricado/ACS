@@ -236,7 +236,7 @@ return (
     {/* wrapper con scroll horizontal propio y ancho completo */}
     <div className="table-responsive px-3 px-lg-4" style={{ overflowX: 'auto', maxWidth: '100%' }}>
       <table
-        className="table table-bordered table-hover align-middle table-compact mb-0"
+        className="table table-bordered table-hover align-middle table-compact mb-0 table-fullwidth"
         style={{ minWidth: 1200 }} // ajusta este mínimo a tu gusto
       >
         <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>

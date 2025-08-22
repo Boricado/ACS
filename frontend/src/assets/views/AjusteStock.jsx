@@ -151,49 +151,38 @@ const AjusteStock = () => {
     }
   };
 
-return (
-  <div className="container-fluid px-0 mt-4">
-    <h2 className="mb-4 text-center">Ajuste de Stock</h2>
+  return (
+    <div className="container mt-4">
+      <h2 className="mb-4 text-center">Ajuste de Stock</h2>
 
-    <div className="mb-3 d-flex justify-content-between px-3 px-lg-4">
-      <input
-        type="text"
-        className="form-control"
-        style={{ maxWidth: '480px' }}
-        placeholder="Buscar por código o producto"
-        value={filtro}
-        onChange={(e) => setFiltro(e.target.value)}
-      />
-    </div>
+      <div className="mb-3 d-flex justify-content-between">
+        <input
+          type="text"
+          className="form-control"
+          style={{ maxWidth: '400px' }}
+          placeholder="Buscar por código o producto"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+        />
+      </div>
 
-    {/* wrapper con scroll horizontal propio */}
-    <div className="table-responsive px-3 px-lg-4" style={{ maxWidth: '100%', overflowX: 'auto' }}>
-      <table
-        className="table table-bordered table-sm align-middle text-center mb-0"
-        style={{ minWidth: 1200, tableLayout: 'auto' }} // ← ajusta minWidth si necesitas más/menos
-      >
+    <div className="table-responsive" style={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <table className="table table-bordered table-sm align-middle text-center mb-0 table-fullwidth">
         <thead className="table-light">
           <tr>
-            <th style={{ minWidth: 130 }}>Código</th>
-            <th
-              onClick={() => ordenarPor('producto')}
-              style={{ cursor: 'pointer', minWidth: 480 }} // ← más ancho para Producto
-            >
+            <th>Código</th>
+            <th onClick={() => ordenarPor('producto')} style={{ cursor: 'pointer' }}>
               Producto {ordenCampo === 'producto' ? (ordenAscendente ? '▲' : '▼') : ''}
             </th>
-            <th
-              onClick={() => ordenarPor('stock_actual')}
-              style={{ cursor: 'pointer', minWidth: 120 }}
-            >
+            <th onClick={() => ordenarPor('stock_actual')} style={{ cursor: 'pointer' }}>
               Stock Actual {ordenCampo === 'stock_actual' ? (ordenAscendente ? '▲' : '▼') : ''}
             </th>
-            <th style={{ minWidth: 140 }}>Stock Real</th>
-            <th style={{ minWidth: 120 }}>Diferencia</th>
-            <th style={{ minWidth: 240 }}>Último Ajuste</th>
-            <th style={{ minWidth: 120 }}>Acción</th>
+            <th>Stock Real</th>
+            <th>Diferencia</th>
+            <th>Último Ajuste</th>
+            <th>Acción</th>
           </tr>
         </thead>
-
         <tbody>
           {inventario.length > 0 ? (
             inventario
@@ -229,7 +218,7 @@ return (
 
                     {/* Producto editable + botón guardar */}
                     <td>
-                      <div className="d-flex gap-2 align-items-center flex-nowrap">
+                      <div className="d-flex gap-2 align-items-center">
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -238,14 +227,11 @@ return (
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') guardarNombre(codigo, producto);
                           }}
-                          style={{
-                            minWidth: 360, // ← ancho cómodo para leer/editar
-                            flex: '1 1 auto',
-                          }}
+                          style={{ minWidth: "250px" }} // 👈 más espacio
                         />
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-secondary text-nowrap"
+                          className="btn btn-sm btn-outline-secondary"
                           title="Guardar nombre"
                           onClick={() => guardarNombre(codigo, producto)}
                         >
@@ -256,13 +242,12 @@ return (
 
                     <td>{actual}</td>
 
-                    <td>
+                    <td style={{ minWidth: 110 }}>
                       <input
                         type="number"
                         className="form-control form-control-sm"
                         value={real}
                         onChange={(e) => handleChange(codigo, e.target.value)}
-                        style={{ minWidth: 120 }}
                       />
                     </td>
 
@@ -291,10 +276,9 @@ return (
           )}
         </tbody>
       </table>
+    </div> 
     </div>
-  </div>
-);
-
+  );
 };
 
 export default AjusteStock;
