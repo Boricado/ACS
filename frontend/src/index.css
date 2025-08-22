@@ -92,3 +92,48 @@ body {
   min-width: 1000px;   /* ajusta a tu gusto */
   table-layout: auto;
 }
+
+/* Tabla de trabajadores: ocupar ancho completo y repartir columnas */
+.table-fullwidth {
+  width: 100% !important;     /* ocupa todo el ancho disponible */
+  min-width: 1000px;          /* piso para pantallas chicas (scroll) */
+  table-layout: fixed;        /* reparte el ancho según colgroup */
+}
+
+/* Evitar que los inputs hagan overflow dentro de celdas */
+.table-fullwidth td .form-control {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Columnas (ajusta porcentajes a gusto) */
+.table-col-id         { width: 5%;  }
+.table-col-mes        { width: 12%; }
+.table-col-nombre     { width: 20%; }  /* crecerá si hay espacio */
+.table-col-dias       { width: 7%;  }
+.table-col-htrab      { width: 8%;  }
+.table-col-hextras    { width: 8%;  }
+.table-col-retraso    { width: 10%; }
+.table-col-observ     { width: 18%; }  /* crecerá si hay espacio */
+.table-col-hacum      { width: 8%;  }
+.table-col-pct        { width: 6%;  }
+.table-col-acciones   { width: 8%;  }
+
+/* En pantallas muy grandes, deja que NOMBRE y OBSERVACIÓN se lleven el extra */
+@media (min-width: 1400px) {
+  .table-col-nombre { width: 24%; }
+  .table-col-observ { width: 22%; }
+}
+
+/* Si prefieres ver todo el texto sin cortarlo en NOMBRE/OBSERVACIÓN */
+.table-fullwidth th,
+.table-fullwidth td {
+  overflow: hidden;
+  text-overflow: ellipsis; /* evitar saltos raros en celdas angostas */
+  white-space: nowrap;
+}
+.table-fullwidth .col-wrap {
+  white-space: normal;      /* permite múltiples líneas donde lo necesites */
+  overflow: visible;
+  text-overflow: initial;
+}
