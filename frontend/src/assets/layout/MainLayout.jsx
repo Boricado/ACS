@@ -18,9 +18,10 @@ const MainLayout = () => {
         {/* Contenedor principal ocupa todo el ancho */}
         <main
           className="flex-grow-1 d-flex justify-content-start align-items-start"
-          style={{ overflowX: 'auto' }} // 👈 asegura scroll solo si es necesario
+          style={{ overflowX: 'auto' }}
         >
-          <div className="container-fluid p-3">
+          {/* 👇 container-fluid sin padding lateral */}
+          <div className="container-fluid px-0 p-3">
             <Outlet />
           </div>
         </main>
