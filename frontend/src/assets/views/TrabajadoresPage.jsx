@@ -239,16 +239,16 @@ return (
       >
         <thead className="table-dark" style={{ whiteSpace: 'normal', lineHeight: 1.1 }}>
           <tr>
-            <th style={{ minWidth: 70 }} className="text-nowrap">ID</th>
-            <th style={{ minWidth: 160 }} className="text-nowrap">MES</th>
-            <th style={{ minWidth: 260 }}>NOMBRE</th>
-            <th style={{ minWidth: 90 }} className="text-nowrap">DIAS<br />TRAB</th>
-            <th style={{ minWidth: 110 }} className="text-nowrap">HORAS<br />TRAB</th>
-            <th style={{ minWidth: 120 }} className="text-nowrap">HORAS<br />EXTRAS</th>
-            <th style={{ minWidth: 140 }} className="text-nowrap">HORAS RETRASO<br />/ PERMISO</th>
-            <th style={{ minWidth: 260 }}>OBSERVACIÓN</th>
-            <th style={{ minWidth: 140 }} className="text-nowrap">HORAS ACUM.<br />TRAB</th>
-            <th style={{ minWidth: 110 }} className="text-nowrap">% HORA<br />ASIST</th>
+            <th style={{ minWidth: 40 }} className="text-nowrap">ID</th>
+            <th style={{ minWidth: 100 }} className="text-nowrap">MES</th>
+            <th style={{ minWidth: 230 }}>NOMBRE</th>
+            <th style={{ minWidth: 45 }} className="text-nowrap">DIAS<br />TRAB</th>
+            <th style={{ minWidth: 75 }} className="text-nowrap">HORAS<br />TRAB</th>
+            <th style={{ minWidth: 75 }} className="text-nowrap">HORAS<br />EXTRAS</th>
+            <th style={{ minWidth: 100 }} className="text-nowrap">HORAS RETRASO<br />/ PERMISO</th>
+            <th style={{ minWidth: 210 }}>OBSERVACIÓN</th>
+            <th style={{ minWidth: 130 }} className="text-nowrap">HORAS ACUM.<br />TRAB</th>
+            <th style={{ minWidth: 100 }} className="text-nowrap">% HORA<br />ASIST</th>
             <th style={{ minWidth: 130 }} className="text-nowrap">ACCIONES</th>
           </tr>
         </thead>
