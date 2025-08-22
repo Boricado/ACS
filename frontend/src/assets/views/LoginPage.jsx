@@ -16,15 +16,29 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
 
-  try {
-    const res = await axios.post(`${API}api/login`, { correo, contrasena });
-    login(res.data);
-    navigate('/');
-  } catch (err) {
-    console.error('Error de login:', err);
-    setError('Correo o contraseña incorrectos');
-  }
-};
+    try {
+      const res = await axios.post(`${API}api/login`, { correo, contrasena });
+
+      // ✅ Guarda token y nombre para usarlos en toda la app
+      const token = res.data?.token || '';
+      const nombre = res.data?.usuario?.nombre || '';
+
+      if (token) {
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+      // Guarda el nombre visible del usuario (usado por AjusteStock)
+      localStorage.setItem('usuarioNombre', nombre);
+
+      // Si tu AuthContext usa esta info, pásasela igual
+      login(res.data);
+
+      navigate('/');
+    } catch (err) {
+      console.error('Error de login:', err);
+      setError('Correo o contraseña incorrectos');
+    }
+  };
 
   return (
     <section className="bg-primary py-4 py-md-5 py-xl-8 min-vh-100 d-flex align-items-center">

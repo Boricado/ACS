@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -169,6 +170,33 @@ router.get('/inventario_join', async (req, res) => {
     console.error('❌ ERROR en /api/ajuste_stock/inventario_join:', err.message);
     res.status(500).json({ error: 'Error al obtener inventario (join)' });
   }
+});
+
+// Middleware liviano: adjunta req.user si viene Authorization: Bearer <token>
+const authOptional = (req, _res, next) => {
+  try {
+    const h = req.headers.authorization || '';
+    if (h.startsWith('Bearer ')) {
+      const token = h.slice(7);
+      req.user = jwt.verify(token, process.env.JWT_SECRET || 'secreto');
+    }
+  } catch (e) {
+    // token inválido -> seguimos sin usuario
+  }
+  next();
+};
+
+// actívalo para este router
+router.use(authOptional);
+
+// en tu POST '/', cambia esta línea:
+router.post('/', async (req, res) => {
+  const { codigo, producto, diferencia, usuario } = req.body;
+
+  // ...
+  const quien = (usuario || req.user?.nombre || '').toString().trim();
+  const comentarioAjuste = `Ajuste ${fechaAjusteTexto}${quien ? ' • ' + quien : ''}`;
+  // ...
 });
 
 export default router;

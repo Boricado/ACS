@@ -17,21 +17,15 @@ const AjusteStock = () => {
   // Obtiene el nombre del usuario logueado desde localStorage o JWT
   const getUsuario = () => {
     try {
-      const direct =
-        localStorage.getItem('usuarioNombre') ||
-        localStorage.getItem('userName') ||
-        localStorage.getItem('nombre') ||
-        '';
-      if (direct) return direct;
+      const direct = localStorage.getItem('usuarioNombre');
+      if (direct && direct.trim()) return direct.trim();
 
-      const token = localStorage.getItem('token') || '';
+      const token = localStorage.getItem('token');
       if (token && token.split('.').length === 3) {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.name || payload.username || payload.email || 'Usuario';
+        return (payload.nombre || payload.name || payload.username || payload.email || 'Usuario').toString();
       }
-    } catch (_) {
-      /* no-op */
-    }
+    } catch (_) {}
     return 'Usuario';
   };
 
