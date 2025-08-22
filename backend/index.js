@@ -686,7 +686,6 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
   const { estado } = req.query;
 
   try {
-    // Cabeceras de OC (usa observación de la OC, NO de las líneas)
     let ordenesQuery = `
       SELECT 
         oc.numero_oc,
@@ -697,8 +696,8 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
         oc.estado_oc,
         oc.factura,
         oc.fecha_factura,
-        COALESCE(oc.observacion, '') AS observacion,           -- 👈 toma de OC
-        SUM(doc.cantidad * doc.precio_unitario) AS total_neto  -- cálculo del neto
+        COALESCE(MAX(doc.observacion), '') AS observacion,
+        SUM(doc.cantidad * doc.precio_unitario) AS total_neto
       FROM ordenes_compra oc
       LEFT JOIN detalle_oc doc ON doc.numero_oc = oc.numero_oc
     `;
@@ -724,38 +723,26 @@ app.get('/api/ordenes_compra_estado', async (req, res) => {
         oc.cliente_id,
         oc.estado_oc,
         oc.factura,
-        oc.fecha_factura,
-        oc.observacion
+        oc.fecha_factura
       ORDER BY oc.fecha DESC
     `;
 
     const ordenesRes = await pool.query(ordenesQuery, valores);
     const ordenes = ordenesRes.rows;
 
-    // Detalles por OC (incluye observacion_ingreso)
     for (const orden of ordenes) {
-      const detallesRes = await pool.query(
-        `
+      const detallesRes = await pool.query(`
         SELECT 
           codigo, 
           producto, 
           cantidad, 
           precio_unitario, 
-          cantidad_llegada,
-          observacion_ingreso,         -- 👈 NUEVO
-          costo_neto                   -- (opcional) si lo usas en UI
+          cantidad_llegada
         FROM detalle_oc
         WHERE numero_oc = $1
-        ORDER BY id ASC
-        `,
-        [orden.numero_oc]
-      );
+      `, [orden.numero_oc]);
 
-      // Asegura string vacío si viene null
-      orden.detalles = detallesRes.rows.map(d => ({
-        ...d,
-        observacion_ingreso: d.observacion_ingreso ?? ''
-      }));
+      orden.detalles = detallesRes.rows;
     }
 
     res.json(ordenes);
