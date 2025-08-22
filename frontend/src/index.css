@@ -66,3 +66,24 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Usa todo el ancho del viewport y quita el centrado forzado */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: block;      /* ← quita el flex que centra todo */
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  max-width: none;     /* ← quita el límite de 1280px */
+  width: 100%;         /* ← ocupa todo el ancho disponible */
+  margin: 0;           /* ← sin centrado automático */
+  padding: 0;          /* ← deja el padding a tus layouts */
+  text-align: initial; /* ← quita el centrar texto global */
+}
+
