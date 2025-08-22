@@ -1,3 +1,4 @@
+// frontend/src/assets/views/AjusteStock.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -5,12 +6,34 @@ const AjusteStock = () => {
   const [inventario, setInventario] = useState([]);
   const [salidas, setSalidas] = useState([]);
   const [ajustes, setAjustes] = useState({});
+  const [nombresEditados, setNombresEditados] = useState({});
   const [filtro, setFiltro] = useState('');
   const [ordenCampo, setOrdenCampo] = useState('');
   const [ordenAscendente, setOrdenAscendente] = useState(true);
   const [fechasAjuste, setFechasAjuste] = useState({});
 
   const API = import.meta.env.VITE_API_URL;
+
+  // Obtiene el nombre del usuario logueado desde localStorage o JWT
+  const getUsuario = () => {
+    try {
+      const direct =
+        localStorage.getItem('usuarioNombre') ||
+        localStorage.getItem('userName') ||
+        localStorage.getItem('nombre') ||
+        '';
+      if (direct) return direct;
+
+      const token = localStorage.getItem('token') || '';
+      if (token && token.split('.').length === 3) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.name || payload.username || payload.email || 'Usuario';
+      }
+    } catch (_) {
+      /* no-op */
+    }
+    return 'Usuario';
+  };
 
   const ordenarPor = (campo) => {
     if (ordenCampo === campo) {
@@ -22,45 +45,112 @@ const AjusteStock = () => {
   };
 
   useEffect(() => {
-    axios.get(`${API}api/inventario`)
-      .then(res => setInventario(res.data))
-      .catch(err => console.error("❌ Error al cargar inventario:", err));
-
-    axios.get(`${API}api/salidas_inventario2`)
-      .then(res => setSalidas(res.data))
-      .catch(err => console.error("❌ Error al cargar salidas:", err));
-
-    axios.get(`${API}api/ajuste_stock`)
-      .then(res => setFechasAjuste(res.data))
-      .catch(err => console.error("❌ Error al cargar fechas de ajustes:", err));
-  }, []);
+    const cargarTodo = async () => {
+      try {
+        const [inv, sal, fec] = await Promise.all([
+          axios.get(`${API}api/inventario`),
+          axios.get(`${API}api/salidas_inventario2`),
+          axios.get(`${API}api/ajuste_stock`)
+        ]);
+        setInventario(inv.data || []);
+        setSalidas(sal.data || []);
+        setFechasAjuste(fec.data || {});
+      } catch (err) {
+        console.error('❌ Error al cargar datos:', err);
+      }
+    };
+    cargarTodo();
+  }, [API]);
 
   const handleChange = (codigo, nuevoValor) => {
-    setAjustes(prev => ({ ...prev, [codigo]: nuevoValor }));
+    setAjustes((prev) => ({ ...prev, [codigo]: nuevoValor }));
   };
 
+  // ---- Nombre editable ----
+  const handleNombreChange = (codigo, nuevoNombre) => {
+    setNombresEditados((prev) => ({ ...prev, [codigo]: nuevoNombre }));
+  };
+
+  const guardarNombre = async (codigo, nombreOriginal) => {
+    const nuevoNombre = (nombresEditados[codigo] ?? nombreOriginal).trim();
+    if (!nuevoNombre) {
+      alert('El nombre no puede estar vacío.');
+      return;
+    }
+    if (nuevoNombre === nombreOriginal) return;
+
+    try {
+      await axios.put(`${API}api/materiales/${encodeURIComponent(codigo)}`, {
+        producto: nuevoNombre
+      });
+
+      setInventario((prev) =>
+        prev.map((item) =>
+          item.codigo === codigo ? { ...item, producto: nuevoNombre } : item
+        )
+      );
+
+      setNombresEditados((prev) => {
+        const { [codigo]: _omit, ...rest } = prev;
+        return rest;
+      });
+
+      alert('✅ Nombre de producto actualizado.');
+    } catch (err) {
+      console.error('❌ Error al actualizar nombre:', err);
+      alert('❌ Error al actualizar el nombre del producto.');
+    }
+  };
+  // -------------------------
+
   const ajustarStock = async (codigo, producto, stockActual) => {
-    const real = parseInt(ajustes[codigo] || 0);
-    const diferencia = real - stockActual;
+    const real = parseInt(ajustes[codigo] || 0, 10);
+    const diferencia = real - (parseInt(stockActual, 10) || 0);
+
+    if (Number.isNaN(real)) {
+      alert('Ingresa un número válido en Stock Real.');
+      return;
+    }
     if (diferencia === 0) return;
+
+    const usuario = getUsuario();
+    const nombreFinal = (nombresEditados[codigo] ?? producto).trim() || producto;
 
     try {
       await axios.post(`${API}api/ajuste_stock`, {
         codigo,
-        producto,
-        diferencia
+        producto: nombreFinal,
+        diferencia,
+        usuario // ⬅️ Enviamos el usuario al backend
       });
 
-      alert(`✅ Ajuste realizado por ${Math.abs(diferencia)} unidad${Math.abs(diferencia) === 1 ? '' : 'es'}`);
+      // Reflejar de inmediato el "Último Ajuste" sin recargar:
+      const hoy = new Date();
+      const fechaISO = hoy.toISOString().split('T')[0]; // YYYY-MM-DD
+      const fechaAjusteTexto = fechaISO.split('-').reverse().join('-'); // DD-MM-YYYY
 
-      // Recargar datos
+      setFechasAjuste((prev) => ({
+        ...prev,
+        [codigo]: {
+          fecha: fechaISO,
+          comentario: `Ajuste ${fechaAjusteTexto} • ${usuario}`
+        }
+      }));
+
+      alert(
+        `✅ Ajuste realizado por ${Math.abs(diferencia)} unidad${
+          Math.abs(diferencia) === 1 ? '' : 'es'
+        }`
+      );
+
+      // Recargar inventario/stock (no hace falta volver a pedir /api/ajuste_stock)
       const [invRes, salRes] = await Promise.all([
         axios.get(`${API}api/inventario`),
         axios.get(`${API}api/salidas_inventario2`)
       ]);
-      setInventario(invRes.data);
-      setSalidas(salRes.data);
-      setAjustes(prev => ({ ...prev, [codigo]: '' }));
+      setInventario(invRes.data || []);
+      setSalidas(salRes.data || []);
+      setAjustes((prev) => ({ ...prev, [codigo]: '' }));
     } catch (err) {
       console.error('❌ Error al ajustar:', err);
       alert('❌ Error al registrar el ajuste');
@@ -101,34 +191,62 @@ const AjusteStock = () => {
         <tbody>
           {inventario.length > 0 ? (
             inventario
-              .filter(item =>
-                (item.codigo || '').toLowerCase().includes(filtro.toLowerCase()) ||
-                (item.producto || '').toLowerCase().includes(filtro.toLowerCase())
+              .filter(
+                (item) =>
+                  (item.codigo || '').toLowerCase().includes(filtro.toLowerCase()) ||
+                  (item.producto || '').toLowerCase().includes(filtro.toLowerCase())
               )
               .sort((a, b) => {
                 if (ordenCampo === 'producto') {
-                  return ordenAscendente
-                    ? a.producto.localeCompare(b.producto)
-                    : b.producto.localeCompare(a.producto);
+                  const pa = (a.producto || '').toString();
+                  const pb = (b.producto || '').toString();
+                  return ordenAscendente ? pa.localeCompare(pb) : pb.localeCompare(pa);
                 } else if (ordenCampo === 'stock_actual') {
                   return ordenAscendente
-                    ? a.stock_actual - b.stock_actual
-                    : b.stock_actual - a.stock_actual;
+                    ? (a.stock_actual || 0) - (b.stock_actual || 0)
+                    : (b.stock_actual || 0) - (a.stock_actual || 0);
                 }
                 return 0;
               })
               .map(({ codigo, producto, stock_actual }) => {
-                const actual = parseInt(stock_actual);
-                const real = ajustes[codigo] || '';
-                const diferencia = real !== '' ? real - actual : '';
-                const color = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : '';
+                const actual = parseInt(stock_actual, 10) || 0;
+                const real = ajustes[codigo] ?? '';
+                const diferencia = real !== '' ? (parseInt(real, 10) || 0) - actual : '';
+                const color =
+                  diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : '';
+
+                const nombreEnEdicion = nombresEditados[codigo] ?? producto ?? '';
 
                 return (
                   <tr key={codigo}>
-                    <td>{codigo}</td>
-                    <td>{producto}</td>
-                    <td>{actual}</td>
+                    <td className="text-nowrap">{codigo}</td>
+
+                    {/* Producto editable + botón guardar */}
                     <td>
+                      <div className="d-flex gap-2 align-items-center">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={nombreEnEdicion}
+                          onChange={(e) => handleNombreChange(codigo, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') guardarNombre(codigo, producto);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          title="Guardar nombre"
+                          onClick={() => guardarNombre(codigo, producto)}
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    </td>
+
+                    <td>{actual}</td>
+
+                    <td style={{ minWidth: 110 }}>
                       <input
                         type="number"
                         className="form-control form-control-sm"
@@ -136,15 +254,18 @@ const AjusteStock = () => {
                         onChange={(e) => handleChange(codigo, e.target.value)}
                       />
                     </td>
+
                     <td className={color}>{diferencia}</td>
+
                     <td className="text-nowrap" title={fechasAjuste[codigo]?.fecha || ''}>
                       {fechasAjuste[codigo]?.comentario || '-'}
                     </td>
+
                     <td>
                       <button
                         className="btn btn-sm btn-primary"
                         disabled={real === '' || diferencia === 0}
-                        onClick={() => ajustarStock(codigo, producto, actual)}
+                        onClick={() => ajustarStock(codigo, nombreEnEdicion || producto, actual)}
                       >
                         Ajustar
                       </button>

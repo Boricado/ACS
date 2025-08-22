@@ -318,6 +318,7 @@ const cargarRegistros = async () => {
     return a + valorM2 * m2;
   }, 0);
 
+
   const totalM2InstalacionesConAlumce = totalM2Instalaciones + totalM2Alumce;
   const valorAcumuladoInstalacionesConAlumce =
     valorAcumuladoInstalaciones + valorAcumuladoAlumce;

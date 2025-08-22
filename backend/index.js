@@ -516,6 +516,51 @@ app.post('/api/materiales', async (req, res) => {
   }
 });
 
+// PUT: Actualizar nombre de material (y sincronizar inventario)
+app.put('/api/materiales/:codigo', async (req, res) => {
+  const { codigo } = req.params;
+  const { producto } = req.body;
+
+  const nuevoNombre = (producto || '').trim();
+  if (!codigo) return res.status(400).json({ error: 'Falta el código' });
+  if (!nuevoNombre) return res.status(400).json({ error: 'El nombre de producto no puede estar vacío' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1) Actualiza materiales (fuente de verdad)
+    const updMat = await client.query(
+      `UPDATE materiales
+       SET producto = $1
+       WHERE codigo = $2
+       RETURNING codigo, producto`,
+      [nuevoNombre, codigo]
+    );
+
+    if (updMat.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Material no encontrado' });
+    }
+
+    // 2) (Opcional) Mantener inventario sincronizado si ahí también guardas el nombre
+    await client.query(
+      `UPDATE inventario
+       SET producto = $1
+       WHERE codigo = $2`,
+      [nuevoNombre, codigo]
+    );
+
+    await client.query('COMMIT');
+    return res.json({ mensaje: 'Nombre actualizado', material: updMat.rows[0] });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error al actualizar material:', err);
+    return res.status(500).json({ error: 'Error interno al actualizar material' });
+  } finally {
+    client.release();
+  }
+});
 
 
 app.get('/api/ultima_oc', async (req, res) => {
