@@ -17,23 +17,23 @@ const OCPendientePage = () => {
     cargarOrdenes();
   }, [filtro.estado]);
 
-const cargarOrdenes = async () => {
-  try {
-    let estadoParam = filtro.estado;
-    if (estadoParam === 'Todas') {
-      estadoParam = '';
-    } else if (estadoParam === 'Pendiente') {
-      estadoParam = 'PENDIENTE';
-    }
+  const cargarOrdenes = async () => {
+    try {
+      let estadoParam = filtro.estado;
+      if (estadoParam === 'Todas') {
+        estadoParam = '';
+      } else if (estadoParam === 'Pendiente') {
+        estadoParam = 'PENDIENTE';
+      }
 
-    const res = await axios.get(`${API}api/ordenes_compra_estado`, {
-      params: { estado: estadoParam }
-    });
-    setOrdenes(res.data);
-  } catch (err) {
-    console.error('Error al cargar órdenes:', err);
-  }
-};
+      const res = await axios.get(`${API}api/ordenes_compra_estado`, {
+        params: { estado: estadoParam }
+      });
+      setOrdenes(res.data);
+    } catch (err) {
+      console.error('Error al cargar órdenes:', err);
+    }
+  };
 
   const handleFiltroChange = (e) => {
     setFiltro({ ...filtro, [e.target.name]: e.target.value });
@@ -99,6 +99,7 @@ const cargarOrdenes = async () => {
                           <th>Precio Unitario</th>
                           <th>Cant. Llegadas</th>
                           <th>Cant. Pendientes</th>
+                          <th>Comentario</th> {/* 👈 NUEVA COLUMNA */}
                         </tr>
                       </thead>
                       <tbody>
@@ -121,6 +122,7 @@ const cargarOrdenes = async () => {
                                   {pendientes} {pendientes > 0 ? '⚠️' : '✔️'}
                                 </span>
                               </td>
+                              <td>{d.observacion_ingreso || '-'}</td> {/* 👈 AQUÍ SE MUESTRA */}
                             </tr>
                           );
                         })}
