@@ -100,61 +100,100 @@ const OCPendientePage = () => {
     return widths.map((w) => ({ wch: Math.min(Math.max(w + 2, 10), 60) }));
   };
 
-  const exportarExcel = () => {
-    try {
-      // 1) Filtra órdenes por el mes elegido (independiente de los filtros de UI)
-      const ocMes = ordenes.filter((o) => coincideMes(o.fecha, mesExcel));
+// Pon esto dentro de tu componente, reemplazando exportarExcel:
 
-      if (ocMes.length === 0) {
-        alert('No hay órdenes en el mes seleccionado.');
-        return;
-      }
+const exportarExcel = async () => {
+  try {
+    // Carga dinámica: evita problemas de bundling/SSR
+    const mod = await import('xlsx');
+    const XLSX = mod.default || mod;
 
-      // 2) Hoja principal: resumen de OC
-      const rowsOC = ocMes.map((o) => ({
+    // Mapea el estado del filtro UI a lo que llega desde el backend
+    const estadoFiltroToDB = (val) => {
+      if (val === 'Pendiente') return 'PENDIENTE';
+      if (val === 'Completa') return 'COMPLETA';
+      return ''; // Todas
+    };
+    const estadoDB = estadoFiltroToDB(filtro.estado);
+
+    // 1) Filtra órdenes por el mes elegido y por el estado del filtro
+    const ocMes = ordenes.filter((o) => {
+      const okMes = coincideMes(o.fecha, mesExcel);
+      const okEstado = estadoDB ? String(o.estado || '').toUpperCase() === estadoDB : true;
+      return okMes && okEstado;
+    });
+
+    if (ocMes.length === 0) {
+      alert('No hay órdenes en el mes/estado seleccionados.');
+      return;
+    }
+
+    // 2) Hoja principal: resumen de OC con totales e indicador de estado
+    const rowsOC = ocMes.map((o) => {
+      const totalNeto = Number(o.total_neto ?? 0);
+      const iva = Math.round(totalNeto * 0.19);
+      const total = Math.round(totalNeto + iva);
+      const estadoUI = (String(o.estado || '').toUpperCase() === 'PENDIENTE')
+        ? 'Pendiente'
+        : (String(o.estado || '').toUpperCase() === 'COMPLETA')
+          ? 'Completa'
+          : String(o.estado || '');
+
+      return {
         'N° OC': o.numero_oc,
         'Proveedor': o.proveedor,
         'Fecha': fmtFecha(o.fecha),
         'N° Presupuesto': o.numero_presupuesto ?? '',
         'Observación': o.observacion ?? '',
-        'Estado': o.estado ?? ''
-      }));
-      const wsOC = XLSX.utils.json_to_sheet(rowsOC);
-      wsOC['!cols'] = autoCols(rowsOC);
+        'Total Neto': totalNeto,
+        'IVA 19%': iva,
+        'Total': total,
+        'Estado': estadoUI
+      };
+    });
+    const wsOC = XLSX.utils.json_to_sheet(rowsOC);
+    wsOC['!cols'] = autoCols(rowsOC);
 
-      // 3) Hoja de detalles (plana, una fila por ítem)
-      const rowsDet = [];
-      ocMes.forEach((o) => {
-        (o.detalles ?? []).forEach((d) => {
-          const pendientes = (d.cantidad || 0) - (d.cantidad_llegada || 0);
-          rowsDet.push({
-            'N° OC': o.numero_oc,
-            'Proveedor': o.proveedor,
-            'Fecha OC': fmtFecha(o.fecha),
-            'Código': d.codigo ?? '',
-            'Producto': d.producto ?? '',
-            'Cant. Total': d.cantidad ?? 0,
-            'Precio Unit.': d.precio_unitario ?? 0,
-            'Cant. Llegada': d.cantidad_llegada ?? 0,
-            'Cant. Pendiente': pendientes,
-            'Comentario Ítem': d.observacion_ingreso ?? ''
-          });
+    // 3) Hoja de detalles (una fila por ítem) + Estado OC
+    const rowsDet = [];
+    ocMes.forEach((o) => {
+      const estadoUI = (String(o.estado || '').toUpperCase() === 'PENDIENTE')
+        ? 'Pendiente'
+        : (String(o.estado || '').toUpperCase() === 'COMPLETA')
+          ? 'Completa'
+          : String(o.estado || '');
+      (o.detalles ?? []).forEach((d) => {
+        const pendientes = (d.cantidad || 0) - (d.cantidad_llegada || 0);
+        rowsDet.push({
+          'N° OC': o.numero_oc,
+          'Proveedor': o.proveedor,
+          'Fecha OC': fmtFecha(o.fecha),
+          'Código': d.codigo ?? '',
+          'Producto': d.producto ?? '',
+          'Cant. Total': d.cantidad ?? 0,
+          'Precio Unit.': d.precio_unitario ?? 0,
+          'Cant. Llegada': d.cantidad_llegada ?? 0,
+          'Cant. Pendiente': pendientes,
+          'Comentario Ítem': d.observacion_ingreso ?? '',
+          'Estado OC': estadoUI
         });
       });
-      const wsDet = XLSX.utils.json_to_sheet(rowsDet);
-      wsDet['!cols'] = autoCols(rowsDet);
+    });
+    const wsDet = XLSX.utils.json_to_sheet(rowsDet);
+    wsDet['!cols'] = autoCols(rowsDet);
 
-      // 4) Libro y descarga
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, wsOC, 'OC');
-      XLSX.utils.book_append_sheet(wb, wsDet, 'Detalles');
-      const nombre = `OC_${mesExcel}.xlsx`;
-      XLSX.writeFile(wb, nombre);
-    } catch (e) {
-      console.error(e);
-      alert('No se pudo generar el Excel.');
-    }
-  };
+    // 4) Libro y descarga
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsOC, 'OC');
+    XLSX.utils.book_append_sheet(wb, wsDet, 'Detalles');
+    const nombre = `OC_${mesExcel}_${filtro.estado}.xlsx`;
+    XLSX.writeFile(wb, nombre);
+  } catch (e) {
+    console.error(e);
+    alert('No se pudo generar el Excel.');
+  }
+};
+
   // ------------------------------------------------
 
   return (
