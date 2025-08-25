@@ -183,7 +183,12 @@ export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
         fmtCLP(pagos.reduce((s, v) => s + v, 0) || totalAPagar), // debe coincidir con resumen.total
       ],
     ],
-    footStyles: { fillColor: [245, 245, 245], halign: 'right', fontStyle: 'bold' },
+    footStyles: {
+      fillColor: [230, 230, 230],      // gris más notorio
+      textColor: [33, 37, 41],         // texto oscuro (no blanco)
+      halign: 'right',
+      fontStyle: 'bold',
+    },
   });
 
   doc.save(`Pago_UTV_${periodo}.pdf`);
