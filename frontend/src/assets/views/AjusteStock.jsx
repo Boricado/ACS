@@ -168,6 +168,15 @@ const AjusteStock = () => {
 
     <div className="table-responsive" style={{ maxWidth: '100%', overflowX: 'auto' }}>
       <table className="table table-bordered table-sm align-middle text-center mb-0 table-fullwidth">
+          <colgroup>
+            <col style={{ width: '12%' }} /> {/* Código */}
+            <col style={{ width: '40%' }} /> {/* Producto */}
+            <col style={{ width: '8%'  }} /> {/* Stock Actual */}
+            <col style={{ width: '12%' }} /> {/* Stock Real */}
+            <col style={{ width: '10%' }} /> {/* Diferencia */}
+            <col style={{ width: '12%' }} /> {/* Último Ajuste */}
+            <col style={{ width: '6%'  }} /> {/* Acción */}
+          </colgroup>
         <thead className="table-light">
           <tr>
             <th>Código</th>
