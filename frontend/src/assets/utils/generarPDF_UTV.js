@@ -11,27 +11,59 @@ const fmtCLP = (n) =>
 
 const pct = (x) => `${Math.round((Number(x) || 0) * 100)}%`;
 
+/** Reparte un total en proporción a weights (0..1), redondeando a pesos y
+ *  ajustando el redondeo para que la suma final sea EXACTAMENTE el total. */
+function repartirProporcional(total, weights) {
+  const T = Math.round(Number(total) || 0);
+  const W = weights.map((w) => Number(w) || 0);
+  const sumW = W.reduce((s, v) => s + v, 0);
+  if (T <= 0 || sumW <= 0) return W.map(() => 0);
+
+  // Asignación base redondeada
+  let asign = W.map((w) => Math.round((T * w) / sumW));
+  let diff = T - asign.reduce((s, v) => s + v, 0);
+
+  // Ajuste de redondeo: distribuye 1 peso por iteración
+  // Prioriza quienes tienen mayor peso (>0); si todos 0 (no pasa aquí), no ajusta.
+  if (diff !== 0) {
+    const idxs = W
+      .map((w, i) => ({ w, i }))
+      .filter((x) => x.w > 0)
+      .sort((a, b) => b.w - a.w) // mayor peso primero
+      .map((x) => x.i);
+
+    let k = 0;
+    const step = diff > 0 ? 1 : -1;
+    const loops = Math.abs(diff);
+    for (let t = 0; t < loops; t++) {
+      if (idxs.length === 0) break;
+      asign[idxs[k]] += step;
+      k = (k + 1) % idxs.length;
+    }
+  }
+  return asign;
+}
+
 /**
+ * @param {Object} opts
+ * @param {string} opts.periodo
  * @param {{
- *   periodo: string,
- *   resumen: {
- *     utv: { suma: number, valor: number },
- *     termopanel: { m2: number, valor: number },
- *     instalacion: { m2: number, valor: number },
- *     total: number
- *   },
- *   trabajadores: Array<{
- *     nombre:string, dias_trab:number, horas_trab:number, horas_extras:number,
- *     horas_retraso:number, observacion?:string, horas_acum_trab:number,
- *     pct_asist:number, pago:number
- *   }>
- * }} opts
+ *   utv: { suma: number, valor: number },
+ *   termopanel: { m2: number, valor: number },
+ *   instalacion: { m2: number, valor: number },
+ *   total: number
+ * }} opts.resumen
+ * @param {Array<{
+ *   nombre:string, dias_trab:number, horas_trab:number, horas_extras:number,
+ *   horas_retraso:number, observacion?:string, horas_acum_trab:number,
+ *   pct_asist:number, pago?:number
+ * }>} opts.trabajadores
  */
 export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
   const doc = new jsPDF({
-    orientation: 'landscape',   // 👈 horizontal
+    orientation: 'landscape',
     unit: 'pt',
-    format: 'letter',           // 👈 tamaño carta
+    format: 'letter',
   });
 
   const pageW = doc.internal.pageSize.getWidth();
@@ -91,6 +123,14 @@ export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
     ],
   ];
 
+  const totalAPagar = Number(resumen?.total || 0);
+
+  // Pesos = % asistencia (0..1) de cada trabajador
+  const weights = (trabajadores || []).map((t) => Number(t.pct_asist) || 0);
+
+  // Pagos proporcionales al % asistencia (independiente de horas)
+  const pagos = repartirProporcional(totalAPagar, weights);
+
   const body = (trabajadores || []).map((t, i) => [
     i + 1,
     t.nombre || '',
@@ -99,9 +139,9 @@ export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
     Number(t.horas_extras) || 0,
     Number(t.horas_retraso) || 0,
     t.observacion || '',
-    Number(t.horas_acum_trab) || 0,
+    Number(t.horas_acum_trab) || 0, // solo display; no afecta el pago
     pct(t.pct_asist),
-    fmtCLP(t.pago),
+    fmtCLP(pagos[i] || 0),
   ]);
 
   const totHorasTrab = (trabajadores || []).reduce(
@@ -112,7 +152,6 @@ export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
     (s, t) => s + (Number(t.horas_acum_trab) || 0),
     0
   );
-  const totPago = (trabajadores || []).reduce((s, t) => s + (Number(t.pago) || 0), 0);
 
   doc.autoTable({
     startY: doc.lastAutoTable.finalY + 20,
@@ -140,8 +179,8 @@ export function generarPDF_UTV({ periodo, resumen, trabajadores }) {
         '', // retraso
         '', // observación
         String(totHorasAcum),
-        '', // %
-        fmtCLP(totPago),
+        '', // % asistencia
+        fmtCLP(pagos.reduce((s, v) => s + v, 0) || totalAPagar), // debe coincidir con resumen.total
       ],
     ],
     footStyles: { fillColor: [245, 245, 245], halign: 'right', fontStyle: 'bold' },
