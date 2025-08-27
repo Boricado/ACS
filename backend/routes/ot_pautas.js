@@ -40,17 +40,39 @@ const insertarYActualizar = async (req, res, tabla, campoSeguimiento) => {
   }
 };
 
-// Función genérica para obtener reservas activas (sólo obras con recepcion_final = false)
 const obtenerReservasActivas = async (req, res, tabla) => {
   try {
-    const result = await pool.query(`
+    const { cliente_id, presupuesto_id, numero_presupuesto } = req.query;
+
+    const where = ['s.recepcion_final = false'];
+    const values = [];
+
+    if (cliente_id) {
+      values.push(Number(cliente_id));
+      where.push(`p.cliente_id = $${values.length}`);
+    }
+
+    if (presupuesto_id) {
+      values.push(Number(presupuesto_id));
+      where.push(`p.presupuesto_id = $${values.length}`);
+    }
+
+    if (numero_presupuesto) {
+      values.push(String(numero_presupuesto));
+      where.push(`p.numero_presupuesto = $${values.length}`);
+    }
+
+    const sql = `
       SELECT p.*
       FROM ${tabla} p
-      INNER JOIN seguimiento_obras s ON p.numero_presupuesto = s.presupuesto_numero
-      WHERE s.recepcion_final = false
-    `);
+      INNER JOIN seguimiento_obras s
+        ON p.numero_presupuesto = s.presupuesto_numero
+      WHERE ${where.join(' AND ')}
+      ORDER BY p.id ASC
+    `;
 
-    res.json(result.rows);
+    const { rows } = await pool.query(sql, values);
+    res.json(rows);
   } catch (err) {
     console.error(`❌ Error al obtener reservas desde ${tabla}:`, err);
     res.status(500).json({ error: `Error al obtener datos desde ${tabla}` });
