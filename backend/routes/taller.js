@@ -3,6 +3,27 @@ import pool from '../db.js';
 
 const router = express.Router();
 
+/** =========================
+ * Helpers de fecha (seguros)
+ * ========================= */
+const boundsMes = (mesQ, anioQ) => {
+  const hoy = new Date();
+  const anio = Number(anioQ) || hoy.getFullYear();
+  const mes  = Number(mesQ)  || (hoy.getMonth() + 1); // 1-12
+
+  // Primer día del mes (UTC para evitar desfases TZ)
+  const inicio = new Date(Date.UTC(anio, mes - 1, 1));
+  // Primer día del mes siguiente
+  const fin    = new Date(Date.UTC(anio, mes, 1));
+
+  const toISO = (d) => d.toISOString().slice(0, 10); // YYYY-MM-DD
+  return [toISO(inicio), toISO(fin)];
+};
+
+/** =========================
+ * UTV: CRUD
+ * ========================= */
+
 // POST /api/taller/utv
 router.post('/utv', async (req, res) => {
   const {
@@ -98,8 +119,8 @@ router.put('/utv/:id', async (req, res) => {
     otro,
     comentario_otro,
     valor_m2,
-    m2_instalador,   
-    instalador         
+    m2_instalador,
+    instalador
   } = req.body;
 
   try {
@@ -142,7 +163,7 @@ router.put('/utv/:id', async (req, res) => {
       comentario_otro,
       valor_m2,
       m2_instalador,
-      instalador,  
+      instalador,
       req.params.id
     ]);
 
@@ -165,6 +186,10 @@ router.delete('/utv/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar UTV' });
   }
 });
+
+/** =========================
+ * Termopanel & Instalación: POST/DELETE
+ * ========================= */
 
 // 🔹 Agregar Termopanel
 router.post('/termopanel', async (req, res) => {
@@ -209,6 +234,18 @@ router.post('/termopanel', async (req, res) => {
   }
 });
 
+// Eliminar registro termopanel
+router.delete('/termopanel/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query('DELETE FROM termopanel_taller WHERE id = $1', [id]);
+    res.json({ message: 'Registro eliminado' });
+  } catch (error) {
+    console.error('Error al eliminar registro termopanel:', error);
+    res.status(500).json({ error: 'Error al eliminar registro' });
+  }
+});
 
 // 🔹 Agregar Instalación
 router.post('/instalacion', async (req, res) => {
@@ -228,19 +265,22 @@ router.post('/instalacion', async (req, res) => {
   }
 });
 
+/** =========================
+ * Consultas por mes/año (RANGO SEGURO)
+ * ========================= */
 
-// 🔸 Obtener registros por mes/año
-const generarFiltroFecha = (mes, anio) => {
-  const start = `${anio}-${mes.toString().padStart(2, '0')}-01`;
-  const end = `${anio}-${mes.toString().padStart(2, '0')}-31`;
-  return [start, end];
-};
-
+// UTV por mes/año
 router.get('/utv', async (req, res) => {
-  const { mes, anio } = req.query;
-  const [inicio, fin] = generarFiltroFecha(mes, anio);
   try {
-    const resultado = await pool.query(`SELECT * FROM utv_taller WHERE fecha BETWEEN $1 AND $2`, [inicio, fin]);
+    const [inicio, fin] = boundsMes(req.query.mes, req.query.anio);
+    const sql = `
+      SELECT * 
+      FROM utv_taller
+      WHERE fecha >= $1::date
+        AND fecha <  $2::date
+      ORDER BY fecha DESC, id DESC;
+    `;
+    const resultado = await pool.query(sql, [inicio, fin]);
     res.json(resultado.rows);
   } catch (err) {
     console.error('Error obteniendo UTV:', err);
@@ -248,12 +288,18 @@ router.get('/utv', async (req, res) => {
   }
 });
 
-
+// Instalaciones por mes/año
 router.get('/instalaciones', async (req, res) => {
-  const { mes, anio } = req.query;
-  const [inicio, fin] = generarFiltroFecha(mes, anio);
   try {
-    const resultado = await pool.query(`SELECT * FROM instalaciones_taller WHERE fecha BETWEEN $1 AND $2`, [inicio, fin]);
+    const [inicio, fin] = boundsMes(req.query.mes, req.query.anio);
+    const sql = `
+      SELECT *
+      FROM instalaciones_taller
+      WHERE fecha >= $1::date
+        AND fecha <  $2::date
+      ORDER BY fecha DESC, id DESC;
+    `;
+    const resultado = await pool.query(sql, [inicio, fin]);
     res.json(resultado.rows);
   } catch (err) {
     console.error('Error obteniendo Instalaciones:', err);
@@ -261,17 +307,41 @@ router.get('/instalaciones', async (req, res) => {
   }
 });
 
-//Fechas
-
-router.get('/', async (req, res) => {
-  const { mes, anio } = req.query;
-
+// Termopanel por mes/año
+router.get('/termopanel', async (req, res) => {
   try {
-    const resultado = await pool.query(`
-      SELECT * FROM utv 
-      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2
-    `, [mes, anio]);
+    const [inicio, fin] = boundsMes(req.query.mes, req.query.anio);
+    const sql = `
+      SELECT *
+      FROM termopanel_taller
+      WHERE fecha >= $1::date
+        AND fecha <  $2::date
+      ORDER BY fecha DESC, id DESC;
+    `;
+    const result = await pool.query(sql, [inicio, fin]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener termopaneles:', error);
+    res.status(500).json({ error: 'Error al obtener registros de termopanel' });
+  }
+});
 
+/** =========================
+ * Ruta base (legacy UTV): también segura
+ * ========================= */
+
+// Fechas (legacy) usando EXTRACT → lo cambiamos a rango seguro
+router.get('/', async (req, res) => {
+  try {
+    const [inicio, fin] = boundsMes(req.query.mes, req.query.anio);
+    const sql = `
+      SELECT *
+      FROM utv
+      WHERE fecha >= $1::date
+        AND fecha <  $2::date
+      ORDER BY fecha DESC, id DESC;
+    `;
+    const resultado = await pool.query(sql, [inicio, fin]);
     res.json(resultado.rows);
   } catch (error) {
     console.error('Error al obtener datos UTV:', error);
@@ -279,7 +349,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUT /api/taller/utv/:id/instalador
+/** =========================
+ * Campo instalador (UTV)
+ * ========================= */
 router.put('/utv/:id/instalador', async (req, res) => {
   const { instalador } = req.body;
 
@@ -298,38 +370,5 @@ router.put('/utv/:id/instalador', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar instalador' });
   }
 });
-
-// Ruta: Obtener registros termopanel filtrados por mes/año
-router.get('/termopanel', async (req, res) => {
-  const { mes, anio } = req.query;
-
-  try {
-    const result = await pool.query(`
-      SELECT * FROM termopanel_taller
-      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2
-      ORDER BY fecha DESC
-    `, [mes, anio]);
-
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener termopaneles:', error);
-    res.status(500).json({ error: 'Error al obtener registros de termopanel' });
-  }
-});
-
-// Eliminar registro termopanel
-router.delete('/termopanel/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await pool.query('DELETE FROM termopanel_taller WHERE id = $1', [id]);
-    res.json({ message: 'Registro eliminado' });
-  } catch (error) {
-    console.error('Error al eliminar registro termopanel:', error);
-    res.status(500).json({ error: 'Error al eliminar registro' });
-  }
-});
-
-
 
 export default router;
