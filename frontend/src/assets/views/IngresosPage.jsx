@@ -42,28 +42,29 @@ const IngresosPage = () => {
   };
 
   // Actualiza un campo de una línea de detalle
-  const handleInputChange = (oc, idx, field, value) => {
-    setOrdenes((prev) =>
-      prev.map((o) =>
-        o.numero_oc !== oc
-          ? o
-          : {
-              ...o,
-              detalles: o.detalles.map((item, i) =>
-                i !== idx
-                  ? item
-                  : {
-                      ...item,
-                      [field]:
-                        field === 'precio_unitario' || field === 'cantidad_llegada'
-                          ? parseFloat(value) || 0
-                          : value,
-                    }
-              ),
-            }
-      )
-    );
-  };
+  const handleInputChange = (oc, detalleId, field, value) => {
+  setOrdenes(prev =>
+    prev.map(o =>
+      o.numero_oc !== oc
+        ? o
+        : {
+            ...o,
+            detalles: o.detalles.map(item =>
+              item.id !== detalleId
+                ? item
+                : {
+                    ...item,
+                    [field]:
+                      field === 'precio_unitario' || field === 'cantidad_llegada'
+                        ? parseFloat(value) || 0
+                        : value,
+                  }
+            ),
+          }
+    )
+  );
+};
+
 
   const calcularTotales = (detalles = []) => {
     let totalNeto = 0;
@@ -253,7 +254,7 @@ const IngresosPage = () => {
                                 className="form-control form-control-sm"
                                 value={d.precio_unitario}
                                 onChange={(e) =>
-                                  handleInputChange(o.numero_oc, idx, 'precio_unitario', e.target.value)
+                                  handleInputChange(o.numero_oc, d.id, 'precio_unitario', e.target.value)
                                 }
                               />
                             </td>
@@ -266,7 +267,7 @@ const IngresosPage = () => {
                                 } text-white`}
                                 value={d.cantidad_llegada || ''}
                                 onChange={(e) =>
-                                  handleInputChange(o.numero_oc, idx, 'cantidad_llegada', e.target.value)
+                                  handleInputChange(o.numero_oc, d.id, 'cantidad_llegada', e.target.value)
                                 }
                               />
                             </td>
@@ -279,7 +280,7 @@ const IngresosPage = () => {
                                 placeholder="Comentario de ingreso"
                                 value={d.observacion_ingreso || ''}
                                 onChange={(e) =>
-                                  handleInputChange(o.numero_oc, idx, 'observacion_ingreso', e.target.value)
+                                  handleInputChange(o.numero_oc, d.id, 'observacion_ingreso', e.target.value)
                                 }
                               />
                             </td>
