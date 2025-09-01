@@ -934,51 +934,50 @@ app.post('/api/ingresar_factura', async (req, res) => {
       const numero_oc = orden.numero_oc;
       if (!numero_oc) throw new Error('Falta numero_oc en la orden.');
 
+      // 1) Actualiza líneas de detalle (incluye observacion_ingreso)
       for (const detalle of orden.detalles || []) {
         const {
           id,
           codigo,
           cantidad_llegada = 0,
           precio_unitario = 0,
-          observacion_ingreso = ''
+          observacion_ingreso = '' // 👈 viene del front
         } = detalle;
 
-        if (!id) throw new Error(`Falta id de detalle en OC ${numero_oc}`);
+        if (!codigo) throw new Error(`Falta código en detalle de OC ${numero_oc}`);
 
-        // 1) Leer la llegada anterior para calcular DELTA y evitar doble conteo
-        const prevRes = await client.query(
-          `SELECT cantidad_llegada FROM detalle_oc WHERE id = $1 FOR UPDATE`,
-          [id]
-        );
-        const llegadaPrev = Number(prevRes.rows?.[0]?.cantidad_llegada || 0);
-        const llegadaNueva = Number(cantidad_llegada) || 0;
-        const delta = llegadaNueva - llegadaPrev; // <-- lo que realmente cambió
+        const costo_neto = (Number(cantidad_llegada) || 0) * (Number(precio_unitario) || 0);
 
-        const costo_neto = llegadaNueva * (Number(precio_unitario) || 0);
-
-        // 2) Actualizar el detalle por ID (clave única)
         await client.query(
           `UPDATE detalle_oc
-             SET cantidad_llegada    = $1,
-                 precio_unitario     = $2,
-                 costo_neto          = $3,
-                 observacion_ingreso = $4
-           WHERE id = $5`,
-          [llegadaNueva, Number(precio_unitario) || 0, Number(costo_neto) || 0, String(observacion_ingreso || ''), id]
+             SET cantidad_llegada   = $1,
+                 precio_unitario    = $2,
+                 costo_neto         = $3,
+                 observacion_ingreso= $4   -- 👈 guarda aquí
+           WHERE numero_oc = $5 AND codigo = $6 AND id = $7`,
+          [
+            Number(cantidad_llegada) || 0,
+            Number(precio_unitario) || 0,
+            Number(costo_neto) || 0,
+            String(observacion_ingreso || ''),
+            numero_oc,
+            codigo,
+            id
+          ]
         );
 
-        // 3) Ajustar inventario SOLO por el delta
-        if (delta !== 0 && codigo) {
+        // 2) Actualiza stock si hubo llegada
+        if ((Number(cantidad_llegada) || 0) > 0) {
           await client.query(
             `UPDATE inventario
                 SET stock_actual = stock_actual + $1
               WHERE codigo = $2`,
-            [delta, codigo]
+            [Number(cantidad_llegada) || 0, codigo]
           );
         }
       }
 
-      // 4) Actualizar cabecera
+      // 3) Actualiza cabecera de la OC (factura y fecha)
       await client.query(
         `UPDATE ordenes_compra
             SET factura = $1,
@@ -987,7 +986,7 @@ app.post('/api/ingresar_factura', async (req, res) => {
         [orden.factura || null, orden.fecha_factura || null, numero_oc]
       );
 
-      // 5) Recalcular estado de la OC
+      // 4) Si no quedan pendientes, marca la OC como Completa
       const result = await client.query(
         `SELECT COUNT(*) FROM detalle_oc
           WHERE numero_oc = $1
